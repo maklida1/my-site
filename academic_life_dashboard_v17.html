@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דשבורד אקדמי - הלן ישעיהו (Notion Style)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Heebo & Rubik -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <!-- Icons are now embedded inline as SVG; FontAwesome CDN no longer needed -->
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Heebo', 'sans-serif'],
+                        rubik: ['Rubik', 'sans-serif'],
+                    },
+                    colors: {
+                        notion: {
+                            bg: '#FBFBFA',
+                            card: '#FFFFFF',
+                            border: '#E9E9E7',
+                            text: '#37352F',
+                            muted: '#787774',
+                            hover: '#EFEEEA',
+                            active: '#23232A'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #FBFBFA;
+            color: #37352F;
+        }
+        .notion-border {
+            border: 1px solid #E9E9E7;
+        }
+        .notion-card {
+            background-color: #FFFFFF;
+            border: 1px solid #E9E9E7;
+            border-radius: 8px;
+            box-shadow: rgba(15, 15, 15, 0.03) 0px 1px 2px;
+        }
+        .active-tab {
+            background-color: #EFEEEA !important;
+            color: #37352F !important;
+            font-weight: 600;
+        }
+        /* Custom Scrollbar */
+        .course-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .course-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .course-scroll::-webkit-scrollbar-thumb {
+            background: #D3D3D1;
+            border-radius: 4px;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: invert(0.5);
+        }
+        /* Draggable Note Styling */
+        .draggable-note {
+            touch-action: none;
+            user-select: none;
+            will-change: transform;
+            transition: box-shadow 0.2s ease;
+            box-sizing: border-box;
+            position: relative;
+            overflow-y: auto;
+            width: 200px;
+            height: 150px;
+            min-width: 180px;
+            min-height: 120px;
+            justify-self: start;
+        }
+        .draggable-note.is-dragging {
+            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12);
+            opacity: 0.95;
+            z-index: 50 !important;
+        }
+        .draggable-note.is-resizing {
+            transition: none;
+            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12);
+        }
+        /* Resize Handle Styling (bottom corner grip) */
+        .note-resize-handle {
+            position: absolute;
+            bottom: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            cursor: nesw-resize;
+            touch-action: none;
+            background-image: repeating-linear-gradient(45deg, #A8A29E 0, #A8A29E 2px, transparent 2px, transparent 5px);
+            -webkit-mask-image: linear-gradient(135deg, transparent 45%, black 45%);
+            mask-image: linear-gradient(135deg, transparent 45%, black 45%);
+            border-radius: 2px;
+            opacity: 0.55;
+            transition: opacity 0.15s ease;
+        }
+        .note-resize-handle:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-16">
+
+    <!-- Notion-style Top Header / Breadcrumb Bar -->
+    <header class="bg-[#FBFBFA] border-b border-[#E9E9E7] sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                
+                <!-- Workspace / Page Title Area -->
+                    <div class="flex items-center space-x-2.5 space-x-reverse">
+                    <div class="w-7 h-7 rounded-md bg-[#EFEEEA] flex items-center justify-center text-sm">
+                        🌿
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-[#787774]">
+                        <span>הלן</span>
+                        <span>/</span>
+                        <span class="font-medium text-[#37352F]">דשבורד</span>
+                    </div>
+                </div>
+
+                <!-- Notion View Switcher Tabs -->
+                <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center self-center md:self-auto border border-[#E9E9E7]">
+                    <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all duration-150 flex items-center gap-1.5 text-[#787774] hover:text-[#37352F]">
+                        <svg class="text-[10px] text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8.25"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>
+                        <span>מיקוד יומי</span>
+                    </button>
+                    <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all duration-150 flex items-center gap-1.5 text-[#787774] hover:text-[#37352F]">
+                        <svg class="text-[10px] text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><rect x="3.75" y="3.75" width="16.5" height="16.5" rx="1.5"/><line x1="3.75" y1="12" x2="20.25" y2="12"/><line x1="12" y1="3.75" x2="12" y2="20.25"/></svg>
+                        <span>קורסים</span>
+                    </button>
+                    <button id="btn-notes-mode" onclick="switchMode('notes')" class="px-3 py-1 rounded-md text-xs transition-all duration-150 flex items-center gap-1.5 text-[#787774] hover:text-[#37352F] relative">
+                        <svg class="text-[10px] text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h9.379a1.5 1.5 0 0 1 1.06.44l3.622 3.62a1.5 1.5 0 0 1 .439 1.061V18.5A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4 18.5v-13Z"/><path d="M14.5 4.2V8a1 1 0 0 0 1 1h3.8"/></svg>
+                        <span>פתקים</span>
+                    </button>
+                </div>
+
+                <!-- Date Indicator -->
+                <div class="hidden lg:flex items-center text-xs text-[#787774] px-2.5 py-1 rounded-md border border-[#E9E9E7] bg-white">
+                    <svg class="ml-1.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><rect x="3.75" y="5.25" width="16.5" height="15" rx="1.5"/><line x1="3.75" y1="9.75" x2="20.25" y2="9.75"/><line x1="8" y1="3" x2="8" y2="6.5"/><line x1="16" y1="3" x2="16" y2="6.5"/></svg>
+                    <span>שני, 17 באוגוסט 2026</span>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+
+        <!-- ================================================================= -->
+        <!-- VIEW 1: 🟢 FOCUS MODE (מיקוד יומי) -->
+        <!-- ================================================================= -->
+        <div id="view-focus" class="space-y-6">
+            
+            <!-- Notion Callout Banner -->
+            <div class="notion-card p-4 bg-white flex items-start gap-3">
+                <div>
+                    <h2 class="text-sm font-bold text-[#37352F]">מיקוד</h2>
+                </div>
+            </div>
+
+            <!-- Row: PINNED NOTE, Today's Schedule, Semester Courses (side by side) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- PINNED NOTE CARD (Notion Yellow Callout Style) -->
+                <div class="notion-card p-5 bg-[#FBFB9B]/20 border border-[#F4F482]/60 relative">
+                    <div class="flex items-center mb-2.5 border-b border-[#E9E9E7]/60 pb-2">
+                        <div class="flex items-center gap-2">
+                            <svg viewBox="0 0 384 512" class="w-4 h-4" style="fill:#dc2626; transform: rotate(45deg);" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M298.028 214.267 285.793 96H328c13.255 0 24-10.745 24-24V24c0-13.255-10.745-24-24-24H56C42.745 0 32 10.745 32 24v48c0 13.255 10.745 24 24 24h42.207L85.972 214.267C37.465 236.82 0 277.951 0 328c0 13.255 10.745 24 24 24h136v104.007c0 1.242.289 2.467.845 3.578l24 48c2.941 5.882 11.364 5.882 14.311 0l24-48a8.008 8.008 0 0 0 .845-3.578V352h136c13.255 0 24-10.745 24-24-.001-51.183-38.559-91.42-85.973-113.733z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div id="pinned-note-display" contenteditable="true"
+                         class="text-xs text-[#37352F] leading-relaxed min-h-[60px] whitespace-pre-wrap p-2 rounded focus:outline-none focus:ring-1 focus:ring-[#37352F]/30 transition-all">
+                        <!-- Loaded via JS -->
+                    </div>
+                </div>
+
+                <!-- Today's Schedule -->
+                <div class="notion-card p-5">
+                    <div class="flex items-center gap-2 mb-4 border-b border-[#E9E9E7] pb-3">
+                        <span class="text-sm">📅</span>
+                        <h3 class="text-sm font-bold text-[#37352F]">Google Calendar</h3>
+                    </div>
+
+                    <div class="space-y-3.5 relative before:absolute before:right-2.5 before:top-2 before:bottom-2 before:w-px before:bg-[#E9E9E7]">
+                        <div class="pr-6 relative">
+                            <span class="absolute right-1.5 top-1.5 w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-white"></span>
+                            <p class="text-[10px] text-[#787774]">08:00 - 15:00</p>
+                            <p class="text-xs font-bold text-[#37352F]">משמרת עבודה - דיור מוגן</p>
+                        </div>
+                        <div class="pr-6 relative">
+                            <span class="absolute right-1.5 top-1.5 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white"></span>
+                            <p class="text-[10px] text-[#787774]">15:30 - 16:30</p>
+                            <p class="text-xs font-bold text-[#37352F]">איסוף תרופות וסידורים אישיים</p>
+                        </div>
+                        <div class="pr-6 relative">
+                            <span class="absolute right-1.5 top-1.5 w-2 h-2 rounded-full bg-[#787774] ring-2 ring-white"></span>
+                            <p class="text-[10px] text-[#787774]">19:00 - 20:00</p>
+                            <p class="text-xs font-bold text-[#37352F]">מנוחה וזמן אישי</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Semester Courses Card -->
+                <div class="notion-card p-5">
+                    <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2.5">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm">🎓</span>
+                            <h3 class="text-sm font-bold text-[#37352F]">קורסי הסמסטר</h3>
+                        </div>
+                    </div>
+
+                    <div id="semester-courses-list" class="space-y-2">
+                        <!-- Populated automatically from the Courses page -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Grid Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Col 1 & 2: Chronological Tasks List + Weekly Hobbies Tracker -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Single Chronological Unified Tasks List -->
+                    <div class="notion-card p-5">
+                        <div class="flex items-center justify-between mb-4 border-b border-[#E9E9E7] pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">📋</span>
+                                <h3 class="text-sm font-bold text-[#37352F]">משימות</h3>
+                            </div>
+                            <span id="focus-tasks-count" class="text-xs text-[#787774]"></span>
+                        </div>
+
+                        <!-- Dynamic Sorted Single List Container -->
+                        <div class="space-y-2.5" id="focus-tasks-list">
+                            <!-- Tasks populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Col 3: Post-Study Routine + Weekly Hobbies Tracker -->
+                <div class="space-y-6">
+
+                    <!-- Post-Study Routine -->
+                    <div class="notion-card p-5">
+                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
+                            <div class="flex items-center gap-2">
+                                <span>🔄</span>
+                                <h3 class="text-xs font-bold text-[#37352F]">סנכרון לאחר יום לימודים</h3>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button id="routine-reset-btn" onclick="resetRoutineChecks()" title="איפוס סימונים לשבוע חדש" class="text-slate-400 hover:text-slate-700 w-6 h-6 rounded border border-[#E9E9E7] transition-colors flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;" xmlns="http://www.w3.org/2000/svg"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                                </button>
+                                <button id="routine-edit-btn" onclick="enableRoutineEdit()" title="עריכת הרשימה" class="text-slate-400 hover:text-slate-700 w-6 h-6 rounded border border-[#E9E9E7] transition-colors flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;" xmlns="http://www.w3.org/2000/svg"><path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L16.862 4.487"/><path d="M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                                </button>
+                                <button id="routine-save-btn" onclick="saveRoutineEdit()" class="hidden bg-[#37352F] text-white px-2.5 py-0.5 rounded text-[10px] transition-colors">שמירה</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1" id="routine-checklist-list">
+                            <div class="routine-item flex items-center gap-2 p-1 rounded">
+                                <label class="flex items-start gap-2 cursor-pointer text-xs flex-1">
+                                    <input type="checkbox" onchange="handleRoutineCheckboxChange(this)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7]">
+                                    <span class="text-[#37352F] routine-item-text">סנכרון סיכומים וטיוטות ל-Docs ול-Drive</span>
+                                </label>
+                            </div>
+                            <div class="routine-item flex items-center gap-2 p-1 rounded">
+                                <label class="flex items-start gap-2 cursor-pointer text-xs flex-1">
+                                    <input type="checkbox" onchange="handleRoutineCheckboxChange(this)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7]">
+                                    <span class="text-[#37352F] routine-item-text">קליטת מטלות וחובות חדשות ללוח</span>
+                                </label>
+                            </div>
+                            <div class="routine-item flex items-center gap-2 p-1 rounded">
+                                <label class="flex items-start gap-2 cursor-pointer text-xs flex-1">
+                                    <input type="checkbox" onchange="handleRoutineCheckboxChange(this)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7]">
+                                    <span class="text-[#37352F] routine-item-text">סימון פרקי קריאה ומאמרים למפגש הבא</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <textarea id="routine-checklist-edit" rows="5" placeholder="פריט אחד בכל שורה..."
+                                  class="hidden w-full p-2 text-xs bg-white border border-[#E9E9E7] rounded text-[#37352F] focus:outline-none focus:border-[#37352F] font-sans"></textarea>
+                    </div>
+
+                    <!-- Weekly Hobbies Tracker Widget -->
+                    <div class="notion-card p-5">
+                        <div class="flex items-center justify-between mb-4 border-b border-[#E9E9E7] pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">✨</span>
+                                <h3 class="text-sm font-bold text-[#37352F]">מעקב שבועי</h3>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button id="hobbies-reset-btn" onclick="resetHobbiesChecks()" title="איפוס סימונים לשבוע חדש" class="text-slate-400 hover:text-slate-700 w-6 h-6 rounded border border-[#E9E9E7] transition-colors flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;" xmlns="http://www.w3.org/2000/svg"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                                </button>
+                                <button id="hobbies-edit-btn" onclick="enableHobbiesEdit()" title="עריכת הרשימה" class="text-slate-400 hover:text-slate-700 w-6 h-6 rounded border border-[#E9E9E7] transition-colors flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;" xmlns="http://www.w3.org/2000/svg"><path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L16.862 4.487"/><path d="M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                                </button>
+                                <button id="hobbies-save-btn" onclick="saveHobbiesEdit()" class="hidden bg-[#37352F] text-white px-2.5 py-0.5 rounded text-[10px] transition-colors">שמירה</button>
+                            </div>
+                        </div>
+
+                        <!-- Table / Grid for Hobbies Tracker -->
+                        <div class="overflow-x-auto" id="hobbies-table-wrapper">
+                            <table class="w-full text-right text-xs">
+                                <thead>
+                                    <tr class="border-b border-[#E9E9E7] text-[#787774] text-[11px] font-medium">
+                                        <th class="pb-2 text-right font-bold text-[#37352F] min-w-[110px]">תחביב</th>
+                                        <th class="pb-2 text-center w-8">א'</th>
+                                        <th class="pb-2 text-center w-8">ב'</th>
+                                        <th class="pb-2 text-center w-8">ג'</th>
+                                        <th class="pb-2 text-center w-8">ד'</th>
+                                        <th class="pb-2 text-center w-8">ה'</th>
+                                        <th class="pb-2 text-center w-8">ו'</th>
+                                        <th class="pb-2 text-center w-8">ש'</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hobbies-tracker-list" class="divide-y divide-[#E9E9E7]/60">
+                                    <!-- Default Hobby 1: הליכה -->
+                                    <tr class="hobby-row transition-colors">
+                                        <td class="py-2.5 font-medium text-[#37352F] hobby-name">הליכה 🏃‍♀️</td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="0" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="1" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="2" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="3" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="4" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="5" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="6" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                    </tr>
+                                    <!-- Default Hobby 2: ספר -->
+                                    <tr class="hobby-row transition-colors">
+                                        <td class="py-2.5 font-medium text-[#37352F] hobby-name">קריאת ספר 📖</td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="0" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="1" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="2" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="3" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="4" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="5" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="6" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                    </tr>
+                                    <!-- Default Hobby 3: יוגה -->
+                                    <tr class="hobby-row transition-colors">
+                                        <td class="py-2.5 font-medium text-[#37352F] hobby-name">יוגה 🧘‍♀️</td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="0" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="1" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="2" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="3" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="4" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="5" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                        <td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="6" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <textarea id="hobbies-checklist-edit" rows="5" placeholder="תחביב אחד בכל שורה..."
+                                  class="hidden w-full p-2 text-xs bg-white border border-[#E9E9E7] rounded text-[#37352F] focus:outline-none focus:border-[#37352F] font-sans"></textarea>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================================= -->
+        <!-- VIEW 2: 🔵 MANAGMENT BOARD (לוח קורסים) -->
+        <!-- ================================================================= -->
+        <div id="view-manage" class="hidden space-y-6">
+            
+            <!-- Notion Header -->
+            <div class="notion-card p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F]">קורסים ומטלות</h2>
+                </div>
+                <button onclick="openAddCourseModal()" class="bg-[#37352F] hover:bg-black text-white text-xs font-medium px-3.5 py-1.5 rounded transition-all flex items-center gap-1.5">
+                    <svg class="text-[10px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="4.5" x2="12" y2="19.5"/><line x1="4.5" y1="12" x2="19.5" y2="12"/></svg> קורס חדש
+                </button>
+            </div>
+
+            <!-- Side-by-Side Boards Container -->
+            <div id="courses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- COLUMN 1: COURSE A -->
+                <div class="notion-card p-4 flex flex-col justify-between" data-course-title="לקויות למידה">
+                    <div>
+                        <div class="border-b border-[#E9E9E7] pb-3 mb-3">
+                            <div class="flex items-center justify-between">
+                                <span class="course-code-badge text-[10px] text-[#787774] bg-[#EFEEEA] px-2 py-0.5 rounded">1021.403</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-[#787774] course-task-count">4 מטלות</span>
+                                    <div class="flex items-center gap-0.5">
+                                        <button onclick="moveCourseCard(this, -1)" title="הזזה אחורה ברשימה" class="text-slate-400 hover:text-slate-700 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M15 6L9 12l6 6"/></svg></button>
+                                        <button onclick="moveCourseCard(this, 1)" title="הזזה קדימה ברשימה" class="text-slate-400 hover:text-slate-700 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M9 6l6 6-6 6"/></svg></button>
+                                        <button onclick="openEditCourseModal(this)" title="עריכת קורס" class="text-slate-400 hover:text-slate-700 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L16.862 4.487"/><path d="M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg></button>
+                                        <button onclick="deleteCourse(this)" title="מחיקת קורס" class="text-slate-400 hover:text-red-500 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-[#37352F] text-sm mt-1.5">לקויות למידה: אבחון וטיפול</h3>
+                            <div class="flex items-center gap-3 mt-1 text-[10px] text-[#787774] course-meta-row" style="display:none;">
+                                <span class="flex items-center gap-1 course-hours-badge" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8.25"/><path d="M12 7.5V12l3 2"/></svg><span class="course-hours-text"></span></span>
+                                <span class="flex items-center gap-1 course-location-badge" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg><span class="course-location-text"></span></span>
+                            </div>
+                            
+                            <!-- Links Bar -->
+                            <div class="grid grid-cols-2 gap-1.5 mt-3 text-xs course-links-grid">
+                                <a href="https://moodle.tau.ac.il" target="_blank" class="course-link-moodle bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1 transition-colors">
+                                    <svg class="text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8.25"/><ellipse cx="12" cy="12" rx="3.5" ry="8.25"/><line x1="3.75" y1="12" x2="20.25" y2="12"/></svg> Moodle
+                                </a>
+                                <a href="https://docs.google.com" target="_blank" class="course-link-docs bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1 transition-colors">
+                                    <svg class="text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 3.75h7.379a1.5 1.5 0 0 1 1.06.44l3.372 3.37a1.5 1.5 0 0 1 .439 1.062V19.5a1.5 1.5 0 0 1-1.5 1.5h-10.75a1.5 1.5 0 0 1-1.5-1.5V5.25a1.5 1.5 0 0 1 1.5-1.5Z"/><line x1="8.5" y1="12" x2="15.5" y2="12"/><line x1="8.5" y1="15.5" x2="15.5" y2="15.5"/></svg> Docs
+                                </a>
+                                <button onclick="openSyllabusModal(this)" class="bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1">
+                                    <svg class="text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M6 3.75h12v16.5l-2.25-1.5-2.25 1.5-2.25-1.5-2.25 1.5-2.25-1.5-.75.5V3.75Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="11.5" x2="15" y2="11.5"/></svg> סילבוס
+                                </button>
+                                <a href="#" target="_blank" class="course-link-drive bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1">
+                                    <svg class="text-amber-500" viewBox="0 0 24 24" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M8.05 3.5 1 15.5l3.05 5.25L11.1 8.75 8.05 3.5Zm7.9 0L12.9 8.75l7.05 12L23 15.5 15.95 3.5ZM4.6 21.5h14.8l-3.05-5.25H7.65L4.6 21.5Z"/></svg> Drive
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Tasks List -->
+                        <div class="space-y-2 max-h-72 overflow-y-auto course-scroll pr-1">
+                            <div class="task-card p-2.5 rounded border border-[#E9E9E7] bg-white hover:border-[#37352F] transition-all flex items-center justify-between group" data-task-id="task-1" data-date="2026-08-20" data-formatted-date="20/08/2026" data-course="לקויות למידה" data-status="in-progress">
+                                <div class="flex items-start gap-2 w-full">
+                                    <input type="checkbox" onchange="toggleCheckboxStatus(this)" class="mt-0.5 w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] cursor-pointer">
+                                    <div class="w-full">
+                                        <p class="task-title text-xs font-medium text-[#37352F]">קריאת מאמר אבחון תקשורתי (עמ' 12-28)</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="text-[#787774] text-[10px]">20/08/2026</span>
+                                            <span onclick="cycleStatus(this)" title="שנה סטטוס" class="status-btn cursor-pointer px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800">בתהליך</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="deleteTask(this)" class="text-slate-400 hover:text-red-500 text-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                            </div>
+
+                            <div class="task-card p-2.5 rounded border border-[#E9E9E7] bg-white hover:border-[#37352F] transition-all flex items-center justify-between group" data-task-id="task-2" data-date="2026-08-22" data-formatted-date="22/08/2026" data-course="לקויות למידה" data-status="not-started">
+                                <div class="flex items-start gap-2 w-full">
+                                    <input type="checkbox" onchange="toggleCheckboxStatus(this)" class="mt-0.5 w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] cursor-pointer">
+                                    <div class="w-full">
+                                        <p class="task-title text-xs font-medium text-[#37352F]">סיכום נקודות מתוך הרצאה 2 ב-Docs</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="text-[#787774] text-[10px]">22/08/2026</span>
+                                            <span onclick="cycleStatus(this)" title="שנה סטטוס" class="status-btn cursor-pointer px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#EFEEEA] text-[#787774]">טרם הוחל</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="deleteTask(this)" class="text-slate-400 hover:text-red-500 text-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#E9E9E7] mt-3 space-y-1.5">
+                        <button onclick="openAddCustomLinkModal(this)" class="w-full py-1 bg-white hover:bg-[#EFEEEA] text-[#37352F] text-[11px] rounded transition-colors border border-dashed border-[#E9E9E7]">
+                            + הוספת קישור
+                        </button>
+                        <button onclick="openAddTaskModal(this)" class="w-full py-1.5 bg-[#EFEEEA]/60 hover:bg-[#EFEEEA] text-[#37352F] text-xs font-medium rounded transition-colors">
+                            + הוספת משימה
+                        </button>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: COURSE B -->
+                <div class="notion-card p-4 flex flex-col justify-between" data-course-title="שיטות מחקר">
+                    <div>
+                        <div class="border-b border-[#E9E9E7] pb-3 mb-3">
+                            <div class="flex items-center justify-between">
+                                <span class="course-code-badge text-[10px] text-[#787774] bg-[#EFEEEA] px-2 py-0.5 rounded">1021.501</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-[#787774] course-task-count">3 מטלות</span>
+                                    <div class="flex items-center gap-0.5">
+                                        <button onclick="moveCourseCard(this, -1)" title="הזזה אחורה ברשימה" class="text-slate-400 hover:text-slate-700 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M15 6L9 12l6 6"/></svg></button>
+                                        <button onclick="moveCourseCard(this, 1)" title="הזזה קדימה ברשימה" class="text-slate-400 hover:text-slate-700 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M9 6l6 6-6 6"/></svg></button>
+                                        <button onclick="openEditCourseModal(this)" title="עריכת קורס" class="text-slate-400 hover:text-slate-700 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L16.862 4.487"/><path d="M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg></button>
+                                        <button onclick="deleteCourse(this)" title="מחיקת קורס" class="text-slate-400 hover:text-red-500 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-[#37352F] text-sm mt-1.5">שיטות מחקר וסטטיסטיקה</h3>
+                            <div class="flex items-center gap-3 mt-1 text-[10px] text-[#787774] course-meta-row" style="display:none;">
+                                <span class="flex items-center gap-1 course-hours-badge" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8.25"/><path d="M12 7.5V12l3 2"/></svg><span class="course-hours-text"></span></span>
+                                <span class="flex items-center gap-1 course-location-badge" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg><span class="course-location-text"></span></span>
+                            </div>
+                            
+                            <!-- Links Bar -->
+                            <div class="grid grid-cols-2 gap-1.5 mt-3 text-xs course-links-grid">
+                                <a href="https://moodle.tau.ac.il" target="_blank" class="course-link-moodle bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1 transition-colors">
+                                    <svg class="text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8.25"/><ellipse cx="12" cy="12" rx="3.5" ry="8.25"/><line x1="3.75" y1="12" x2="20.25" y2="12"/></svg> Moodle
+                                </a>
+                                <a href="https://docs.google.com" target="_blank" class="course-link-docs bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1 transition-colors">
+                                    <svg class="text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 3.75h7.379a1.5 1.5 0 0 1 1.06.44l3.372 3.37a1.5 1.5 0 0 1 .439 1.062V19.5a1.5 1.5 0 0 1-1.5 1.5h-10.75a1.5 1.5 0 0 1-1.5-1.5V5.25a1.5 1.5 0 0 1 1.5-1.5Z"/><line x1="8.5" y1="12" x2="15.5" y2="12"/><line x1="8.5" y1="15.5" x2="15.5" y2="15.5"/></svg> Docs
+                                </a>
+                                <button onclick="openSyllabusModal(this)" class="bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1">
+                                    <svg class="text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M6 3.75h12v16.5l-2.25-1.5-2.25 1.5-2.25-1.5-2.25 1.5-2.25-1.5-.75.5V3.75Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="11.5" x2="15" y2="11.5"/></svg> סילבוס
+                                </button>
+                                <a href="#" target="_blank" class="course-link-drive bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1">
+                                    <svg class="text-amber-500" viewBox="0 0 24 24" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M8.05 3.5 1 15.5l3.05 5.25L11.1 8.75 8.05 3.5Zm7.9 0L12.9 8.75l7.05 12L23 15.5 15.95 3.5ZM4.6 21.5h14.8l-3.05-5.25H7.65L4.6 21.5Z"/></svg> Drive
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Tasks List -->
+                        <div class="space-y-2 max-h-72 overflow-y-auto course-scroll pr-1">
+                            <div class="task-card p-2.5 rounded border border-[#E9E9E7] bg-white hover:border-[#37352F] transition-all flex items-center justify-between group" data-task-id="task-5" data-date="2026-08-26" data-formatted-date="26/08/2026" data-course="שיטות מחקר" data-status="in-progress">
+                                <div class="flex items-start gap-2 w-full">
+                                    <input type="checkbox" onchange="toggleCheckboxStatus(this)" class="mt-0.5 w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] cursor-pointer">
+                                    <div class="w-full">
+                                        <p class="task-title text-xs font-medium text-[#37352F]">הרצת ניתוח סטטיסטי בקובץ SPSS</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="text-[#787774] text-[10px]">26/08/2026</span>
+                                            <span onclick="cycleStatus(this)" title="שנה סטטוס" class="status-btn cursor-pointer px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800">בתהליך</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="deleteTask(this)" class="text-slate-400 hover:text-red-500 text-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#E9E9E7] mt-3 space-y-1.5">
+                        <button onclick="openAddCustomLinkModal(this)" class="w-full py-1 bg-white hover:bg-[#EFEEEA] text-[#37352F] text-[11px] rounded transition-colors border border-dashed border-[#E9E9E7]">
+                            + הוספת קישור
+                        </button>
+                        <button onclick="openAddTaskModal(this)" class="w-full py-1.5 bg-[#EFEEEA]/60 hover:bg-[#EFEEEA] text-[#37352F] text-xs font-medium rounded transition-colors">
+                            + הוספת משימה
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================================= -->
+        <!-- VIEW 3: 🟡 NOTES (פתקים ורעיונות - עם גרירה חופשית) -->
+        <!-- ================================================================= -->
+        <div id="view-notes" class="hidden space-y-6">
+            
+            <!-- Notion Header -->
+            <div class="notion-card p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F]">פתקים</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="resetNotesPosition()" class="bg-white border border-[#E9E9E7] hover:bg-[#EFEEEA] text-[#37352F] text-xs font-medium px-3 py-1.5 rounded transition-all">
+                        איפוס מיקומי פתקים
+                    </button>
+                    <button onclick="addManualNotePrompt()" class="bg-[#37352F] hover:bg-black text-white text-xs font-medium px-3.5 py-1.5 rounded transition-all">
+                        + פתק חדש
+                    </button>
+                </div>
+            </div>
+
+            <!-- Free Canvas Notes Container -->
+            <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 min-h-[500px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-hidden">
+                
+                <!-- Sticky Note 1 -->
+                <div class="draggable-note notion-card p-4 flex flex-col justify-between relative group cursor-grab active:cursor-grabbing">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-blue-100 text-blue-800 text-[10px] font-medium px-2 py-0.5 rounded">רעיון למחקר</span>
+                            <span class="text-[10px] text-[#787774]">היום, 17:10</span>
+                        </div>
+                        <label class="flex items-start gap-2 cursor-pointer">
+                            <input type="checkbox" onchange="toggleNoteCheck(this)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7] flex-shrink-0">
+                            <p class="text-xs text-[#37352F] leading-relaxed note-text flex-1">
+                                בדיקת קשר בין רמת עוררות תחושתית לבין יכולת קריאה אצל ילדים עם לקויות למידה.
+                            </p>
+                        </label>
+                    </div>
+                    <div class="mt-4 pt-2 border-t border-[#E9E9E7] flex items-center justify-between text-[11px] text-[#787774]">
+                        <span>גררי להזזה</span>
+                        <button onclick="deleteNoteCard(this)" class="hover:text-red-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                    </div>
+                    <div class="note-resize-handle" title="גררי לשינוי גודל"></div>
+                </div>
+
+                <!-- Sticky Note 2 -->
+                <div class="draggable-note notion-card p-4 flex flex-col justify-between relative group cursor-grab active:cursor-grabbing">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-medium px-2 py-0.5 rounded">עבודה</span>
+                            <span class="text-[10px] text-[#787774]">היום, 14:30</span>
+                        </div>
+                        <label class="flex items-start gap-2 cursor-pointer">
+                            <input type="checkbox" onchange="toggleNoteCheck(this)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7] flex-shrink-0">
+                            <p class="text-xs text-[#37352F] leading-relaxed note-text flex-1">
+                                בירור מול אחראי משמרת בדיור המוגן לגבי החלפת המשמרת ביום רביעי הקרוב.
+                            </p>
+                        </label>
+                    </div>
+                    <div class="mt-4 pt-2 border-t border-[#E9E9E7] flex items-center justify-between text-[11px] text-[#787774]">
+                        <span>גררי להזזה</span>
+                        <button onclick="deleteNoteCard(this)" class="hover:text-red-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                    </div>
+                    <div class="note-resize-handle" title="גררי לשינוי גודל"></div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL: ADD TASK TO COURSE -->
+    <div id="add-task-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-sm w-full p-5 relative shadow-xl">
+            <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-3 mb-4">
+                <h3 class="text-sm font-bold text-[#37352F]">הוספת משימה חדשה</h3>
+                <button onclick="closeAddTaskModal()" class="text-[#787774] hover:text-[#37352F]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+            </div>
+            <form onsubmit="handleAddNewTaskSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">תיאור המשימה *</label>
+                    <input type="text" id="task-modal-text" placeholder="למשל: הגשת תרגיל 2" required
+                           class="w-full p-2 border border-[#E9E9E7] rounded text-xs text-[#37352F] focus:outline-none focus:border-[#37352F]">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">מועד יעד (אופציונלי)</label>
+                    <input type="date" id="task-modal-date"
+                           class="w-full p-2 border border-[#E9E9E7] rounded text-xs text-[#37352F] focus:outline-none focus:border-[#37352F]">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">סטטוס</label>
+                    <select id="task-modal-status" class="w-full p-2 border border-[#E9E9E7] rounded text-xs text-[#37352F] focus:outline-none focus:border-[#37352F]">
+                        <option value="not-started">טרם הוחל</option>
+                        <option value="in-progress">בתהליך</option>
+                        <option value="completed">טופל</option>
+                    </select>
+                </div>
+                <div class="pt-2 flex justify-end gap-2 border-t border-[#E9E9E7]">
+                    <button type="button" onclick="closeAddTaskModal()" class="px-3 py-1 bg-[#EFEEEA] text-[#37352F] text-xs rounded">ביטול</button>
+                    <button type="submit" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">הוספה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD CUSTOM LINK TO COURSE -->
+    <div id="add-custom-link-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-sm w-full p-5 relative shadow-xl">
+            <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-3 mb-4">
+                <h3 class="text-sm font-bold text-[#37352F]">הוספת קישור לקורס</h3>
+                <button onclick="closeAddCustomLinkModal()" class="text-[#787774] hover:text-[#37352F]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+            </div>
+            <form onsubmit="handleAddCustomLinkSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">שם הקישור *</label>
+                    <input type="text" id="custom-link-modal-name" placeholder="למשל: זום, מחברת 2" required
+                           class="w-full p-2 border border-[#E9E9E7] rounded text-xs text-[#37352F] focus:outline-none focus:border-[#37352F]">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">כתובת URL *</label>
+                    <input type="url" id="custom-link-modal-url" placeholder="https://..." required
+                           class="w-full p-2 border border-[#E9E9E7] rounded text-xs text-[#37352F] font-mono focus:outline-none focus:border-[#37352F]">
+                </div>
+                <div class="pt-2 flex justify-end gap-2 border-t border-[#E9E9E7]">
+                    <button type="button" onclick="closeAddCustomLinkModal()" class="px-3 py-1 bg-[#EFEEEA] text-[#37352F] text-xs rounded">ביטול</button>
+                    <button type="submit" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">הוספה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD COURSE -->
+    <div id="add-course-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-md w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-3 mb-4">
+                <h3 id="course-modal-title" class="text-sm font-bold text-[#37352F]">הוספת קורס חדש</h3>
+                <button onclick="closeAddCourseModal()" class="text-[#787774] hover:text-[#37352F]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+            </div>
+            <form onsubmit="handleAddNewCourse(event)" class="space-y-3">
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">שם הקורס *</label>
+                        <input type="text" id="course-name" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">קוד</label>
+                        <input type="text" id="course-code" placeholder="1021..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">שעות מפגש</label>
+                        <input type="text" id="course-hours" placeholder="למשל: ב' 10:00-12:00" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">מיקום</label>
+                        <input type="text" id="course-location" placeholder="למשל: בניין 605, חדר 3" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Moodle</label>
+                    <input type="url" id="course-moodle" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Docs</label>
+                    <input type="url" id="course-docs" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Drive</label>
+                    <input type="url" id="course-drive" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div class="pt-2 border-t border-[#E9E9E7]">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-medium text-[#37352F]">קישורים נוספים</label>
+                        <button type="button" onclick="addCustomLinkInputRow()" class="text-xs text-blue-600">+ הוסף</button>
+                    </div>
+                    <div id="modal-custom-links-container" class="space-y-2"></div>
+                </div>
+                <div class="pt-2 flex justify-end gap-2 border-t border-[#E9E9E7]">
+                    <button type="button" onclick="closeAddCourseModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                    <button type="submit" id="course-modal-submit-btn" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">יצירה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: SYLLABUS (paste text or image) -->
+    <div id="syllabus-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-lg w-full p-5 relative shadow-xl max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-3 mb-3">
+                <h3 id="syllabus-modal-title" class="text-sm font-bold text-[#37352F]">סילבוס</h3>
+                <button onclick="closeSyllabusModal()" class="text-[#787774] hover:text-[#37352F]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+            </div>
+            <p class="text-[11px] text-[#787774] mb-2">אפשר להדביק כאן טקסט או תמונה (Ctrl+V / Cmd+V) של הסילבוס</p>
+            <div id="syllabus-content-editable" contenteditable="true"
+                 class="flex-1 overflow-y-auto border border-[#E9E9E7] rounded p-3 text-xs text-[#37352F] min-h-[220px] focus:outline-none focus:border-[#37352F]"></div>
+            <div class="pt-3 flex justify-end gap-2 border-t border-[#E9E9E7] mt-3">
+                <button type="button" onclick="closeSyllabusModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">סגירה</button>
+                <button type="button" onclick="saveSyllabusContent()" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">שמירה</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let noteCount = 3;
+        let dynamicCourseCounter = 3;
+        let taskUniqueIdCounter = 100;
+        let activeCourseTargetForTask = null;
+        let activeSyllabusCourseKey = null;
+        let noteZIndexCounter = 10;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            syncFocusTasks();
+            syncSemesterCourses();
+            updateAllCourseTaskCounts();
+            initDraggableNotes();
+            initPinnedNote();
+            initPinnedNoteEditing();
+            applyRoutineCheckState();
+            checkAndResetHobbiesForNewWeek();
+            applyHobbiesCheckState();
+            initSyllabusPasteHandler();
+        });
+
+        function initPinnedNote() {
+            const savedText = localStorage.getItem('pinned_focus_note_v2') || '';
+            const displayEl = document.getElementById('pinned-note-display');
+            if (displayEl) displayEl.innerText = savedText;
+        }
+
+        function savePinnedNote() {
+            const displayEl = document.getElementById('pinned-note-display');
+            if (!displayEl) return;
+            const val = displayEl.innerText.trim();
+            try { localStorage.setItem('pinned_focus_note_v2', val); } catch(e) {}
+        }
+
+        function initPinnedNoteEditing() {
+            const displayEl = document.getElementById('pinned-note-display');
+            if (!displayEl) return;
+
+            displayEl.addEventListener('blur', savePinnedNote);
+            displayEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    displayEl.blur();
+                }
+            });
+        }
+
+        function switchMode(mode) {
+            const focusView = document.getElementById('view-focus');
+            const manageView = document.getElementById('view-manage');
+            const notesView = document.getElementById('view-notes');
+            
+            const btnFocus = document.getElementById('btn-focus-mode');
+            const btnManage = document.getElementById('btn-manage-mode');
+            const btnNotes = document.getElementById('btn-notes-mode');
+
+            focusView.classList.add('hidden');
+            manageView.classList.add('hidden');
+            notesView.classList.add('hidden');
+
+            btnFocus.className = "px-3 py-1 rounded-md text-xs transition-all duration-150 flex items-center gap-1.5 text-[#787774] hover:text-[#37352F]";
+            btnManage.className = "px-3 py-1 rounded-md text-xs transition-all duration-150 flex items-center gap-1.5 text-[#787774] hover:text-[#37352F]";
+            btnNotes.className = "px-3 py-1 rounded-md text-xs transition-all duration-150 flex items-center gap-1.5 text-[#787774] hover:text-[#37352F] relative";
+
+            if (mode === 'focus') {
+                syncFocusTasks();
+                syncSemesterCourses();
+                focusView.classList.remove('hidden');
+                btnFocus.className = "active-tab px-3 py-1 rounded-md text-xs transition-all duration-150 flex items-center gap-1.5";
+            } else if (mode === 'manage') {
+                manageView.classList.remove('hidden');
+                btnManage.className = "active-tab px-3 py-1 rounded-md text-xs transition-all duration-150 flex items-center gap-1.5";
+            } else if (mode === 'notes') {
+                notesView.classList.remove('hidden');
+                btnNotes.className = "active-tab px-3 py-1 rounded-md text-xs transition-all duration-150 flex items-center gap-1.5 relative";
+            }
+        }
+
+        function initDraggableNotes() {
+            document.querySelectorAll('#notes-grid .draggable-note').forEach(note => makeElementDraggable(note));
+            document.querySelectorAll('#notes-grid .note-resize-handle').forEach(handle => makeElementResizable(handle));
+        }
+
+        function makeElementDraggable(elmnt) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            let currentTranslateX = 0, currentTranslateY = 0;
+
+            elmnt.addEventListener('mousedown', dragMouseDown);
+            elmnt.addEventListener('touchstart', dragTouchStart, { passive: false });
+
+            function dragMouseDown(e) {
+                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('textarea') || e.target.closest('.note-resize-handle')) return;
+                e.preventDefault();
+                noteZIndexCounter++;
+                elmnt.style.zIndex = noteZIndexCounter;
+                elmnt.classList.add('is-dragging');
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.addEventListener('mouseup', closeDragElement);
+                document.addEventListener('mousemove', elementDrag);
+            }
+
+            function dragTouchStart(e) {
+                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('textarea') || e.target.closest('.note-resize-handle')) return;
+                e.preventDefault();
+                noteZIndexCounter++;
+                elmnt.style.zIndex = noteZIndexCounter;
+                elmnt.classList.add('is-dragging');
+                const touch = e.touches[0];
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                document.addEventListener('touchend', closeDragElement);
+                document.addEventListener('touchmove', elementTouchDrag, { passive: false });
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                currentTranslateX -= pos1;
+                currentTranslateY -= pos2;
+                elmnt.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0)`;
+            }
+
+            function elementTouchDrag(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                pos1 = pos3 - touch.clientX;
+                pos2 = pos4 - touch.clientY;
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                currentTranslateX -= pos1;
+                currentTranslateY -= pos2;
+                elmnt.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0)`;
+            }
+
+            function closeDragElement() {
+                elmnt.classList.remove('is-dragging');
+                document.removeEventListener('mouseup', closeDragElement);
+                document.removeEventListener('mousemove', elementDrag);
+                document.removeEventListener('touchend', closeDragElement);
+                document.removeEventListener('touchmove', elementTouchDrag);
+            }
+        }
+
+        /* --- RESIZABLE NOTES ENGINE --- */
+        const NOTE_MIN_WIDTH = 180;
+        const NOTE_MIN_HEIGHT = 120;
+        const NOTE_MAX_WIDTH = 640;
+        const NOTE_MAX_HEIGHT = 640;
+
+        function makeElementResizable(handle) {
+            if (!handle) return;
+            const note = handle.closest('.draggable-note');
+            if (!note) return;
+
+            let startX = 0, startY = 0, startWidth = 0, startHeight = 0;
+
+            handle.addEventListener('mousedown', startResize);
+            handle.addEventListener('touchstart', startResizeTouch, { passive: false });
+
+            function beginResize(clientX, clientY) {
+                const rect = note.getBoundingClientRect();
+                startX = clientX;
+                startY = clientY;
+                startWidth = rect.width;
+                startHeight = rect.height;
+
+                noteZIndexCounter++;
+                note.style.zIndex = noteZIndexCounter;
+                note.classList.add('is-resizing');
+            }
+
+            function applyResize(clientX, clientY) {
+                const deltaX = clientX - startX;
+                const deltaY = clientY - startY;
+
+                let newWidth = Math.min(NOTE_MAX_WIDTH, Math.max(NOTE_MIN_WIDTH, startWidth + deltaX));
+                let newHeight = Math.min(NOTE_MAX_HEIGHT, Math.max(NOTE_MIN_HEIGHT, startHeight + deltaY));
+
+                note.style.width = newWidth + 'px';
+                note.style.height = newHeight + 'px';
+            }
+
+            function startResize(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                beginResize(e.clientX, e.clientY);
+
+                document.addEventListener('mousemove', doResize);
+                document.addEventListener('mouseup', stopResize);
+            }
+
+            function doResize(e) {
+                e.preventDefault();
+                applyResize(e.clientX, e.clientY);
+            }
+
+            function stopResize() {
+                note.classList.remove('is-resizing');
+                document.removeEventListener('mousemove', doResize);
+                document.removeEventListener('mouseup', stopResize);
+            }
+
+            function startResizeTouch(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const touch = e.touches[0];
+                beginResize(touch.clientX, touch.clientY);
+
+                document.addEventListener('touchmove', doResizeTouch, { passive: false });
+                document.addEventListener('touchend', stopResizeTouch);
+            }
+
+            function doResizeTouch(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                applyResize(touch.clientX, touch.clientY);
+            }
+
+            function stopResizeTouch() {
+                note.classList.remove('is-resizing');
+                document.removeEventListener('touchmove', doResizeTouch);
+                document.removeEventListener('touchend', stopResizeTouch);
+            }
+        }
+
+        function resetNotesPosition() {
+            document.querySelectorAll('#notes-grid .draggable-note').forEach(note => {
+                note.style.transform = 'translate3d(0px, 0px, 0)';
+                note.style.zIndex = '1';
+                note.style.width = '';
+                note.style.height = '';
+            });
+        }
+
+        function syncFocusTasks() {
+            const focusList = document.getElementById('focus-tasks-list');
+            if (!focusList) return;
+
+            const allTaskCards = Array.from(document.querySelectorAll('#courses-container .task-card[data-date]'));
+            const datedTasks = allTaskCards.filter(card => {
+                const dateVal = card.getAttribute('data-date');
+                return dateVal && dateVal.trim() !== '';
+            });
+
+            datedTasks.sort((a, b) => a.getAttribute('data-date').localeCompare(b.getAttribute('data-date')));
+
+            const countEl = document.getElementById('focus-tasks-count');
+            if (countEl) countEl.innerText = `${datedTasks.length}`;
+
+            focusList.innerHTML = '';
+            if (datedTasks.length === 0) {
+                focusList.innerHTML = '<p class="text-xs text-[#787774] italic text-center py-4">אין משימות עם תאריך יעד.</p>';
+                return;
+            }
+
+            datedTasks.forEach(origCard => {
+                const taskId = origCard.getAttribute('data-task-id');
+                const status = origCard.getAttribute('data-status') || 'not-started';
+                const courseName = origCard.getAttribute('data-course') || 'קורס';
+                const formattedDate = origCard.getAttribute('data-formatted-date') || '';
+                const titleEl = origCard.querySelector('.task-title');
+                const title = titleEl ? titleEl.innerText : '';
+
+                const isCompleted = status === 'completed';
+                const isInProgress = status === 'in-progress';
+
+                let statusBadge = `<span onclick="handleFocusCycleStatus('${taskId}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[10px] bg-[#EFEEEA] text-[#787774]">טרם הוחל</span>`;
+                if (isCompleted) {
+                    statusBadge = `<span onclick="handleFocusCycleStatus('${taskId}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800">טופל</span>`;
+                } else if (isInProgress) {
+                    statusBadge = `<span onclick="handleFocusCycleStatus('${taskId}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800">בתהליך</span>`;
+                }
+
+                const item = document.createElement('div');
+                item.className = "p-2.5 rounded border border-[#E9E9E7] bg-white flex items-center justify-between";
+                item.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="handleFocusCheckbox(this, '${taskId}')" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] cursor-pointer">
+                        <div>
+                            <p class="text-xs font-medium text-[#37352F] ${isCompleted ? 'line-through opacity-60' : ''}">${escapeHtml(title)}</p>
+                            <div class="flex items-center gap-2 mt-0.5 text-[10px] text-[#787774]">
+                                <span class="bg-[#EFEEEA] px-1.5 py-0.2 rounded">${escapeHtml(courseName)}</span>
+                                <span>${escapeHtml(formattedDate)}</span>
+                                ${statusBadge}
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="handleFocusDeleteTask('${taskId}')" class="text-slate-400 hover:text-red-500 text-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                `;
+                focusList.appendChild(item);
+            });
+        }
+
+        function handleFocusCheckbox(checkbox, taskId) {
+            const origCard = document.querySelector(`#courses-container .task-card[data-task-id="${taskId}"]`);
+            if (origCard) {
+                const origCheckbox = origCard.querySelector('input[type="checkbox"]');
+                if (origCheckbox) {
+                    origCheckbox.checked = checkbox.checked;
+                    toggleCheckboxStatus(origCheckbox);
+                }
+            }
+        }
+
+        function handleFocusCycleStatus(taskId) {
+            const origCard = document.querySelector(`#courses-container .task-card[data-task-id="${taskId}"]`);
+            if (origCard) {
+                const btn = origCard.querySelector('.status-btn');
+                if (btn) cycleStatus(btn);
+            }
+        }
+
+        function handleFocusDeleteTask(taskId) {
+            const origCard = document.querySelector(`#courses-container .task-card[data-task-id="${taskId}"]`);
+            if (!origCard) return;
+            const status = origCard.getAttribute('data-status') || 'not-started';
+            if (status !== 'completed') {
+                if (!confirm('המשימה עדיין לא סומנה כטופלה. למחוק בכל זאת?')) return;
+            }
+            const courseCard = origCard.closest('.notion-card');
+            origCard.remove();
+            if (courseCard) updateCourseTaskCount(courseCard);
+            syncFocusTasks();
+        }
+
+        function applyTaskStatus(card, status) {
+            card.setAttribute('data-status', status);
+            const statusBtn = card.querySelector('.status-btn');
+            const titleEl = card.querySelector('.task-title');
+            const checkbox = card.querySelector('input[type="checkbox"]');
+
+            if (!statusBtn) return;
+
+            if (status === 'completed') {
+                statusBtn.className = "status-btn cursor-pointer px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800";
+                statusBtn.innerText = "טופל";
+                if (titleEl) titleEl.classList.add('line-through', 'opacity-60');
+                if (checkbox) checkbox.checked = true;
+            } else if (status === 'in-progress') {
+                statusBtn.className = "status-btn cursor-pointer px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800";
+                statusBtn.innerText = "בתהליך";
+                if (titleEl) titleEl.classList.remove('line-through', 'opacity-60');
+                if (checkbox) checkbox.checked = false;
+            } else {
+                statusBtn.className = "status-btn cursor-pointer px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#EFEEEA] text-[#787774]";
+                statusBtn.innerText = "טרם הוחל";
+                if (titleEl) titleEl.classList.remove('line-through', 'opacity-60');
+                if (checkbox) checkbox.checked = false;
+            }
+            syncFocusTasks();
+        }
+
+        function cycleStatus(btn) {
+            const card = btn.closest('.task-card');
+            if (!card) return;
+            const current = card.getAttribute('data-status') || 'not-started';
+            let next = 'not-started';
+            if (current === 'not-started') next = 'in-progress';
+            else if (current === 'in-progress') next = 'completed';
+            applyTaskStatus(card, next);
+        }
+
+        function toggleCheckboxStatus(checkbox) {
+            const card = checkbox.closest('.task-card');
+            if (card) applyTaskStatus(card, checkbox.checked ? 'completed' : 'not-started');
+        }
+
+        function updateCourseTaskCount(card) {
+            const countEl = card.querySelector('.course-task-count');
+            if (!countEl) return;
+            const count = card.querySelectorAll('.task-card').length;
+            countEl.innerText = count + ' מטלות';
+        }
+
+        function updateAllCourseTaskCounts() {
+            document.querySelectorAll('#courses-container > div[data-course-title]').forEach(updateCourseTaskCount);
+        }
+
+        function deleteTask(btn) {
+            const card = btn.closest('.task-card');
+            if (!card) return;
+            const status = card.getAttribute('data-status') || 'not-started';
+            if (status !== 'completed') {
+                if (!confirm('המשימה עדיין לא סומנה כטופלה. למחוק בכל זאת?')) return;
+            }
+            const courseCard = card.closest('.notion-card');
+            card.remove();
+            if (courseCard) updateCourseTaskCount(courseCard);
+            syncFocusTasks();
+        }
+
+        function openAddTaskModal(btn) {
+            activeCourseTargetForTask = btn.closest('.notion-card');
+            document.getElementById('task-modal-text').value = '';
+            document.getElementById('task-modal-date').value = '';
+            document.getElementById('add-task-modal').classList.remove('hidden');
+        }
+
+        function closeAddTaskModal() {
+            document.getElementById('add-task-modal').classList.add('hidden');
+            activeCourseTargetForTask = null;
+        }
+
+        function handleAddNewTaskSubmit(event) {
+            event.preventDefault();
+            const textVal = document.getElementById('task-modal-text').value.trim();
+            const dateVal = document.getElementById('task-modal-date').value;
+            const statusVal = document.getElementById('task-modal-status').value;
+
+            if (!textVal || !activeCourseTargetForTask) return;
+
+            const taskList = activeCourseTargetForTask.querySelector('.course-scroll');
+            let formattedDate = '';
+            if (dateVal) {
+                const parts = dateVal.split('-');
+                if (parts.length === 3) formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+
+            let courseName = activeCourseTargetForTask.getAttribute('data-course-title') || 'קורס';
+            taskUniqueIdCounter++;
+            const newTaskId = `task-gen-${taskUniqueIdCounter}`;
+
+            const newTask = document.createElement('div');
+            newTask.className = "task-card p-2.5 rounded border border-[#E9E9E7] bg-white flex items-center justify-between";
+            newTask.setAttribute('data-task-id', newTaskId);
+            newTask.setAttribute('data-date', dateVal || '');
+            newTask.setAttribute('data-formatted-date', formattedDate);
+            newTask.setAttribute('data-course', courseName);
+
+            newTask.innerHTML = `
+                <div class="flex items-start gap-2 w-full">
+                    <input type="checkbox" onchange="toggleCheckboxStatus(this)" class="mt-0.5 w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] cursor-pointer">
+                    <div class="w-full">
+                        <p class="task-title text-xs font-medium text-[#37352F]">${escapeHtml(textVal)}</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            ${formattedDate ? `<span class="text-[#787774] text-[10px]">${escapeHtml(formattedDate)}</span>` : ''}
+                            <span onclick="cycleStatus(this)" class="status-btn cursor-pointer px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#EFEEEA] text-[#787774]">טרם הוחל</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="deleteTask(this)" class="text-slate-400 hover:text-red-500 text-xs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+            `;
+
+            taskList.prepend(newTask);
+            applyTaskStatus(newTask, statusVal);
+            updateCourseTaskCount(activeCourseTargetForTask);
+            closeAddTaskModal();
+        }
+
+        function createStickyCard(text, category = 'מחשבה') {
+            const grid = document.getElementById('notes-grid');
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            const card = document.createElement('div');
+            card.className = "draggable-note notion-card p-4 flex flex-col justify-between relative group cursor-grab active:cursor-grabbing";
+            card.innerHTML = `
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="bg-amber-100 text-amber-900 text-[10px] font-medium px-2 py-0.5 rounded">${escapeHtml(category)}</span>
+                        <span class="text-[10px] text-[#787774]">${timeStr}</span>
+                    </div>
+                    <label class="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" onchange="toggleNoteCheck(this)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7] flex-shrink-0">
+                        <p class="text-xs text-[#37352F] leading-relaxed note-text flex-1">${escapeHtml(text)}</p>
+                    </label>
+                </div>
+                <div class="mt-4 pt-2 border-t border-[#E9E9E7] flex items-center justify-between text-[11px] text-[#787774]">
+                    <span>גררי להזזה</span>
+                    <button onclick="deleteNoteCard(this)" class="hover:text-red-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                </div>
+                <div class="note-resize-handle" title="גררי לשינוי גודל"></div>
+            `;
+            grid.prepend(card);
+            makeElementDraggable(card);
+            makeElementResizable(card.querySelector('.note-resize-handle'));
+            noteCount++;
+        }
+
+        function addManualNotePrompt() {
+            const text = prompt('רשמי פתק חדש:');
+            if (text && text.trim()) createStickyCard(text.trim(), 'פתק אישי');
+        }
+
+        function deleteNoteCard(btn) {
+            btn.closest('.draggable-note').remove();
+            if (noteCount > 0) noteCount--;
+        }
+
+        function toggleNoteCheck(checkbox) {
+            const label = checkbox.closest('label');
+            const textEl = label ? label.querySelector('.note-text') : null;
+            if (!textEl) return;
+            if (checkbox.checked) {
+                textEl.classList.add('line-through', 'opacity-50');
+            } else {
+                textEl.classList.remove('line-through', 'opacity-50');
+            }
+        }
+
+        /* --- SYLLABUS MODAL (paste text or image, saved per course) --- */
+        function openSyllabusModal(btn) {
+            const card = btn.closest('.notion-card');
+            const titleEl = card ? card.querySelector('h3') : null;
+            const courseTitle = titleEl ? titleEl.innerText : (card ? card.getAttribute('data-course-title') : 'קורס') || 'קורס';
+            activeSyllabusCourseKey = 'syllabus_' + courseTitle;
+
+            document.getElementById('syllabus-modal-title').innerText = 'סילבוס - ' + courseTitle;
+
+            const editable = document.getElementById('syllabus-content-editable');
+            let saved = '';
+            try { saved = localStorage.getItem(activeSyllabusCourseKey) || ''; } catch(e) {}
+            editable.innerHTML = saved;
+
+            document.getElementById('syllabus-modal').classList.remove('hidden');
+        }
+
+        function closeSyllabusModal() {
+            document.getElementById('syllabus-modal').classList.add('hidden');
+            activeSyllabusCourseKey = null;
+        }
+
+        function saveSyllabusContent() {
+            const editable = document.getElementById('syllabus-content-editable');
+            try {
+                if (activeSyllabusCourseKey) {
+                    localStorage.setItem(activeSyllabusCourseKey, editable.innerHTML);
+                }
+            } catch(e) {}
+            closeSyllabusModal();
+        }
+
+        function initSyllabusPasteHandler() {
+            const editable = document.getElementById('syllabus-content-editable');
+            if (!editable) return;
+            editable.addEventListener('paste', function(e) {
+                const items = (e.clipboardData || window.clipboardData).items;
+                if (!items) return;
+                for (const item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            const img = document.createElement('img');
+                            img.src = ev.target.result;
+                            img.style.maxWidth = '100%';
+                            img.style.borderRadius = '6px';
+                            img.style.margin = '4px 0';
+                            const sel = window.getSelection();
+                            if (sel && sel.rangeCount > 0) {
+                                const range = sel.getRangeAt(0);
+                                range.deleteContents();
+                                range.insertNode(img);
+                                range.collapse(false);
+                            } else {
+                                editable.appendChild(img);
+                            }
+                        };
+                        reader.readAsDataURL(blob);
+                        return;
+                    }
+                }
+            });
+        }
+
+        /* --- WEEKLY HOBBIES TRACKER FUNCTIONS --- */
+        function getHobbiesCheckState() {
+            try {
+                return JSON.parse(localStorage.getItem('hobbies_check_state') || '{}');
+            } catch(e) {
+                return {};
+            }
+        }
+
+        function handleHobbyCheckboxChange(checkbox) {
+            const row = checkbox.closest('tr');
+            const nameEl = row ? row.querySelector('.hobby-name') : null;
+            const day = checkbox.getAttribute('data-day');
+            if (!nameEl || day === null) return;
+            const key = nameEl.innerText + '_day' + day;
+            const state = getHobbiesCheckState();
+            state[key] = checkbox.checked;
+            try { localStorage.setItem('hobbies_check_state', JSON.stringify(state)); } catch(e) {}
+        }
+
+        function applyHobbiesCheckState() {
+            const state = getHobbiesCheckState();
+            document.querySelectorAll('#hobbies-tracker-list tr').forEach(row => {
+                const nameEl = row.querySelector('.hobby-name');
+                if (!nameEl) return;
+                row.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    const day = cb.getAttribute('data-day');
+                    const key = nameEl.innerText + '_day' + day;
+                    cb.checked = !!state[key];
+                });
+            });
+        }
+
+        function resetHobbiesChecks(skipConfirm) {
+            if (!skipConfirm && !confirm('לאפס את כל הסימונים בטבלת התחביבים ולהתחיל שבוע חדש?')) return;
+            document.querySelectorAll('#hobbies-tracker-list input[type="checkbox"]').forEach(cb => cb.checked = false);
+            try { localStorage.removeItem('hobbies_check_state'); } catch(e) {}
+        }
+
+        // Automatically clear the weekly tracker once a new week (Sunday) has started
+        function checkAndResetHobbiesForNewWeek() {
+            const today = new Date();
+            const dayIndex = today.getDay(); // 0 = Sunday
+            const sunday = new Date(today);
+            sunday.setDate(today.getDate() - dayIndex);
+            const sundayMarker = sunday.getFullYear() + '-' + (sunday.getMonth() + 1) + '-' + sunday.getDate();
+
+            let storedMarker = null;
+            try { storedMarker = localStorage.getItem('hobbies_week_marker'); } catch(e) {}
+
+            if (storedMarker !== sundayMarker) {
+                resetHobbiesChecks(true);
+                try { localStorage.setItem('hobbies_week_marker', sundayMarker); } catch(e) {}
+            }
+        }
+
+        function enableHobbiesEdit() {
+            const wrapper = document.getElementById('hobbies-table-wrapper');
+            const textarea = document.getElementById('hobbies-checklist-edit');
+            const editBtn = document.getElementById('hobbies-edit-btn');
+            const saveBtn = document.getElementById('hobbies-save-btn');
+
+            const names = Array.from(document.querySelectorAll('#hobbies-tracker-list .hobby-name')).map(el => el.innerText);
+            textarea.value = names.join('\n');
+
+            wrapper.classList.add('hidden');
+            editBtn.classList.add('hidden');
+            textarea.classList.remove('hidden');
+            saveBtn.classList.remove('hidden');
+            textarea.focus();
+        }
+
+        function saveHobbiesEdit() {
+            const wrapper = document.getElementById('hobbies-table-wrapper');
+            const textarea = document.getElementById('hobbies-checklist-edit');
+            const editBtn = document.getElementById('hobbies-edit-btn');
+            const saveBtn = document.getElementById('hobbies-save-btn');
+            const list = document.getElementById('hobbies-tracker-list');
+
+            const names = textarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+            const dayCheckboxes = Array.from({length: 7}, (_, day) =>
+                `<td class="py-2.5 text-center"><input type="checkbox" onchange="handleHobbyCheckboxChange(this)" data-day="${day}" class="w-3.5 h-3.5 text-[#37352F] rounded border-[#E9E9E7] focus:ring-0 cursor-pointer"></td>`
+            ).join('');
+            list.innerHTML = names.map(name => `
+                <tr class="hobby-row transition-colors">
+                    <td class="py-2.5 font-medium text-[#37352F] hobby-name">${escapeHtml(name)}</td>
+                    ${dayCheckboxes}
+                </tr>
+            `).join('');
+            applyHobbiesCheckState();
+
+            wrapper.classList.remove('hidden');
+            editBtn.classList.remove('hidden');
+            textarea.classList.add('hidden');
+            saveBtn.classList.add('hidden');
+        }
+
+        /* --- POST-STUDY ROUTINE CHECKLIST FUNCTIONS --- */
+        function getRoutineCheckState() {
+            try {
+                return JSON.parse(localStorage.getItem('routine_checklist_state') || '{}');
+            } catch(e) {
+                return {};
+            }
+        }
+
+        function handleRoutineCheckboxChange(checkbox) {
+            const item = checkbox.closest('.routine-item');
+            const textEl = item ? item.querySelector('.routine-item-text') : null;
+            if (!textEl) return;
+            const state = getRoutineCheckState();
+            state[textEl.innerText] = checkbox.checked;
+            try { localStorage.setItem('routine_checklist_state', JSON.stringify(state)); } catch(e) {}
+        }
+
+        function applyRoutineCheckState() {
+            const state = getRoutineCheckState();
+            document.querySelectorAll('#routine-checklist-list .routine-item').forEach(item => {
+                const textEl = item.querySelector('.routine-item-text');
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (textEl && checkbox && state[textEl.innerText]) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+
+        function resetRoutineChecks() {
+            if (!confirm('לאפס את כל הסימונים ולהתחיל שבוע חדש?')) return;
+            document.querySelectorAll('#routine-checklist-list input[type="checkbox"]').forEach(cb => cb.checked = false);
+            try { localStorage.removeItem('routine_checklist_state'); } catch(e) {}
+        }
+
+        function enableRoutineEdit() {
+            const list = document.getElementById('routine-checklist-list');
+            const textarea = document.getElementById('routine-checklist-edit');
+            const editBtn = document.getElementById('routine-edit-btn');
+            const saveBtn = document.getElementById('routine-save-btn');
+
+            const items = Array.from(list.querySelectorAll('.routine-item-text')).map(el => el.innerText);
+            textarea.value = items.join('\n');
+
+            list.classList.add('hidden');
+            editBtn.classList.add('hidden');
+            textarea.classList.remove('hidden');
+            saveBtn.classList.remove('hidden');
+            textarea.focus();
+        }
+
+        function saveRoutineEdit() {
+            const list = document.getElementById('routine-checklist-list');
+            const textarea = document.getElementById('routine-checklist-edit');
+            const editBtn = document.getElementById('routine-edit-btn');
+            const saveBtn = document.getElementById('routine-save-btn');
+
+            const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+            list.innerHTML = '';
+            lines.forEach(text => {
+                const item = document.createElement('div');
+                item.className = "routine-item flex items-center gap-2 p-1 rounded";
+                item.innerHTML = `
+                    <label class="flex items-start gap-2 cursor-pointer text-xs flex-1">
+                        <input type="checkbox" onchange="handleRoutineCheckboxChange(this)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7]">
+                        <span class="text-[#37352F] routine-item-text">${escapeHtml(text)}</span>
+                    </label>
+                `;
+                list.appendChild(item);
+            });
+            applyRoutineCheckState();
+
+            textarea.classList.add('hidden');
+            saveBtn.classList.add('hidden');
+            list.classList.remove('hidden');
+            editBtn.classList.remove('hidden');
+        }
+
+        /* --- SEMESTER COURSES: auto-synced (read-only) from the Courses page --- */
+        function syncSemesterCourses() {
+            const list = document.getElementById('semester-courses-list');
+            if (!list) return;
+
+            const courseCards = Array.from(document.querySelectorAll('#courses-container > div[data-course-title]'));
+            if (courseCards.length === 0) {
+                list.innerHTML = '<p class="text-xs text-[#787774] italic text-center py-2">אין קורסים מוגדרים עדיין.</p>';
+                return;
+            }
+
+            const colors = ['bg-blue-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-600', 'bg-teal-600', 'bg-rose-600'];
+
+            list.innerHTML = courseCards.map((card, idx) => {
+                const titleEl = card.querySelector('h3');
+                const title = (titleEl && titleEl.innerText) ? titleEl.innerText : (card.getAttribute('data-course-title') || 'קורס');
+                const codeEl = card.querySelector('.course-code-badge');
+                const code = (codeEl && codeEl.innerText) ? codeEl.innerText.trim() : '';
+                const color = colors[idx % colors.length];
+
+                return `
+                    <div class="p-2 rounded-md bg-[#EFEEEA]/30 border border-[#E9E9E7] flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full ${color}"></div>
+                            <div>
+                                <p class="text-xs font-medium text-[#37352F]">${escapeHtml(title)}</p>
+                                ${code ? `<p class="text-[10px] text-[#787774] font-mono">${escapeHtml(code)}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openAddCourseModal() {
+            editingCourseCard = null;
+            document.getElementById('course-modal-title').innerText = 'הוספת קורס חדש';
+            document.getElementById('course-modal-submit-btn').innerText = 'יצירה';
+            document.getElementById('course-name').value = '';
+            document.getElementById('course-code').value = '';
+            document.getElementById('course-hours').value = '';
+            document.getElementById('course-location').value = '';
+            document.getElementById('course-moodle').value = '';
+            document.getElementById('course-docs').value = '';
+            document.getElementById('course-drive').value = '';
+            document.getElementById('modal-custom-links-container').innerHTML = '';
+            document.getElementById('add-course-modal').classList.remove('hidden');
+        }
+        function closeAddCourseModal() {
+            document.getElementById('add-course-modal').classList.add('hidden');
+            editingCourseCard = null;
+        }
+
+        function addCustomLinkInputRow() {
+            const container = document.getElementById('modal-custom-links-container');
+            const row = document.createElement('div');
+            row.className = "flex gap-2 items-center custom-link-row";
+            row.innerHTML = `
+                <input type="text" placeholder="שם הקישור" class="w-1/2 p-1.5 border border-[#E9E9E7] rounded text-xs custom-link-name">
+                <input type="url" placeholder="https://..." class="w-1/2 p-1.5 border border-[#E9E9E7] rounded text-xs font-mono custom-link-url">
+                <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 text-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+            `;
+            container.appendChild(row);
+        }
+
+        let activeCustomLinkTargetCard = null;
+
+        function openAddCustomLinkModal(btn) {
+            activeCustomLinkTargetCard = btn.closest('.notion-card');
+            document.getElementById('custom-link-modal-name').value = '';
+            document.getElementById('custom-link-modal-url').value = '';
+            document.getElementById('add-custom-link-modal').classList.remove('hidden');
+        }
+
+        function closeAddCustomLinkModal() {
+            document.getElementById('add-custom-link-modal').classList.add('hidden');
+            activeCustomLinkTargetCard = null;
+        }
+
+        function handleAddCustomLinkSubmit(event) {
+            event.preventDefault();
+            const label = document.getElementById('custom-link-modal-name').value.trim();
+            const url = document.getElementById('custom-link-modal-url').value.trim();
+            if (!label || !url || !activeCustomLinkTargetCard) return;
+
+            const linksGrid = activeCustomLinkTargetCard.querySelector('.course-links-grid');
+            if (!linksGrid) { closeAddCustomLinkModal(); return; }
+
+            const newLink = document.createElement('a');
+            newLink.href = url;
+            newLink.target = "_blank";
+            newLink.className = "bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1 transition-colors text-xs";
+            newLink.innerHTML = `<svg class="text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 14.5 14.5 9.5"/><path d="M11 6.5 12.5 5a3.5 3.5 0 0 1 5 5L16 11.5"/><path d="M13 17.5 11.5 19a3.5 3.5 0 0 1-5-5L8 12.5"/></svg> ${escapeHtml(label)}`;
+            linksGrid.appendChild(newLink);
+
+            closeAddCustomLinkModal();
+        }
+
+        let editingCourseCard = null;
+
+        function updateCourseMeta(card, hours, location) {
+            const row = card.querySelector('.course-meta-row');
+            const hoursBadge = card.querySelector('.course-hours-badge');
+            const hoursText = card.querySelector('.course-hours-text');
+            const locBadge = card.querySelector('.course-location-badge');
+            const locText = card.querySelector('.course-location-text');
+
+            if (hoursText) hoursText.innerText = hours;
+            if (locText) locText.innerText = location;
+
+            if (hoursBadge) hoursBadge.style.display = hours ? 'flex' : 'none';
+            if (locBadge) locBadge.style.display = location ? 'flex' : 'none';
+            if (row) row.style.display = (hours || location) ? 'flex' : 'none';
+        }
+
+        function openEditCourseModal(btn) {
+            const card = btn.closest('.notion-card');
+            if (!card) return;
+            editingCourseCard = card;
+
+            const titleEl = card.querySelector('h3');
+            const codeEl = card.querySelector('.course-code-badge');
+            const hoursTextEl = card.querySelector('.course-hours-text');
+            const locTextEl = card.querySelector('.course-location-text');
+            const moodleEl = card.querySelector('.course-link-moodle');
+            const docsEl = card.querySelector('.course-link-docs');
+            const driveEl = card.querySelector('.course-link-drive');
+
+            document.getElementById('course-name').value = titleEl ? titleEl.innerText : '';
+            document.getElementById('course-code').value = codeEl ? codeEl.innerText.trim() : '';
+            document.getElementById('course-hours').value = hoursTextEl ? hoursTextEl.innerText.trim() : '';
+            document.getElementById('course-location').value = locTextEl ? locTextEl.innerText.trim() : '';
+            document.getElementById('course-moodle').value = (moodleEl && moodleEl.getAttribute('href') !== '#') ? moodleEl.getAttribute('href') : '';
+            document.getElementById('course-docs').value = (docsEl && docsEl.getAttribute('href') !== '#') ? docsEl.getAttribute('href') : '';
+            document.getElementById('course-drive').value = (driveEl && driveEl.getAttribute('href') !== '#') ? driveEl.getAttribute('href') : '';
+            document.getElementById('modal-custom-links-container').innerHTML = '';
+
+            document.getElementById('course-modal-title').innerText = 'עריכת קורס';
+            document.getElementById('course-modal-submit-btn').innerText = 'שמירה';
+            document.getElementById('add-course-modal').classList.remove('hidden');
+        }
+
+        function deleteCourse(btn) {
+            const card = btn.closest('.notion-card');
+            if (!card) return;
+            const titleEl = card.querySelector('h3');
+            const name = titleEl ? titleEl.innerText : 'הקורס';
+            if (!confirm(`למחוק את "${name}" וכל המשימות שלו?`)) return;
+            card.remove();
+            syncSemesterCourses();
+            syncFocusTasks();
+        }
+
+        function moveCourseCard(btn, direction) {
+            const card = btn.closest('.notion-card');
+            const container = document.getElementById('courses-container');
+            if (!card || !container) return;
+
+            if (direction === -1) {
+                const prev = card.previousElementSibling;
+                if (prev) container.insertBefore(card, prev);
+            } else {
+                const next = card.nextElementSibling;
+                if (next) container.insertBefore(next, card);
+            }
+            syncSemesterCourses();
+        }
+
+        function handleAddNewCourse(event) {
+            event.preventDefault();
+            const name = document.getElementById('course-name').value.trim();
+            const code = document.getElementById('course-code').value.trim() || 'כללי';
+            const hours = document.getElementById('course-hours').value.trim();
+            const location = document.getElementById('course-location').value.trim();
+            const moodle = document.getElementById('course-moodle').value.trim() || '#';
+            const docs = document.getElementById('course-docs').value.trim() || '#';
+            const drive = document.getElementById('course-drive').value.trim() || '#';
+
+            if (editingCourseCard) {
+                // Update existing course in place
+                const titleEl = editingCourseCard.querySelector('h3');
+                const codeEl = editingCourseCard.querySelector('.course-code-badge');
+                const moodleEl = editingCourseCard.querySelector('.course-link-moodle');
+                const docsEl = editingCourseCard.querySelector('.course-link-docs');
+                const driveEl = editingCourseCard.querySelector('.course-link-drive');
+
+                if (titleEl) titleEl.innerText = name;
+                if (codeEl) codeEl.innerText = code;
+                if (moodleEl) moodleEl.setAttribute('href', moodle);
+                if (docsEl) docsEl.setAttribute('href', docs);
+                if (driveEl) driveEl.setAttribute('href', drive);
+                editingCourseCard.setAttribute('data-course-title', name);
+                updateCourseMeta(editingCourseCard, hours, location);
+
+                syncSemesterCourses();
+                closeAddCourseModal();
+                return;
+            }
+
+            dynamicCourseCounter++;
+
+            const col = document.createElement('div');
+            col.className = "notion-card p-4 flex flex-col justify-between";
+            col.setAttribute('data-course-title', name);
+            col.innerHTML = `
+                <div>
+                    <div class="border-b border-[#E9E9E7] pb-3 mb-3">
+                        <div class="flex items-center justify-between">
+                            <span class="course-code-badge text-[10px] text-[#787774] bg-[#EFEEEA] px-2 py-0.5 rounded">${escapeHtml(code)}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-[#787774] course-task-count">0 מטלות</span>
+                                <div class="flex items-center gap-0.5">
+                                    <button onclick="moveCourseCard(this, -1)" title="הזזה אחורה ברשימה" class="text-slate-400 hover:text-slate-700 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M15 6L9 12l6 6"/></svg></button>
+                                        <button onclick="moveCourseCard(this, 1)" title="הזזה קדימה ברשימה" class="text-slate-400 hover:text-slate-700 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M9 6l6 6-6 6"/></svg></button>
+                                        <button onclick="openEditCourseModal(this)" title="עריכת קורס" class="text-slate-400 hover:text-slate-700 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L16.862 4.487"/><path d="M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg></button>
+                                    <button onclick="deleteCourse(this)" title="מחיקת קורס" class="text-slate-400 hover:text-red-500 p-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9M4.772 5.79m14.456 0c-.34-.059-.68-.114-1.022-.165m1.022.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.11 48.11 0 00-3.478-.397M4.772 5.79c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-[#37352F] text-sm mt-1.5">${escapeHtml(name)}</h3>
+                        <div class="flex items-center gap-3 mt-1 text-[10px] text-[#787774] course-meta-row" style="display:none;">
+                            <span class="flex items-center gap-1 course-hours-badge" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8.25"/><path d="M12 7.5V12l3 2"/></svg><span class="course-hours-text"></span></span>
+                            <span class="flex items-center gap-1 course-location-badge" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg><span class="course-location-text"></span></span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5 mt-3 text-xs course-links-grid">
+                            <a href="${escapeHtml(moodle)}" target="_blank" class="course-link-moodle bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1 transition-colors">
+                                <svg class="text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8.25"/><ellipse cx="12" cy="12" rx="3.5" ry="8.25"/><line x1="3.75" y1="12" x2="20.25" y2="12"/></svg> Moodle
+                            </a>
+                            <a href="${escapeHtml(docs)}" target="_blank" class="course-link-docs bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1 transition-colors">
+                                <svg class="text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 3.75h7.379a1.5 1.5 0 0 1 1.06.44l3.372 3.37a1.5 1.5 0 0 1 .439 1.062V19.5a1.5 1.5 0 0 1-1.5 1.5h-10.75a1.5 1.5 0 0 1-1.5-1.5V5.25a1.5 1.5 0 0 1 1.5-1.5Z"/><line x1="8.5" y1="12" x2="15.5" y2="12"/><line x1="8.5" y1="15.5" x2="15.5" y2="15.5"/></svg> Docs
+                            </a>
+                            <button onclick="openSyllabusModal(this)" class="bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1">
+                                <svg class="text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path d="M6 3.75h12v16.5l-2.25-1.5-2.25 1.5-2.25-1.5-2.25 1.5-2.25-1.5-.75.5V3.75Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="11.5" x2="15" y2="11.5"/></svg> סילבוס
+                            </button>
+                            <a href="${escapeHtml(drive)}" target="_blank" class="course-link-drive bg-[#EFEEEA]/40 hover:bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] flex items-center justify-center gap-1 transition-colors">
+                                <svg class="text-amber-500" viewBox="0 0 24 24" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M8.05 3.5 1 15.5l3.05 5.25L11.1 8.75 8.05 3.5Zm7.9 0L12.9 8.75l7.05 12L23 15.5 15.95 3.5ZM4.6 21.5h14.8l-3.05-5.25H7.65L4.6 21.5Z"/></svg> Drive
+                            </a>
+                        </div>
+                    </div>
+                    <div class="space-y-2 max-h-72 overflow-y-auto course-scroll pr-1">
+                        <p class="text-xs text-[#787774] italic text-center py-4">אין מטלות בקורס זה.</p>
+                    </div>
+                </div>
+                <div class="pt-3 border-t border-[#E9E9E7] mt-3 space-y-1.5">
+                    <button onclick="openAddCustomLinkModal(this)" class="w-full py-1 bg-white hover:bg-[#EFEEEA] text-[#37352F] text-[11px] rounded transition-colors border border-dashed border-[#E9E9E7]">+ הוספת קישור</button>
+                    <button onclick="openAddTaskModal(this)" class="w-full py-1.5 bg-[#EFEEEA]/60 hover:bg-[#EFEEEA] text-[#37352F] text-xs font-medium rounded transition-colors">+ הוספת משימה</button>
+                </div>
+            `;
+            document.getElementById('courses-container').appendChild(col);
+            updateCourseMeta(col, hours, location);
+            syncSemesterCourses();
+            closeAddCourseModal();
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&#039;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
