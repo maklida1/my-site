@@ -210,14 +210,32 @@
             <!-- TOP 3-COLUMN GRID -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <!-- 1. PINNED NOTE WITH CLEAN INTEGRATED PIN HEADER -->
-                <div class="notion-card p-4 bg-[#FEF9C3]/60 border border-[#FDE047]/80 shadow-sm flex flex-col justify-between">
+                <!-- 1. BULK EDITABLE HOBBIES & WEEKLY TRACKER (MOVED TO TOP GRID) -->
+                <div class="notion-card p-5 flex flex-col justify-between">
                     <div>
-                        <div class="flex items-center justify-between border-b border-amber-200/80 pb-2 mb-2">
-                            <span class="text-sm select-none">📌</span>
+                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
+                            <h3 class="text-xs font-bold text-[#37352F]">✨ מעקב שבועי</h3>
+                            <div class="flex items-center gap-2">
+                                <button onclick="bulkEditHobbiesFirebase()" title="עריכת רשימה" class="text-xs font-bold text-[#37352F] hover:opacity-70 p-0.5">✏️</button>
+                                <button onclick="resetHobbiesChecks()" title="איפוס שבוע" class="text-xs text-slate-400 hover:text-slate-600 p-0.5">🔄</button>
+                            </div>
                         </div>
-                        <div id="pinned-note-display" contenteditable="true"
-                             class="text-xs text-[#37352F] leading-relaxed min-h-[85px] whitespace-pre-wrap p-1.5 rounded focus:outline-none focus:bg-white/50 transition-colors">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead>
+                                    <tr class="border-b border-[#E9E9E7] text-[#787774] text-[11px]">
+                                        <th class="pb-2 font-bold text-[#37352F]"></th>
+                                        <th class="pb-2 text-center w-6">א'</th>
+                                        <th class="pb-2 text-center w-6">ב'</th>
+                                        <th class="pb-2 text-center w-6">ג'</th>
+                                        <th class="pb-2 text-center w-6">ד'</th>
+                                        <th class="pb-2 text-center w-6">ה'</th>
+                                        <th class="pb-2 text-center w-6">ו'</th>
+                                        <th class="pb-2 text-center w-6">ש'</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hobbies-tracker-list" class="divide-y divide-[#E9E9E7]/60"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -247,7 +265,7 @@
                 </div>
             </div>
 
-            <!-- Unified Tasks & Weekly Tracker Grid -->
+            <!-- Unified Tasks & Pinned Note Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 space-y-6">
                     <div class="notion-card p-5">
@@ -260,31 +278,15 @@
                 </div>
 
                 <div class="space-y-6">
-                    <!-- BULK EDITABLE HOBBIES & WEEKLY TRACKER -->
-                    <div class="notion-card p-5">
-                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
-                            <h3 class="text-sm font-bold text-[#37352F]">✨ מעקב שבועי</h3>
-                            <div class="flex items-center gap-2">
-                                <button onclick="bulkEditHobbiesFirebase()" title="עריכת רשימה" class="text-xs font-bold text-[#37352F] hover:opacity-70 p-0.5">✏️</button>
-                                <button onclick="resetHobbiesChecks()" title="איפוס שבוע" class="text-xs text-slate-400 hover:text-slate-600 p-0.5">🔄</button>
+                    <!-- PINNED NOTE (MOVED TO SIDE COLUMN) -->
+                    <div class="notion-card p-4 bg-[#FEF9C3]/60 border border-[#FDE047]/80 shadow-sm flex flex-col justify-between h-full min-h-[160px]">
+                        <div>
+                            <div class="flex items-center justify-between border-b border-amber-200/80 pb-2 mb-2">
+                                <span class="text-sm select-none">📌</span>
                             </div>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-xs">
-                                <thead>
-                                    <tr class="border-b border-[#E9E9E7] text-[#787774] text-[11px]">
-                                        <th class="pb-2 font-bold text-[#37352F]"></th>
-                                        <th class="pb-2 text-center w-6">א'</th>
-                                        <th class="pb-2 text-center w-6">ב'</th>
-                                        <th class="pb-2 text-center w-6">ג'</th>
-                                        <th class="pb-2 text-center w-6">ד'</th>
-                                        <th class="pb-2 text-center w-6">ה'</th>
-                                        <th class="pb-2 text-center w-6">ו'</th>
-                                        <th class="pb-2 text-center w-6">ש'</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="hobbies-tracker-list" class="divide-y divide-[#E9E9E7]/60"></tbody>
-                            </table>
+                            <div id="pinned-note-display" contenteditable="true"
+                                 class="text-xs text-[#37352F] leading-relaxed min-h-[100px] whitespace-pre-wrap p-1.5 rounded focus:outline-none focus:bg-white/50 transition-colors">
+                            </div>
                         </div>
                     </div>
                 </div>
