@@ -116,7 +116,7 @@
             border-radius: 4px;
         }
 
-        /* --- LISTS / TASKS BOARD SPECIFIC STYLES --- */
+        /* --- LISTS / TASKS BOARD STYLES --- */
         #lists-board-root {
             --bg:#ffffff;
             --card:#ffffff;
@@ -256,11 +256,6 @@
             line-height:1;
         }
         #lists-board-root .move-cat-btn:hover{color:#888;}
-        #lists-board-root .move-cat-btn:disabled{
-            color:#e5e5e5;
-            cursor:default;
-        }
-
         #lists-board-root .question-block{
             display:flex;
             gap:1px;
@@ -438,11 +433,6 @@
         #lists-board-root .mark-pen-bar.dot-yellow{background:#ffe14d;}
         #lists-board-root .mark-pen-bar.dot-red{background:#ff6f6f;}
         #lists-board-root .mark-pen-bar.dot-brown{background:#b98a5a;}
-        #lists-board-root .mark-palette{
-            display:inline-flex;
-            gap:3px;
-            align-items:center;
-        }
         #lists-board-root .question-menu{
             position:relative;
             display:inline-flex;
@@ -641,54 +631,6 @@
             cursor:pointer;
             font-size:15px;
         }
-        #lists-board-root .history-toggle-btn{
-            background:none;
-            border:1px solid #ccc;
-            border-radius:6px;
-            width:80px;
-            height:24px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            padding:0;
-            font-size:11px;
-            color:#555;
-            cursor:pointer;
-        }
-        #lists-board-root .history-toggle-btn:hover{opacity:0.7;}
-        #lists-board-root .history-empty{
-            max-width:820px;
-            margin:30px auto;
-            text-align:center;
-            color:#999;
-            font-size:14px;
-        }
-        #lists-board-root .history-error{
-            max-width:820px;
-            margin:20px auto;
-            background:#fdecea;
-            border:1px solid #f5b5ae;
-            border-radius:8px;
-            padding:14px 16px;
-            color:#7a1f14;
-            font-size:13.5px;
-            line-height:1.6;
-        }
-        #lists-board-root .question-block.readonly{cursor:default;}
-        #lists-board-root .history-restore-btn{
-            margin-top:2px;
-            flex-shrink:0;
-            background:#fff;
-            border:1px solid #bcd9c2;
-            border-radius:4px;
-            padding:2px 5px;
-            font-size:10.5px;
-            color:#2a7a3b;
-            cursor:pointer;
-            white-space:nowrap;
-            height:fit-content;
-        }
-        #lists-board-root .history-restore-btn:hover{background:#eefbf0;}
         #lists-board-root .answer-date-input {
             padding: 2px 4px;
             border-radius: 5px;
@@ -756,7 +698,7 @@
                     </div>
                 </div>
 
-                <!-- Navigation Tabs (Updated with flex-wrap so all tabs are visible) -->
+                <!-- Navigation Tabs (רשימות נמצאת מיד אחרי פתקים) -->
                 <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center flex-wrap self-center md:self-auto border border-[#E9E9E7] gap-1 max-w-full">
                     <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>מיקוד</button>
                     <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">🎓 קורסים</button>
@@ -993,16 +935,13 @@
             </div>
         </div>
 
-        <!-- VIEW 7: LISTS / TASKS BOARD -->
+        <!-- VIEW 7: LISTS / TASKS BOARD (בדיוק לפי קוד המקור שצורף, ללא משתמשים, מבט על או היסטוריה) -->
         <div id="view-lists" class="hidden space-y-6">
             <div id="lists-board-root">
                 <div class="top-bar mb-4 flex justify-between items-center">
                     <div>
                         <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📋 רשימות ומשימות</h2>
                         <div id="lists-today-date" class="text-xs text-[#787774] mt-0.5"></div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button id="listsHistoryToggleBtn" class="history-toggle-btn" onclick="toggleListsHistoryView()">היסטוריה</button>
                     </div>
                 </div>
                 <div id="lists-board-container"></div>
@@ -1684,18 +1623,35 @@
             update(ref(db, getUserPath()), { notes: localState.notes });
         };
 
-        // --- LISTS / TASKS BOARD LOGIC INTEGRATION ---
-        let listsCurrentView = 'board';
-        let historyData = {};
-        let historyLoadError = null;
+        // --- LISTS / TASKS BOARD FULL FUNCTIONALITY (FROM USER SNIPPET, WITHOUT USERS, OVERVIEW OR HISTORY) ---
+        let lastFocusCatId = null;
+        let lastFocusNewQid = null;
+        let recentlyCreatedQid = null;
+        let recentlyCreatedQidTimer = null;
+        function protectRecentlyCreatedQid(qId){
+            recentlyCreatedQid = qId;
+            if(recentlyCreatedQidTimer) clearTimeout(recentlyCreatedQidTimer);
+            recentlyCreatedQidTimer = setTimeout(() => {
+                recentlyCreatedQid = null;
+                recentlyCreatedQidTimer = null;
+            }, 2000);
+        }
+        let lastFocusCommentQid = null;
+        let lastFocusCommentIdx = null;
+        let lastFocusNightQid = null;
+        let lastFocusNightIdx = null;
+        let lastFocusExtraQid = null;
+        let lastFocusExtraIdx = null;
+        let lastFocusExtraSub = null;
+        let openMarkPopup = null;
+        let openAddCommentPopup = null;
+        let openRowAddPopup = null;
+        let openQuestionMenu = null;
+        let activeResizeImg = null;
         let pendingDeleteCatId = null;
         let pendingClear = null;
         let pendingDeleteQid = null;
-
-        window.toggleListsHistoryView = function() {
-            listsCurrentView = (listsCurrentView === 'history') ? 'board' : 'history';
-            renderListsBoard();
-        };
+        const MARK_COLORS = ['cyan', 'green', 'pink', 'purple', 'gray', 'yellow', 'red', 'brown'];
 
         function renderListsTodayDate(){
             const days = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'יום שבת'];
@@ -1710,34 +1666,31 @@
 
         function saveListsStateToFirebase() {
             if (!loggedInUser) return;
-            update(ref(db, getUserPath()), { listsBoard: localState.listsBoard });
+            update(ref(db, `${getUserPath()}`), { listsBoard: localState.listsBoard });
         }
 
-        function getTodayDateKey() {
+        function nowHM(){
             const d = new Date();
-            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
         }
 
-        function archiveDeletedQuestion(cat, q, explicitDateKey) {
-            if (!loggedInUser) return;
-            q.deletedAt = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const dateKey = explicitDateKey || getTodayDateKey();
-            if (!historyData[dateKey]) historyData[dateKey] = {};
-            if (!historyData[dateKey][cat.id]) historyData[dateKey][cat.id] = { title: cat.title, questions: {} };
-            const qKey = 'q_' + Math.random().toString(36).substr(2, 9);
-            historyData[dateKey][cat.id].questions[qKey] = q;
-            update(ref(db, `${getUserPath()}/historyState`), historyData);
-        }
+        function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
 
         function isQuestionEmpty(q){
             const temp = document.createElement('div');
             temp.innerHTML = q.text || '';
-            if(temp.textContent.trim().length > 0 || temp.querySelector('img')) return false;
+            const hasImage = !!temp.querySelector('img');
+            const hasText = temp.textContent.trim().length > 0;
+            if(hasText || hasImage) return false;
+            if(q.answer && q.answer.trim() !== '') return false;
             if(q.comments && q.comments.some(c => c && c.trim() !== '')) return false;
+            if(q.commentNights && q.commentNights.some(c => c && c.trim() !== '')) return false;
+            if(q.commentExtra && q.commentExtra.some(arr => arr && arr.some(item => item && item.text && item.text.trim() !== ''))) return false;
             return true;
         }
 
         function deleteQuestionIfEmpty(catId, qId){
+            if(qId === recentlyCreatedQid) return false;
             const cat = (localState.listsBoard?.categories || []).find(c => c.id === catId);
             if(!cat) return false;
             const q = cat.questions.find(qq => qq.id === qId);
@@ -1748,10 +1701,8 @@
             return true;
         }
 
-        function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
-
         window.addCategory = function(inputId){
-            const input = document.getElementById(inputId);
+            const input = document.getElementById(inputId || 'new-cat-input-bottom');
             if(!input) return;
             const title = input.value.trim();
             if(!title) return;
@@ -1792,8 +1743,6 @@
 
         window.confirmDeleteCategory = function(){
             if(!pendingDeleteCatId) return;
-            const cat = localState.listsBoard.categories.find(c => c.id === pendingDeleteCatId);
-            if(cat) cat.questions.forEach(q => archiveDeletedQuestion(cat, q));
             localState.listsBoard.categories = localState.listsBoard.categories.filter(c => c.id !== pendingDeleteCatId);
             pendingDeleteCatId = null;
             renderListsBoard();
@@ -1819,7 +1768,6 @@
                 renderListsBoard();
                 return;
             }
-            cat.questions.forEach(q => archiveDeletedQuestion(cat, q));
             cat.questions = [];
             renderListsBoard();
             saveListsStateToFirebase();
@@ -1829,10 +1777,7 @@
             if(!pendingClear) return;
             const cat = localState.listsBoard.categories.find(c => c.id === pendingClear.catId);
             pendingClear = null;
-            if(cat){
-                cat.questions.forEach(q => archiveDeletedQuestion(cat, q));
-                cat.questions = [];
-            }
+            if(cat){ cat.questions = []; }
             renderListsBoard();
             saveListsStateToFirebase();
         };
@@ -1847,9 +1792,15 @@
             if(!cat) return;
             const temp = document.createElement('div');
             temp.innerHTML = html || '';
-            if(!temp.textContent.trim() && !temp.querySelector('img')) return;
+            const hasImage = !!temp.querySelector('img');
+            const hasText = temp.textContent.trim().length > 0;
+            if(!hasText && !hasImage) return;
             if(!cat.questions) cat.questions = [];
-            cat.questions.push({ id: uid('q'), text: html || '', sub: false, done: false, comments: [] });
+            cat.questions.push({
+                id: uid('q'), text: html || '', answer: '', sub: false, done: false,
+                comments: [], textMark: null, commentMarks: [], commentNights: [],
+                commentNightsOn: [], commentExtra: [], createdBy: loggedInUser, createdAt: nowHM()
+            });
             renderListsBoard();
             saveListsStateToFirebase();
         };
@@ -1878,7 +1829,6 @@
                 renderListsBoard();
                 return;
             }
-            if(q) archiveDeletedQuestion(cat, q);
             cat.questions = cat.questions.filter(qq => qq.id !== qId);
             renderListsBoard();
             saveListsStateToFirebase();
@@ -1886,9 +1836,7 @@
 
         window.confirmDeleteQuestion = function(catId, qId){
             const cat = localState.listsBoard.categories.find(c => c.id === catId);
-            const q = cat ? cat.questions.find(qq => qq.id === qId) : null;
             pendingDeleteQid = null;
-            if(cat && q) archiveDeletedQuestion(cat, q);
             if(cat) cat.questions = cat.questions.filter(qq => qq.id !== qId);
             renderListsBoard();
             saveListsStateToFirebase();
@@ -1912,15 +1860,329 @@
             saveListsStateToFirebase();
         };
 
+        window.addSubQuestionAfter = function(catId, qId){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const idx = cat.questions.findIndex(qq => qq.id === qId);
+            if(idx === -1) return;
+            const newQ = {
+                id: uid('q'), text: '', answer: '', sub: true, done: false,
+                comments: [], textMark: null, commentMarks: [], commentNights: [],
+                commentNightsOn: [], commentExtra: [], createdBy: loggedInUser, createdAt: nowHM()
+            };
+            cat.questions.splice(idx + 1, 0, newQ);
+            protectRecentlyCreatedQid(newQ.id);
+            renderListsBoard();
+            saveListsStateToFirebase();
+        };
+
+        window.addComment = function(catId, qId, openNightToo){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            if(!q.comments) q.comments = [];
+            if(!q.commentMarks) q.commentMarks = [];
+            if(!q.commentNights) q.commentNights = [];
+            if(!q.commentNightsOn) q.commentNightsOn = [];
+            if(!q.commentExtra) q.commentExtra = [];
+            q.comments.push('');
+            q.commentMarks.push(null);
+            q.commentNights.push('');
+            q.commentNightsOn.push(!!openNightToo);
+            q.commentExtra.push([]);
+            renderListsBoard();
+            saveListsStateToFirebase();
+        };
+
+        window.updateComment = function(catId, qId, idx, value){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            q.comments[idx] = value;
+            saveListsStateToFirebase();
+        };
+
+        window.updateCommentNight = function(catId, qId, idx, value){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            if(!q.commentNights) q.commentNights = [];
+            q.commentNights[idx] = value;
+            saveListsStateToFirebase();
+        };
+
+        window.deleteCommentNight = function(catId, qId, idx){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            if(!q.commentNights) q.commentNights = [];
+            if(!q.commentNightsOn) q.commentNightsOn = [];
+            q.commentNights[idx] = '';
+            q.commentNightsOn[idx] = false;
+            renderListsBoard();
+            saveListsStateToFirebase();
+        };
+
+        window.deleteComment = function(catId, qId, idx){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            q.comments.splice(idx, 1);
+            if(q.commentMarks) q.commentMarks.splice(idx, 1);
+            if(q.commentNights) q.commentNights.splice(idx, 1);
+            if(q.commentNightsOn) q.commentNightsOn.splice(idx, 1);
+            if(q.commentExtra) q.commentExtra.splice(idx, 1);
+            renderListsBoard();
+            saveListsStateToFirebase();
+        };
+
+        window.addRowThreadItem = function(catId, qId, idx, type){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            if(!q.commentNightsOn) q.commentNightsOn = [];
+            if(!q.commentNights) q.commentNights = [];
+            if(!q.commentExtra) q.commentExtra = [];
+            while(q.commentExtra.length <= idx) q.commentExtra.push([]);
+            if(!q.commentExtra[idx]) q.commentExtra[idx] = [];
+
+            const hasExtraAlready = q.commentExtra[idx].length > 0;
+            if(type === 'night' && !q.commentNightsOn[idx] && !hasExtraAlready){
+                q.commentNightsOn[idx] = true;
+            } else {
+                q.commentExtra[idx].push({id: uid('ex'), type: type, text: '', by: loggedInUser, at: nowHM()});
+            }
+            renderListsBoard();
+            saveListsStateToFirebase();
+        };
+
+        window.updateCommentExtra = function(catId, qId, idx, subIdx, value){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            if(!q.commentExtra || !q.commentExtra[idx] || !q.commentExtra[idx][subIdx]) return;
+            q.commentExtra[idx][subIdx].text = value;
+            saveListsStateToFirebase();
+        };
+
+        window.deleteCommentExtra = function(catId, qId, idx, subIdx){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            if(!q.commentExtra || !q.commentExtra[idx]) return;
+            q.commentExtra[idx].splice(subIdx, 1);
+            renderListsBoard();
+            saveListsStateToFirebase();
+        };
+
+        function rowAddPopupKey(qId, idx){ return qId + '|' + idx; }
+        function markPopupKey(qId, target, commentIdx, extraSubIdx){
+            return qId + '|' + target + '|' + (commentIdx ?? '') + '|' + (extraSubIdx ?? '');
+        }
+
+        window.buildQuestionMenu = function(catId, qId, activeColor, showMarker){
+            const wrap = document.createElement('span');
+            wrap.className = 'question-menu';
+            const key = 'qmenu-' + qId;
+            const isOpen = openQuestionMenu === key;
+
+            const menuBtn = document.createElement('button');
+            menuBtn.className = 'question-menu-btn' + (showMarker && activeColor ? ' dot-' + activeColor : '');
+            menuBtn.innerText = '+';
+            menuBtn.title = showMarker ? 'הוסף תת-סעיף / סמן במרקר' : 'הוסף תת-סעיף';
+            menuBtn.onclick = () => { openQuestionMenu = isOpen ? null : key; renderListsBoard(); };
+            wrap.appendChild(menuBtn);
+
+            if(isOpen){
+                const dropdown = document.createElement('div');
+                dropdown.className = 'question-menu-dropdown';
+                if(showMarker){
+                    const markRow = document.createElement('div');
+                    markRow.className = 'question-menu-row';
+                    markRow.appendChild(buildMarkTools(catId, qId, 'text', activeColor, null));
+                    dropdown.appendChild(markRow);
+                }
+                const addOpt = document.createElement('button');
+                addOpt.className = 'question-menu-add';
+                addOpt.innerText = 'תת-סעיף';
+                addOpt.onclick = () => { openQuestionMenu = null; addSubQuestionAfter(catId, qId); };
+                dropdown.appendChild(addOpt);
+                wrap.appendChild(dropdown);
+            }
+            return wrap;
+        };
+
+        window.buildMarkTools = function(catId, qId, target, activeColor, commentIdx, extraSubIdx){
+            const wrap = document.createElement('span');
+            wrap.className = 'mark-tools';
+            const key = markPopupKey(qId, target, commentIdx, extraSubIdx);
+            const isOpen = openMarkPopup === key;
+
+            const penBtn = document.createElement('button');
+            penBtn.className = 'mark-pen' + (activeColor ? ' mark-pen-active' : '');
+            penBtn.innerHTML = '<span class="mark-pen-bar' + (activeColor ? ' dot-' + activeColor : '') + '"></span>';
+            penBtn.title = 'סמן במרקר';
+            penBtn.onclick = () => { openMarkPopup = isOpen ? null : key; renderListsBoard(); };
+            wrap.appendChild(penBtn);
+
+            if(isOpen){
+                const palette = document.createElement('span');
+                palette.className = 'mark-palette';
+                const clearDot = document.createElement('button');
+                clearDot.className = 'mark-dot mark-dot-clear' + (!activeColor ? ' active' : '');
+                clearDot.title = 'נקי';
+                clearDot.innerHTML = '×';
+                clearDot.onclick = () => { openMarkPopup = null; clearMark(catId, qId, target, commentIdx, extraSubIdx); };
+                palette.appendChild(clearDot);
+
+                MARK_COLORS.forEach(color => {
+                    const dot = document.createElement('button');
+                    dot.className = 'mark-dot dot-' + color + (activeColor === color ? ' active' : '');
+                    dot.title = color;
+                    dot.onclick = () => { openMarkPopup = null; toggleMark(catId, qId, target, color, commentIdx, extraSubIdx); };
+                    palette.appendChild(dot);
+                });
+                wrap.appendChild(palette);
+            }
+            return wrap;
+        };
+
+        window.clearMark = function(catId, qId, target, commentIdx, extraSubIdx){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            if(target === 'text') q.textMark = null;
+            else if(target === 'comment') { if(q.commentMarks) q.commentMarks[commentIdx] = null; }
+            else if(target === 'extra') { if(q.commentExtra?.[commentIdx]?.[extraSubIdx]) q.commentExtra[commentIdx][extraSubIdx].mark = null; }
+            renderListsBoard();
+            saveListsStateToFirebase();
+        };
+
+        window.toggleMark = function(catId, qId, target, color, commentIdx, extraSubIdx){
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            const q = cat.questions.find(qq => qq.id === qId);
+            if(target === 'text') q.textMark = (q.textMark === color) ? null : color;
+            else if(target === 'comment') { if(!q.commentMarks) q.commentMarks = []; q.commentMarks[commentIdx] = (q.commentMarks[commentIdx] === color) ? null : color; }
+            else if(target === 'extra') { if(q.commentExtra?.[commentIdx]?.[extraSubIdx]) { const item = q.commentExtra[commentIdx][extraSubIdx]; item.mark = (item.mark === color) ? null : color; } }
+            renderListsBoard();
+            saveListsStateToFirebase();
+        };
+
+        function formatDateShort(dateStr){
+            if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return dateStr || '';
+            const parts = dateStr.split('-');
+            return parts[2] + '/' + parts[1];
+        }
+
+        function buildDateThreadField(opts){
+            const wrap = document.createElement('span');
+            wrap.className = 'answer-date-wrap2';
+            const input = document.createElement('input');
+            input.type = 'date';
+            input.className = 'answer-date-input';
+            Object.keys(opts.dataset).forEach(k => { input.dataset[k] = opts.dataset[k]; });
+            input.value = opts.value || '';
+
+            const label = document.createElement('button');
+            label.type = 'button';
+            label.className = 'answer-date-label2';
+            label.innerText = opts.value ? formatDateShort(opts.value) : '';
+
+            function showInput(){ label.style.display = 'none'; input.style.display = ''; input.focus(); }
+            function showLabel(){ input.style.display = 'none'; label.style.display = ''; }
+
+            label.onclick = showInput;
+            input.onchange = () => {
+                opts.onCommit(input.value);
+                if(input.value){ label.innerText = formatDateShort(input.value); showLabel(); }
+            };
+            input.onblur = () => { if(input.value) showLabel(); };
+
+            if(opts.value) input.style.display = 'none'; else label.style.display = 'none';
+            wrap.appendChild(input);
+            wrap.appendChild(label);
+            return { wrap: wrap, input: input };
+        }
+
+        function attachImagePaste(el, onChange){
+            el.addEventListener('paste', (e) => {
+                const items = (e.clipboardData && e.clipboardData.items) || [];
+                let imageItem = null;
+                for(let i = 0; i < items.length; i++){
+                    if(items[i].type && items[i].type.indexOf('image/') === 0){ imageItem = items[i]; break; }
+                }
+                e.preventDefault();
+                if(imageItem){
+                    const file = imageItem.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        document.execCommand('insertImage', false, reader.result);
+                        if(onChange) onChange();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    const text = (e.clipboardData && e.clipboardData.getData('text/plain')) || '';
+                    document.execCommand('insertText', false, text);
+                    if(onChange) onChange();
+                }
+            });
+        }
+
+        let dragCtx = null;
+        function startQuestionDrag(e, handle, qDiv, catId){
+            if(e.pointerType === 'mouse' && e.button !== 0) return;
+            e.preventDefault();
+            const catDiv = qDiv.parentElement;
+            if(!catDiv) return;
+            dragCtx = { catId: catId, qDiv: qDiv, catDiv: catDiv, pointerId: e.pointerId };
+            qDiv.classList.add('qdrag-dragging');
+            try { handle.setPointerCapture(e.pointerId); } catch(err){}
+            handle.onpointermove = (ev) => onQuestionDragMove(ev);
+            handle.onpointerup = (ev) => endQuestionDrag(ev, handle);
+            handle.onpointercancel = (ev) => endQuestionDrag(ev, handle);
+        }
+
+        function onQuestionDragMove(e){
+            if(!dragCtx) return;
+            const catDiv = dragCtx.catDiv;
+            const qDiv = dragCtx.qDiv;
+            const y = e.clientY;
+            const siblings = Array.from(catDiv.children).filter(el => el.classList.contains('question-block') && el !== qDiv);
+            let target = null;
+            for(let i = 0; i < siblings.length; i++){
+                const rect = siblings[i].getBoundingClientRect();
+                const mid = rect.top + rect.height / 2;
+                if(y < mid){ target = siblings[i]; break; }
+            }
+            if(target){
+                if(target !== qDiv.nextSibling) catDiv.insertBefore(qDiv, target);
+            } else {
+                const addRow = catDiv.querySelector('.add-row');
+                if(addRow){ if(addRow.previousSibling !== qDiv) catDiv.insertBefore(qDiv, addRow); }
+                else if(catDiv.lastElementChild !== qDiv) catDiv.appendChild(qDiv);
+            }
+        }
+
+        function endQuestionDrag(e, handle){
+            if(!dragCtx) return;
+            const catDiv = dragCtx.catDiv;
+            const catId = dragCtx.catId;
+            const qDiv = dragCtx.qDiv;
+            qDiv.classList.remove('qdrag-dragging');
+            try { handle.releasePointerCapture(e.pointerId); } catch(err){}
+            handle.onpointermove = null;
+            handle.onpointerup = null;
+            handle.onpointercancel = null;
+            dragCtx = null;
+
+            const cat = localState.listsBoard.categories.find(c => c.id === catId);
+            if(cat){
+                const orderedIds = Array.from(catDiv.children)
+                    .filter(el => el.classList.contains('question-block'))
+                    .map(el => el.dataset.qid);
+                const byId = {};
+                cat.questions.forEach(qq => { byId[qq.id] = qq; });
+                const newQuestions = orderedIds.map(id => byId[id]).filter(Boolean);
+                if(newQuestions.length === cat.questions.length) cat.questions = newQuestions;
+            }
+            renderListsBoard();
+            saveListsStateToFirebase();
+        }
+
         function renderListsBoard() {
             renderListsTodayDate();
             const container = document.getElementById('lists-board-container');
             if (!container) return;
-
-            if (listsCurrentView === 'history') {
-                renderListsHistoryView(container);
-                return;
-            }
 
             container.innerHTML = '<div id="board" class="board-grid"></div>';
             const board = container.querySelector('#board');
@@ -1975,7 +2237,7 @@
                 if (pendingDeleteCatId === cat.id) {
                     catDiv.innerHTML += `
                         <div class="clear-confirm-banner">
-                            <span>למחוק את הקטגוריה "${escapeHtml(cat.title)}"?</span>
+                            <span>למחוק את הקטגוריה "${cat.title || ''}"?</span>
                             <div class="clear-confirm-btns">
                                 <button onclick="confirmDeleteCategory()">כן</button>
                                 <button onclick="cancelDeleteCategory()">ביטול</button>
@@ -2003,14 +2265,163 @@
                     qDiv.className = 'question-block' + (q.sub ? ' sub' : '') + (q.done ? ' done' : '');
                     qDiv.dataset.qid = q.id;
 
-                    qDiv.innerHTML = `
-                        <button class="btn-indent btn-square" title="${q.sub ? 'בטל תת-סעיף' : 'תת-סעיף'}" onclick="toggleIndent('${cat.id}', '${q.id}')">↩</button>
-                        <div class="qnum">${q.sub ? '+' : (mainCounter + '.')}</div>
-                        <div class="qbody flex-1 flex items-center gap-2 flex-wrap">
-                            <div class="qtext flex-1 outline-none min-h-[18px] p-1 ${q.textMark ? 'mark-' + q.textMark : ''}" contenteditable="true" oninput="updateText('${cat.id}', '${q.id}', 'text', this.innerHTML)" onblur="updateText('${cat.id}', '${q.id}', 'text', this.innerHTML); deleteQuestionIfEmpty('${cat.id}', '${q.id}')">${q.text || ''}</div>
-                            <button class="btn-done-mini text-xs" onclick="toggleDone('${cat.id}', '${q.id}')">${q.done ? '↩' : '✔'}</button>
-                        </div>
-                    `;
+                    const dragHandle = document.createElement('button');
+                    dragHandle.className = 'btn-drag-handle btn-square';
+                    dragHandle.title = 'גרירה';
+                    dragHandle.innerHTML = '⋮⋮';
+                    dragHandle.onpointerdown = (e) => startQuestionDrag(e, dragHandle, qDiv, cat.id);
+                    qDiv.appendChild(dragHandle);
+
+                    const indentBtn = document.createElement('button');
+                    indentBtn.className = 'btn-indent btn-square';
+                    indentBtn.title = q.sub ? 'בטל תת-סעיף' : 'תת-סעיף';
+                    indentBtn.innerText = '↩';
+                    indentBtn.onclick = () => toggleIndent(cat.id, q.id);
+                    qDiv.appendChild(indentBtn);
+
+                    qDiv.appendChild(buildQuestionMenu(cat.id, q.id, q.textMark, true));
+
+                    const numDiv = document.createElement('div');
+                    numDiv.className = 'qnum';
+                    numDiv.innerText = q.sub ? '+' : (mainCounter + '.');
+                    qDiv.appendChild(numDiv);
+
+                    const bodyDiv = document.createElement('div');
+                    bodyDiv.className = 'qbody flex-1 flex items-center gap-2 flex-wrap';
+
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'qtext flex-1 outline-none min-h-[18px] p-1' + (q.textMark ? ' mark-' + q.textMark : '');
+                    textDiv.contentEditable = true;
+                    textDiv.setAttribute('data-placeholder', 'משימה חדשה...');
+                    textDiv.innerHTML = q.text || '';
+                    textDiv.oninput = () => updateText(cat.id, q.id, 'text', textDiv.innerHTML);
+                    textDiv.onblur = () => { updateText(cat.id, q.id, 'text', textDiv.innerHTML); deleteQuestionIfEmpty(cat.id, q.id); };
+                    attachImagePaste(textDiv, () => updateText(cat.id, q.id, 'text', textDiv.innerHTML));
+                    bodyDiv.appendChild(textDiv);
+
+                    (q.comments || []).forEach((commentText, idx) => {
+                        const mark = (q.commentMarks && q.commentMarks[idx]) || null;
+                        const rowHasNight = !!((q.commentNightsOn && q.commentNightsOn[idx]) || (q.commentNights && q.commentNights[idx]));
+                        const rowHasExtra = !!(q.commentExtra && q.commentExtra[idx] && q.commentExtra[idx].length > 0);
+                        const rowHasMore = rowHasNight || rowHasExtra;
+                        const commentHasContent = commentText && commentText.trim() !== '';
+                        const extraItems = (q.commentExtra && q.commentExtra[idx]) || [];
+                        let lastTypistExtraIdx = -1;
+                        extraItems.forEach((item, subIdx) => { if(item.type !== 'night') lastTypistExtraIdx = subIdx; });
+
+                        if(commentHasContent || !rowHasMore){
+                            const commentDiv = document.createElement('div');
+                            commentDiv.className = 'comment' + (mark ? (' mark-' + mark) : '');
+                            commentDiv.contentEditable = true;
+                            commentDiv.setAttribute('data-placeholder', 'הערה...');
+                            commentDiv.innerText = commentText;
+                            commentDiv.oninput = () => updateComment(cat.id, q.id, idx, commentDiv.innerText);
+                            bodyDiv.appendChild(commentDiv);
+                        }
+
+                        if(rowHasNight){
+                            const nightValue = (q.commentNights && q.commentNights[idx]) || '';
+                            const nightField = buildDateThreadField({
+                                value: nightValue,
+                                dataset: { qid: q.id, col: 'commentNight', idx: idx },
+                                onCommit: (val) => {
+                                    if(val.trim() === '') deleteCommentNight(cat.id, q.id, idx);
+                                    else updateCommentNight(cat.id, q.id, idx, val);
+                                }
+                            });
+                            bodyDiv.appendChild(nightField.wrap);
+                        }
+
+                        extraItems.forEach((item, subIdx) => {
+                            if(item.type === 'night'){
+                                const extraField = buildDateThreadField({
+                                    value: item.text || '',
+                                    dataset: { qid: q.id, col: 'extra', idx: idx, subidx: subIdx },
+                                    onCommit: (val) => {
+                                        if(val.trim() === '') deleteCommentExtra(cat.id, q.id, idx, subIdx);
+                                        else updateCommentExtra(cat.id, q.id, idx, subIdx, val);
+                                    }
+                                });
+                                bodyDiv.appendChild(extraField.wrap);
+                                return;
+                            }
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'comment' + (item.mark ? (' mark-' + item.mark) : '');
+                            itemDiv.contentEditable = true;
+                            itemDiv.setAttribute('data-placeholder', 'הערה...');
+                            itemDiv.innerText = item.text || '';
+                            itemDiv.oninput = () => updateCommentExtra(cat.id, q.id, idx, subIdx, itemDiv.innerText);
+                            bodyDiv.appendChild(itemDiv);
+                        });
+
+                        const isLastRow = idx === (q.comments.length - 1);
+                        if(isLastRow){
+                            const rowKey = rowAddPopupKey(q.id, idx);
+                            const isRowPopupOpen = openRowAddPopup === rowKey;
+                            const rowAddWrap = document.createElement('span');
+                            rowAddWrap.style.display = 'inline-flex';
+                            rowAddWrap.style.alignItems = 'center';
+                            rowAddWrap.style.position = 'relative';
+
+                            const rowAddBtn = document.createElement('button');
+                            rowAddBtn.className = 'btn-add-comment';
+                            rowAddBtn.innerText = '+';
+                            rowAddBtn.onclick = () => { openRowAddPopup = isRowPopupOpen ? null : rowKey; renderListsBoard(); };
+                            rowAddWrap.appendChild(rowAddBtn);
+
+                            if(isRowPopupOpen){
+                                const rowPopup = document.createElement('span');
+                                rowPopup.className = 'add-comment-popup';
+                                const rowTypistOpt = document.createElement('button');
+                                rowTypistOpt.innerText = 'הערה';
+                                rowTypistOpt.onclick = () => { openRowAddPopup = null; addRowThreadItem(cat.id, q.id, idx, 'typist'); };
+                                rowPopup.appendChild(rowTypistOpt);
+                                const rowNightOpt = document.createElement('button');
+                                rowNightOpt.innerText = 'מועד';
+                                rowNightOpt.onclick = () => { openRowAddPopup = null; addRowThreadItem(cat.id, q.id, idx, 'night'); };
+                                rowPopup.appendChild(rowNightOpt);
+                                rowAddWrap.appendChild(rowPopup);
+                            }
+                            bodyDiv.appendChild(rowAddWrap);
+                        }
+                    });
+
+                    if((q.comments || []).length === 0){
+                        const addCommentWrap = document.createElement('span');
+                        addCommentWrap.style.display = 'inline-flex';
+                        addCommentWrap.style.alignItems = 'center';
+                        addCommentWrap.style.position = 'relative';
+
+                        const addCommentBtn = document.createElement('button');
+                        addCommentBtn.className = 'btn-add-comment';
+                        addCommentBtn.innerText = '+';
+                        const isAddCommentPopupOpen = openAddCommentPopup === q.id;
+                        addCommentBtn.onclick = () => { openAddCommentPopup = isAddCommentPopupOpen ? null : q.id; renderListsBoard(); };
+                        addCommentWrap.appendChild(addCommentBtn);
+
+                        if(isAddCommentPopupOpen){
+                            const popup = document.createElement('span');
+                            popup.className = 'add-comment-popup';
+                            const addTypistOpt = document.createElement('button');
+                            addTypistOpt.innerText = 'הערה';
+                            addTypistOpt.onclick = () => { openAddCommentPopup = null; addComment(cat.id, q.id, false); };
+                            popup.appendChild(addTypistOpt);
+                            const addNightOpt = document.createElement('button');
+                            addNightOpt.innerText = 'מועד';
+                            addNightOpt.onclick = () => { openAddCommentPopup = null; addComment(cat.id, q.id, true); };
+                            popup.appendChild(addNightOpt);
+                            addCommentWrap.appendChild(popup);
+                        }
+                        bodyDiv.appendChild(addCommentWrap);
+                    }
+
+                    const doneBtn = document.createElement('button');
+                    doneBtn.className = 'btn-done-mini text-xs';
+                    doneBtn.innerText = q.done ? '↩' : '✔';
+                    doneBtn.onclick = () => toggleDone(cat.id, q.id);
+                    bodyDiv.appendChild(doneBtn);
+
+                    qDiv.appendChild(bodyDiv);
 
                     if (pendingDeleteQid === q.id) {
                         const confirmSpan = document.createElement('span');
@@ -2048,48 +2459,6 @@
             container.appendChild(addCatRow);
         }
 
-        function renderListsHistoryView(container) {
-            container.innerHTML = '<div class="space-y-4"></div>';
-            const inner = container.querySelector('div');
-            const keys = Object.keys(historyData || {});
-            if (keys.length === 0) {
-                inner.innerHTML = '<div class="notion-card p-8 text-center text-xs text-[#787774]">אין משימות בהיסטוריה.</div>';
-                return;
-            }
-            keys.forEach(dateKey => {
-                const cats = historyData[dateKey];
-                Object.keys(cats).forEach(catId => {
-                    const c = cats[catId];
-                    const card = document.createElement('div');
-                    card.className = 'notion-card p-4 space-y-2';
-                    card.innerHTML = `<h3 class="font-bold text-xs text-[#37352F] border-b pb-1">${escapeHtml(c.title)} (${dateKey})</h3>`;
-                    Object.keys(c.questions || {}).forEach(qKey => {
-                        const q = c.questions[qKey];
-                        const row = document.createElement('div');
-                        row.className = 'text-xs flex justify-between items-center bg-[#EFEEEA]/30 p-2 rounded';
-                        row.innerHTML = `<span>${q.text || ''}</span> <button onclick="restoreQuestion('${dateKey}', '${catId}', '${qKey}')" class="history-restore-btn">שחזור</button>`;
-                        card.appendChild(row);
-                    });
-                    inner.appendChild(card);
-                });
-            });
-        }
-
-        window.restoreQuestion = function(dateKey, catId, qKey) {
-            const q = historyData[dateKey]?.[catId]?.questions?.[qKey];
-            if (!q) return;
-            const targetCat = (localState.listsBoard?.categories || []).find(c => c.id === catId);
-            if (targetCat) {
-                targetCat.questions.push(q);
-            } else if (localState.listsBoard?.categories?.[0]) {
-                localState.listsBoard.categories[0].questions.push(q);
-            }
-            delete historyData[dateKey][catId].questions[qKey];
-            update(ref(db, `${getUserPath()}/historyState`), historyData);
-            saveListsStateToFirebase();
-            renderListsBoard();
-        };
-
         // --- GENERAL APP MODES SWITCHING ---
         window.switchMode = function(mode) {
             ['focus', 'manage', 'articles', 'glossary', 'telegram', 'notes', 'lists'].forEach(m => {
@@ -2111,11 +2480,6 @@
                 renderListsBoard();
             }
         };
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&#039;").replace(/'/g, "&#039;");
-        }
 
         checkAuthSession();
     </script>
