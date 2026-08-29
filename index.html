@@ -255,35 +255,36 @@
             <div id="courses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- UNIFIED VIEW 3: ARTICLES & ANALYSIS LIBRARY -->
+        <!-- UNIFIED VIEW 3: COMPACT ARTICLES LIBRARY -->
         <div id="view-articles" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F]">📚 מאגר מאמרים וניתוחים</h2>
-                    <p class="text-xs text-[#787774]">כל המאמרים והניתוחים במקום אחד. לחצי על מאמר לעריכה מלאה או הזיני מאמר חדש.</p>
+                    <p class="text-xs text-[#787774]">כל המאמרים והניתוחים במבנה קומפקטי. לחצי על מאמר לעריכה מלאה.</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <select id="articles-course-filter" onchange="renderArticlesView()" class="p-1.5 border border-[#E9E9E7] rounded text-xs bg-white">
                         <option value="ALL">כל הקורסים</option>
                     </select>
-                    <button onclick="openArticleModal()" class="bg-[#37352F] text-white text-xs font-medium px-3.5 py-1.5 rounded transition-all">+ מאמר וניתוח חדש</button>
+                    <button onclick="openArticleModal()" class="bg-[#37352F] text-white text-xs font-medium px-3.5 py-1.5 rounded transition-all">+ מאמר חדש</button>
                 </div>
             </div>
 
-            <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            <!-- COMPACT GRID FOR ARTICLES (3 CARDS PER ROW ON LARGE SCREENS) -->
+            <div id="articles-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
-        <!-- VIEW 4: COMPACT ACADEMIC GLOSSARY WITH DUAL FILTERING -->
-        <div id="view-glossary" class="space-y-6">
+        <!-- VIEW 4: COMPACT GLOSSARY (HIDDEN BY DEFAULT TO PREVENT OVERLAP) -->
+        <div id="view-glossary" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-2"><span>📖</span> מילון מושגים אקדמי</h2>
-                    <p class="text-xs text-[#787774]">מושגים מקושרים לקורסים ולמאמרים, בתיבות קומפקטיות ונוחות לסקירה</p>
+                    <p class="text-xs text-[#787774]">מושגים מקושרים לקורסים ולמאמרים, בתיבות קומפקטיות ונוחות לסקירה ועריכה</p>
                 </div>
                 <button onclick="openGlossaryModal()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all">+ מושג חדש</button>
             </div>
 
-            <!-- DUAL FILTER CONTROLS: COURSE & ARTICLE -->
+            <!-- DUAL FILTER CONTROLS -->
             <div class="notion-card p-3 space-y-2">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div>
@@ -446,7 +447,7 @@
         </div>
     </div>
 
-    <!-- MODAL: ADD / EDIT GLOSSARY TERM (WITH OPTIONAL COURSE & ARTICLE LINKING) -->
+    <!-- MODAL: ADD / EDIT GLOSSARY TERM -->
     <div id="glossary-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
         <div class="notion-card bg-white max-w-lg w-full p-5 relative shadow-xl max-h-[90vh] overflow-y-auto space-y-3">
             <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-2">
@@ -679,7 +680,7 @@
             renderStickyNotesCanvas();
         }
 
-        // --- COMPACT GLOSSARY LOGIC WITH DUAL LINKING & FILTERING ---
+        // --- COMPACT GLOSSARY LOGIC & EDITING ---
         function updateGlossaryFilterDropdowns() {
             const courseSelect = document.getElementById('glossary-filter-course');
             const articleSelect = document.getElementById('glossary-filter-article');
@@ -737,7 +738,6 @@
                 return;
             }
 
-            // SMALL COMPACT GRID (3 TO 4 CARDS PER ROW)
             let html = `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">`;
             filtered.forEach(c => {
                 const linkedCourse = localState.courses[c.courseId];
@@ -748,13 +748,15 @@
                         <div>
                             <div class="flex items-start justify-between gap-1 mb-1">
                                 <h4 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline" onclick="openGlossaryModal('${c.id}')">${escapeHtml(c.termHe)}</h4>
-                                <button onclick="deleteGlossaryTermFirebase('${c.id}')" class="text-slate-300 hover:text-red-500 text-[11px] p-0.5">✕</button>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="openGlossaryModal('${c.id}')" title="עריכת מושג" class="text-slate-400 hover:text-slate-700 text-[11px] p-0.5">✏️</button>
+                                    <button onclick="deleteGlossaryTermFirebase('${c.id}')" title="מחיקת מושג" class="text-slate-300 hover:text-red-500 text-[11px] p-0.5">✕</button>
+                                </div>
                             </div>
-                            ${c.termEn ? `<p class="text-[10px] text-[#787774] italic -mt-0.5 mb-1.5 font-mono">${escapeHtml(c.termEn)}</p>` : ''}
+                            ${c.termEn ? `<p class="text-[10px] text-[#787774] italic -mt-0.5 mb-1 font-mono">${escapeHtml(c.termEn)}</p>` : ''}
                             <p class="text-[11px] text-[#37352F] leading-relaxed">${escapeHtml(c.definition)}</p>
                         </div>
                         
-                        <!-- COMPACT LINKED BADGES -->
                         <div class="pt-2 border-t border-[#E9E9E7]/80 flex flex-wrap gap-1 text-[9px]">
                             ${linkedCourse ? `<span class="bg-[#EFEEEA] text-[#787774] px-1.5 py-0.5 rounded font-medium truncate max-w-[130px]">🎓 ${escapeHtml(linkedCourse.title)}</span>` : ''}
                             ${linkedArticle ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-medium truncate max-w-[130px]">📄 ${escapeHtml(linkedArticle.title)}</span>` : ''}
@@ -771,7 +773,6 @@
             const articleSelect = document.getElementById('glossary-modal-article');
             const modalTitle = document.getElementById('glossary-modal-title');
 
-            // Populate Dropdowns
             courseSelect.innerHTML = '<option value="">-- ללא שיוך לקורס --</option>' + 
                 Object.keys(localState.courses || {}).map(cId => `<option value="${cId}">${escapeHtml(localState.courses[cId].title)}</option>`).join('');
 
@@ -840,7 +841,7 @@
             }
         };
 
-        // --- ARTICLES WORKFLOW ---
+        // --- COMPACT ARTICLES WORKFLOW ---
         function updateArticleCourseSelect() {
             const select = document.getElementById('art-course');
             if (!select) return;
@@ -945,9 +946,9 @@
 
             if (articleKeys.length === 0) {
                 grid.innerHTML = `
-                    <div class="col-span-2 notion-card p-12 text-center space-y-3">
+                    <div class="col-span-3 notion-card p-10 text-center space-y-3">
                         <p class="text-sm font-bold text-[#37352F]">טרם נותחו מאמרים</p>
-                        <p class="text-xs text-[#787774]">לחצי על "+ מאמר וניתוח חדש" כדי להוסיף מאמר ראשון.</p>
+                        <p class="text-xs text-[#787774]">לחצי על "+ מאמר חדש" כדי להוסיף מאמר ראשון.</p>
                         <button onclick="openArticleModal()" class="bg-[#37352F] text-white text-xs px-4 py-2 rounded font-medium">+ הוספת מאמר</button>
                     </div>
                 `;
@@ -962,33 +963,32 @@
                 const an = art.analysis || {};
 
                 const card = document.createElement('div');
-                card.className = 'notion-card p-5 flex flex-col justify-between space-y-4';
+                card.className = 'notion-card p-4 flex flex-col justify-between space-y-3 hover:border-[#37352F]/40 transition-all';
                 card.innerHTML = `
                     <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[10px] bg-[#EFEEEA] px-2 py-0.5 rounded text-[#787774] font-medium">${escapeHtml(courseObj.title)}</span>
-                            <span class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-bold">נותח וסוכם ✓</span>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[9px] bg-[#EFEEEA] px-1.5 py-0.5 rounded text-[#787774] font-medium truncate max-w-[140px]">${escapeHtml(courseObj.title)}</span>
+                            <span class="text-[9px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">סוכם ✓</span>
                         </div>
-                        <h3 class="font-bold text-sm text-[#37352F] leading-snug cursor-pointer hover:underline" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
-                        <p class="text-[11px] text-[#787774] mt-1">${escapeHtml(art.authors || 'מחברים לא צוינו')} ${art.year ? `(${escapeHtml(art.year)})` : ''}</p>
+                        <h3 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
+                        <p class="text-[10px] text-[#787774] mt-0.5">${escapeHtml(art.authors || 'מחברים לא צוינו')} ${art.year ? `(${escapeHtml(art.year)})` : ''}</p>
 
-                        <div class="mt-4 pt-3 border-t border-[#E9E9E7] space-y-2 text-xs">
-                            ${an.rq ? `<div class="bg-[#EFEEEA]/30 p-2 rounded"><strong>שאלת מחקר:</strong> <span class="text-[#37352F]">${escapeHtml(an.rq)}</span></div>` : ''}
-                            ${an.method ? `<div class="bg-[#EFEEEA]/30 p-2 rounded"><strong>מתודולוגיה:</strong> <span class="text-[#37352F]">${escapeHtml(an.method)}</span></div>` : ''}
-                            ${an.findings ? `<div class="bg-[#EFEEEA]/30 p-2 rounded"><strong>ממצאים:</strong> <span class="text-[#37352F]">${escapeHtml(an.findings)}</span></div>` : ''}
-                            ${an.takeaways ? `<div class="bg-amber-50/60 p-2 rounded border-r-2 border-amber-400"><strong>זיקה אישית:</strong> <span class="text-[#37352F]">${escapeHtml(an.takeaways)}</span></div>` : ''}
+                        <!-- COMPACT ANALYSIS SUMMARY DETAILS -->
+                        <div class="mt-3 pt-2 border-t border-[#E9E9E7] space-y-1.5 text-[11px]">
+                            ${an.rq ? `<div class="bg-[#EFEEEA]/30 p-1.5 rounded"><strong>שאלת מחקר:</strong> <span class="text-[#37352F]">${escapeHtml(an.rq)}</span></div>` : ''}
+                            ${an.findings ? `<div class="bg-[#EFEEEA]/30 p-1.5 rounded"><strong>ממצאים:</strong> <span class="text-[#37352F]">${escapeHtml(an.findings)}</span></div>` : ''}
                         </div>
                     </div>
 
-                    <div class="pt-3 border-t border-[#E9E9E7] flex items-center justify-between text-xs flex-wrap gap-2">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                            <button onclick="exportAnalysisToMarkdown('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] border border-[#E9E9E7] px-2 py-1 rounded text-[10px]">📄 Markdown</button>
-                            <button onclick="exportAnalysisToPDF('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] border border-[#E9E9E7] px-2 py-1 rounded text-[10px]">🖨️ PDF</button>
-                            <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] border border-[#E9E9E7] px-2 py-1 rounded text-[10px]">📋 APA</button>
+                    <div class="pt-2.5 border-t border-[#E9E9E7] flex items-center justify-between text-[10px] flex-wrap gap-1.5">
+                        <div class="flex items-center gap-1 flex-wrap">
+                            <button onclick="exportAnalysisToMarkdown('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">📄 MD</button>
+                            <button onclick="exportAnalysisToPDF('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">🖨️ PDF</button>
+                            <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">📋 APA</button>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            <button onclick="openArticleModal('${artId}')" class="bg-[#37352F] hover:bg-black text-white px-2.5 py-1 rounded text-[10px] font-bold">✏️ עריכה מלאה</button>
-                            <button onclick="deleteArticleFirebase('${artId}')" class="text-slate-400 hover:text-red-500 text-xs p-1">🗑️</button>
+                        <div class="flex items-center gap-1">
+                            <button onclick="openArticleModal('${artId}')" class="bg-[#37352F] hover:bg-black text-white px-2 py-0.5 rounded text-[9px] font-bold">✏️ עריכה</button>
+                            <button onclick="deleteArticleFirebase('${artId}')" class="text-slate-300 hover:text-red-500 text-[10px] p-0.5">✕</button>
                         </div>
                     </div>
                 `;
@@ -1055,7 +1055,7 @@
             }
         };
 
-        // --- EDITABLE ROUTINE & HOBBIES LOGIC ---
+        // --- ROUTINE & HOBBIES LOGIC ---
         function renderRoutineChecklist() {
             const list = document.getElementById('routine-checklist-list');
             if (!list) return;
