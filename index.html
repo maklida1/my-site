@@ -756,8 +756,8 @@
                     </div>
                 </div>
 
-                <!-- Navigation Tabs -->
-                <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center self-center md:self-auto border border-[#E9E9E7] gap-1 overflow-x-auto max-w-full">
+                <!-- Navigation Tabs (Updated with flex-wrap so all tabs are visible) -->
+                <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center flex-wrap self-center md:self-auto border border-[#E9E9E7] gap-1 max-w-full">
                     <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>מיקוד</button>
                     <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">🎓 קורסים</button>
                     <button id="btn-articles-mode" onclick="switchMode('articles')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">📚 מאמרים</button>
@@ -1688,25 +1688,9 @@
         let listsCurrentView = 'board';
         let historyData = {};
         let historyLoadError = null;
-        let pendingLocalWrites = 0;
         let pendingDeleteCatId = null;
         let pendingClear = null;
         let pendingDeleteQid = null;
-        let dragCtx = null;
-        let lastFocusCatId = null;
-        let lastFocusNewQid = null;
-        let recentlyCreatedQid = null;
-        let recentlyCreatedQidTimer = null;
-        let lastFocusCommentQid = null;
-        let lastFocusCommentIdx = null;
-        let lastFocusNightQid = null;
-        let lastFocusNightIdx = null;
-        let openMarkPopup = null;
-        let openAddCommentPopup = null;
-        let openRowAddPopup = null;
-        let openQuestionMenu = null;
-        let activeResizeImg = null;
-        const MARK_COLORS = ['cyan', 'green', 'pink', 'purple', 'gray', 'yellow', 'red', 'brown'];
 
         window.toggleListsHistoryView = function() {
             listsCurrentView = (listsCurrentView === 'history') ? 'board' : 'history';
@@ -1750,13 +1734,10 @@
             temp.innerHTML = q.text || '';
             if(temp.textContent.trim().length > 0 || temp.querySelector('img')) return false;
             if(q.comments && q.comments.some(c => c && c.trim() !== '')) return false;
-            if(q.commentNights && q.commentNights.some(c => c && c.trim() !== '')) return false;
-            if(q.commentExtra && q.commentExtra.some(arr => arr && arr.some(item => item && item.text && item.text.trim() !== ''))) return false;
             return true;
         }
 
         function deleteQuestionIfEmpty(catId, qId){
-            if(qId === recentlyCreatedQid) return false;
             const cat = (localState.listsBoard?.categories || []).find(c => c.id === catId);
             if(!cat) return false;
             const q = cat.questions.find(qq => qq.id === qId);
@@ -1868,7 +1849,7 @@
             temp.innerHTML = html || '';
             if(!temp.textContent.trim() && !temp.querySelector('img')) return;
             if(!cat.questions) cat.questions = [];
-            cat.questions.push({ id: uid('q'), text: html || '', sub: false, done: false, comments: [], textMark: null, commentMarks: [], commentNights: [], commentNightsOn: [], commentExtra: [] });
+            cat.questions.push({ id: uid('q'), text: html || '', sub: false, done: false, comments: [] });
             renderListsBoard();
             saveListsStateToFirebase();
         };
@@ -1928,42 +1909,6 @@
             const cat = localState.listsBoard.categories.find(c => c.id === catId);
             const q = cat.questions.find(qq => qq.id === qId);
             q[field] = value;
-            saveListsStateToFirebase();
-        };
-
-        window.addComment = function(catId, qId, openNightToo){
-            const cat = localState.listsBoard.categories.find(c => c.id === catId);
-            const q = cat.questions.find(qq => qq.id === qId);
-            if(!q.comments) q.comments = [];
-            if(!q.commentMarks) q.commentMarks = [];
-            if(!q.commentNights) q.commentNights = [];
-            if(!q.commentNightsOn) q.commentNightsOn = [];
-            if(!q.commentExtra) q.commentExtra = [];
-            q.comments.push('');
-            q.commentMarks.push(null);
-            q.commentNights.push('');
-            q.commentNightsOn.push(!!openNightToo);
-            q.commentExtra.push([]);
-            renderListsBoard();
-            saveListsStateToFirebase();
-        };
-
-        window.updateComment = function(catId, qId, idx, value){
-            const cat = localState.listsBoard.categories.find(c => c.id === catId);
-            const q = cat.questions.find(qq => qq.id === qId);
-            q.comments[idx] = value;
-            saveListsStateToFirebase();
-        };
-
-        window.deleteComment = function(catId, qId, idx){
-            const cat = localState.listsBoard.categories.find(c => c.id === catId);
-            const q = cat.questions.find(qq => qq.id === qId);
-            q.comments.splice(idx, 1);
-            if(q.commentMarks) q.commentMarks.splice(idx, 1);
-            if(q.commentNights) q.commentNights.splice(idx, 1);
-            if(q.commentNightsOn) q.commentNightsOn.splice(idx, 1);
-            if(q.commentExtra) q.commentExtra.splice(idx, 1);
-            renderListsBoard();
             saveListsStateToFirebase();
         };
 
