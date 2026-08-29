@@ -217,7 +217,7 @@
                             <h3 class="text-xs font-bold text-[#37352F]">✨ מעקב שבועי</h3>
                             <div class="flex items-center gap-2">
                                 <button onclick="bulkEditHobbiesFirebase()" title="עריכת רשימה" class="text-xs font-bold text-[#37352F] hover:opacity-70 p-0.5">✏️</button>
-                                <button onclick="resetHobbiesChecks()" title="איפוס שבוע" class="text-xs p-0.5 opacity-50 hover:opacity-100 grayscale transition-all">🔄</button>
+                                <button onclick="resetHobbiesChecks()" title="איפוס שבוע" class="text-xs p-0.5 text-slate-400 hover:text-slate-600 transition-colors">🔄</button>
                             </div>
                         </div>
                         <div class="overflow-x-auto">
@@ -247,7 +247,7 @@
                             <h3 class="text-xs font-bold text-[#37352F]">🔄 סנכרון לאחר יום לימודים</h3>
                             <div class="flex items-center gap-2">
                                 <button onclick="bulkEditRoutineFirebase()" title="עריכת רשימה" class="text-xs font-bold text-[#37352F] hover:opacity-70 p-0.5">✏️</button>
-                                <button onclick="resetRoutineChecks()" title="איפוס" class="text-xs p-0.5 opacity-50 hover:opacity-100 grayscale transition-all">🔄</button>
+                                <button onclick="resetRoutineChecks()" title="איפוס" class="text-xs p-0.5 text-slate-400 hover:text-slate-600 transition-colors">🔄</button>
                             </div>
                         </div>
                         <div class="space-y-2" id="routine-checklist-list"></div>
@@ -599,6 +599,10 @@
                 <div>
                     <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Drive</label>
                     <input type="url" id="course-drive" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Notebook</label>
+                    <input type="url" id="course-notebook" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
                 </div>
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeAddCourseModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
@@ -1642,7 +1646,8 @@
                             <div class="grid grid-cols-2 gap-1.5 mt-3 text-xs">
                                 <a href="${course.links?.moodle || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Moodle</a>
                                 <a href="${course.links?.docs || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Docs</a>
-                                <a href="${course.links?.drive || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center col-span-2">Drive</a>
+                                <a href="${course.links?.drive || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Drive</a>
+                                <a href="${course.links?.notebook || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Notebook</a>
                             </div>
                         </div>
                         <div class="space-y-2 max-h-64 overflow-y-auto course-scroll pr-1">${tasksHtml}</div>
@@ -1663,6 +1668,7 @@
             document.getElementById('course-moodle').value = '';
             document.getElementById('course-docs').value = '';
             document.getElementById('course-drive').value = '';
+            document.getElementById('course-notebook').value = '';
             document.getElementById('add-course-modal').classList.remove('hidden');
         };
 
@@ -1675,6 +1681,7 @@
             document.getElementById('course-moodle').value = c.links?.moodle || '';
             document.getElementById('course-docs').value = c.links?.docs || '';
             document.getElementById('course-drive').value = c.links?.drive || '';
+            document.getElementById('course-notebook').value = c.links?.notebook || '';
             document.getElementById('add-course-modal').classList.remove('hidden');
         };
 
@@ -1689,7 +1696,8 @@
                 links: {
                     moodle: document.getElementById('course-moodle').value.trim(),
                     docs: document.getElementById('course-docs').value.trim(),
-                    drive: document.getElementById('course-drive').value.trim()
+                    drive: document.getElementById('course-drive').value.trim(),
+                    notebook: document.getElementById('course-notebook').value.trim()
                 }
             };
             if (activeEditingCourseId) update(ref(db, `${getUserPath()}/courses/${activeEditingCourseId}`), courseObj);
