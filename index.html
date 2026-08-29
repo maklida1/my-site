@@ -207,30 +207,11 @@
                 <h2 class="text-sm font-bold text-[#37352F]">מיקוד</h2>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- PINNED NOTE -->
-                <div class="notion-card p-5 bg-[#FBFB9B]/20 border border-[#F4F482]/60 relative">
-                    <div class="flex items-center justify-between mb-2.5 border-b border-[#E9E9E7]/60 pb-2">
-                        <span class="text-xs font-bold text-[#37352F] flex items-center gap-1">📌 פתק מוצמד</span>
-                        <span id="pinned-status-text" class="text-[10px] text-[#787774]">נשמר אוטומטית</span>
-                    </div>
+                <div class="notion-card p-5 bg-[#FBFB9B]/20 border border-[#F4F482]/60 relative flex flex-col justify-center">
                     <div id="pinned-note-display" contenteditable="true"
                          class="text-xs text-[#37352F] leading-relaxed min-h-[80px] whitespace-pre-wrap p-2 rounded focus:outline-none focus:ring-1 focus:ring-[#37352F]/30 bg-white/50">
-                    </div>
-                </div>
-
-                <!-- Schedule -->
-                <div class="notion-card p-5">
-                    <div class="flex items-center gap-2 mb-4 border-b border-[#E9E9E7] pb-3">
-                        <span class="text-sm">📅</span>
-                        <h3 class="text-sm font-bold text-[#37352F]">סדר יום משוער</h3>
-                    </div>
-                    <div class="space-y-3 relative before:absolute before:right-2.5 before:top-2 before:bottom-2 before:w-px before:bg-[#E9E9E7]">
-                        <div class="pr-6 relative">
-                            <span class="absolute right-1.5 top-1.5 w-2 h-2 rounded-full bg-emerald-600"></span>
-                            <p class="text-[10px] text-[#787774]">08:00 - 15:00</p>
-                            <p class="text-xs font-bold text-[#37352F]">משמרת עבודה - דיור מוגן</p>
-                        </div>
                     </div>
                 </div>
 
@@ -248,7 +229,7 @@
                 <div class="lg:col-span-2 space-y-6">
                     <div class="notion-card p-5">
                         <div class="flex items-center justify-between mb-4 border-b border-[#E9E9E7] pb-3">
-                            <h3 class="text-sm font-bold text-[#37352F]">📋 כל המשימות (ממוינות לפי תאריך)</h3>
+                            <h3 class="text-sm font-bold text-[#37352F]">📋 משימות</h3>
                             <span id="focus-tasks-count" class="text-xs text-[#787774] font-bold"></span>
                         </div>
                         <div class="space-y-2.5" id="focus-tasks-list"></div>
@@ -1546,16 +1527,10 @@
         const debouncedSavePinnedNote = debounce(() => {
             if (!loggedInUser) return;
             const text = document.getElementById('pinned-note-display').innerText.trim();
-            const statusEl = document.getElementById('pinned-status-text');
-            if (statusEl) statusEl.innerText = 'שומר...';
-            update(ref(db, getUserPath()), { pinnedNote: text }).then(() => {
-                if (statusEl) statusEl.innerText = 'נשמר אוטומטית ✓';
-            });
+            update(ref(db, getUserPath()), { pinnedNote: text });
         }, 500);
 
         document.getElementById('pinned-note-display')?.addEventListener('input', () => {
-            const statusEl = document.getElementById('pinned-status-text');
-            if (statusEl) statusEl.innerText = 'מקליד/ה...';
             debouncedSavePinnedNote();
         });
 
@@ -1814,7 +1789,7 @@
                 if (!q || a.title.toLowerCase().includes(q)) results.push({ type: 'מאמר', title: a.title, action: () => openArticleModal(id) });
             });
 
-            resultsList.innerHTML = results.length ? results.map(r => `<div onclick="(${r.action})(); toggleCommandPalette();" class="p-2 hover:bg-[#EFEEEA] cursor-pointer flex justify-between text-xs"><span>${escapeHtml(r.title)}</span><span class="text-[10px] bg-slate-100 p-0.5 rounded">${r.type}</span></div>`).join('') : '<p class="text-xs text-center py-4 text-[#787774]">לא נמצאו תוצאות</p>';
+            resultsList.innerHTML = results.length ? results.map(r => `<div onclick="(${r.action})(); toggleCommandPalette();" class="p-[#EFEEEA] cursor-pointer flex justify-between text-xs"><span>${escapeHtml(r.title)}</span><span class="text-[10px] bg-slate-100 p-0.5 rounded">${r.type}</span></div>`).join('') : '<p class="text-xs text-center py-4 text-[#787774]">לא נמצאו תוצאות</p>';
         };
 
         // NAVIGATION SWITCHER
