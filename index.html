@@ -59,21 +59,11 @@
             mask-image: linear-gradient(135deg, transparent 45%, black 45%);
             border-radius: 2px;
         }
-
-        .export-dropdown { position: relative; display: inline-block; }
-        .export-menu { display: none; position: absolute; top: 110%; left: 0; background: #ffffff; border: 1px solid #E9E9E7; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 50; min-width: 130px; }
-        .export-menu.open { display: block; }
-        
-        @media print {
-            body * { visibility: hidden; }
-            #printable-analysis-area, #printable-analysis-area * { visibility: visible; }
-            #printable-analysis-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
-        }
     </style>
 </head>
 <body class="min-h-screen pb-16">
 
-    <!-- LOGIN OVERLAY (HELEN / 1234) -->
+    <!-- LOGIN OVERLAY -->
     <div id="login-overlay" class="fixed inset-0 bg-white/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-4">
         <div class="notion-card p-8 max-w-sm w-full text-center space-y-4 border border-[#E9E9E7] shadow-xl">
             <div class="w-12 h-12 bg-[#EFEEEA] rounded-full flex items-center justify-center text-2xl mx-auto">🔑</div>
@@ -92,7 +82,7 @@
                 </div>
                 <p id="login-error" class="text-xs text-rose-600 font-bold text-center hidden">שם משתמש או סיסמה שגויים</p>
                 <button type="submit" class="w-full py-2.5 px-4 bg-[#37352F] hover:bg-black text-white text-xs font-medium rounded-lg transition-all shadow-sm">
-                    התחברות
+                    התחברות וזכירת משתמש
                 </button>
             </form>
         </div>
@@ -113,13 +103,12 @@
                     </div>
                 </div>
 
-                <!-- Navigation Tabs -->
+                <!-- Navigation Tabs (UNIFIED ARTICLES TAB) -->
                 <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center self-center md:self-auto border border-[#E9E9E7] gap-1 overflow-x-auto max-w-full">
                     <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">מיקוד יומי</button>
                     <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">קורסים</button>
-                    <button id="btn-articles-mode" onclick="switchMode('articles')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">מאמרים</button>
-                    <button id="btn-analysis-mode" onclick="switchMode('analysis')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">ניתוח מאמר</button>
-                    <button id="btn-glossary-mode" onclick="switchMode('glossary')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📚 מילון מושגים</button>
+                    <button id="btn-articles-mode" onclick="switchMode('articles')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📚 מאגר ומאמרים</button>
+                    <button id="btn-glossary-mode" onclick="switchMode('glossary')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📖 מילון מושגים</button>
                     <button id="btn-telegram-mode" onclick="switchMode('telegram')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">✈️ טלגרם</button>
                     <button id="btn-notes-mode" onclick="switchMode('notes')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">פתקים</button>
                 </div>
@@ -136,7 +125,7 @@
         </div>
     </header>
 
-    <!-- COMMAND PALETTE MODAL (Ctrl + K) -->
+    <!-- COMMAND PALETTE MODAL -->
     <div id="cmd-palette-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] flex items-start justify-center pt-20 hidden p-4">
         <div class="notion-card bg-white max-w-xl w-full p-4 relative shadow-2xl space-y-3">
             <div class="relative">
@@ -200,7 +189,7 @@
                 </div>
             </div>
 
-            <!-- Unified Tasks -->
+            <!-- Unified Tasks & Checklists -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 space-y-6">
                     <div class="notion-card p-5">
@@ -213,24 +202,32 @@
                 </div>
 
                 <div class="space-y-6">
+                    <!-- EDITABLE ROUTINE CHECKLIST -->
                     <div class="notion-card p-5">
                         <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
                             <h3 class="text-xs font-bold text-[#37352F]">🔄 סנכרון לאחר יום לימודים</h3>
-                            <button onclick="resetRoutineChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס</button>
+                            <div class="flex items-center gap-2">
+                                <button onclick="addRoutineItemFirebase()" class="text-xs font-bold text-[#37352F] hover:underline">+ הוספה</button>
+                                <button onclick="resetRoutineChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס</button>
+                            </div>
                         </div>
-                        <div class="space-y-1.5" id="routine-checklist-list"></div>
+                        <div class="space-y-2" id="routine-checklist-list"></div>
                     </div>
 
+                    <!-- EDITABLE HOBBIES & WEEKLY TRACKER -->
                     <div class="notion-card p-5">
                         <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
                             <h3 class="text-sm font-bold text-[#37352F]">✨ מעקב שבועי</h3>
-                            <button onclick="resetHobbiesChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס שבוע</button>
+                            <div class="flex items-center gap-2">
+                                <button onclick="addHobbyFirebase()" class="text-xs font-bold text-[#37352F] hover:underline">+ הרגל חדש</button>
+                                <button onclick="resetHobbiesChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס שבוע</button>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-xs">
                                 <thead>
                                     <tr class="border-b border-[#E9E9E7] text-[#787774] text-[11px]">
-                                        <th class="pb-2 font-bold text-[#37352F]">תחביב</th>
+                                        <th class="pb-2 font-bold text-[#37352F]">הרגל / תחביב</th>
                                         <th class="pb-2 text-center w-6">א'</th>
                                         <th class="pb-2 text-center w-6">ב'</th>
                                         <th class="pb-2 text-center w-6">ג'</th>
@@ -238,6 +235,7 @@
                                         <th class="pb-2 text-center w-6">ה'</th>
                                         <th class="pb-2 text-center w-6">ו'</th>
                                         <th class="pb-2 text-center w-6">ש'</th>
+                                        <th class="pb-2 text-center w-8"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="hobbies-tracker-list" class="divide-y divide-[#E9E9E7]/60"></tbody>
@@ -257,98 +255,40 @@
             <div id="courses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- VIEW 3: ARTICLES LIST -->
-        <div id="view-articles" class="hidden space-y-6">
+        <!-- UNIFIED VIEW 3: ARTICLES & ANALYSIS LIBRARY -->
+        <div id="view-articles" class="space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F]">מאמרים אקדמיים לקריאה ומחקר</h2>
-                    <p class="text-xs text-[#787774]">ציטוט אוטומטי בפורמט APA 7th וקישור לניתוחים</p>
+                    <h2 class="text-lg font-bold text-[#37352F]">📚 מאגר מאמרים וניתוחים</h2>
+                    <p class="text-xs text-[#787774]">כל המאמרים והניתוחים במקום אחד. לחצי על מאמר לעריכה מלאה או הזיני מאמר חדש.</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <select id="articles-course-filter" onchange="renderArticlesView()" class="p-1.5 border border-[#E9E9E7] rounded text-xs bg-white">
                         <option value="ALL">כל הקורסים</option>
                     </select>
-                    <button onclick="openAddArticleModal()" class="bg-[#37352F] text-white text-xs font-medium px-3.5 py-1.5 rounded">+ מאמר חדש</button>
+                    <button onclick="openArticleModal()" class="bg-[#37352F] text-white text-xs font-medium px-3.5 py-1.5 rounded transition-all">+ מאמר וניתוח חדש</button>
                 </div>
             </div>
-            <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+            <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
 
-        <!-- VIEW 4: ARTICLE ANALYSIS -->
-        <div id="view-analysis" class="hidden space-y-6">
-            <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                    <h2 class="text-lg font-bold text-[#37352F]">ניתוח מאמר מובנה</h2>
-                    <p class="text-xs text-[#787774]">שמירה אוטומטית בזמן הקלדה | ייצוא ל-Markdown ול-PDF</p>
-                </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span id="analysis-save-status" class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">כל השינויים נשמרו</span>
-                    <button onclick="exportAnalysisToMarkdown()" class="bg-[#EFEEEA] text-[#37352F] border border-[#E9E9E7] text-xs px-3 py-1.5 rounded">📄 Markdown</button>
-                    <button onclick="exportAnalysisToPDF()" class="bg-[#37352F] text-white text-xs px-3.5 py-1.5 rounded">🖨️ PDF</button>
-                    <select id="analysis-article-selector" onchange="loadArticleAnalysisToForm(this.value)" class="p-1.5 border border-[#E9E9E7] rounded text-xs bg-white"></select>
-                </div>
-            </div>
-
-            <div id="printable-analysis-area" class="notion-card p-6 bg-white space-y-5">
-                <div class="border-b border-[#E9E9E7] pb-3">
-                    <h3 id="analysis-article-title" class="text-base font-bold text-[#37352F]">בחר מאמר להתחלת ניתוח</h3>
-                    <p id="analysis-article-meta" class="text-xs text-[#787774] mt-0.5">מחברים ושנת פרסום יופיעו כאן</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-[#37352F]">1. שאלת המחקר והשערות</label>
-                        <textarea id="an-rq" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
-                    </div>
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-[#37352F]">2. מתודולוגיה, מדגם וכלים</label>
-                        <textarea id="an-method" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
-                    </div>
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-[#37352F]">3. ממצאים מרכזיים ותוצאות</label>
-                        <textarea id="an-findings" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
-                    </div>
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-[#37352F]">4. דיון, מגבלות וביקורת</label>
-                        <textarea id="an-critique" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
-                    </div>
-                </div>
-
-                <div class="space-y-1.5 pt-2 border-t border-[#E9E9E7]">
-                    <label class="block text-xs font-bold text-[#37352F]">5. זיקה למחקר שלי / ציטוטים וסיכום אישי</label>
-                    <textarea id="an-takeaways" rows="3" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- VIEW 5: ACADEMIC GLOSSARY -->
+        <!-- VIEW 4: ACADEMIC GLOSSARY -->
         <div id="view-glossary" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-2"><span>📚</span> מילון מושגים אקדמי</h2>
-                    <p class="text-xs text-[#787774]">ארגון מושגים לפי קורס, תרגול בכרטיסיות (Flashcards) וייצוא מרובה</p>
+                    <p class="text-xs text-[#787774]">ארגון מושגים לפי קורס, תרגול בכרטיסיות (Flashcards) וייצוא</p>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
                     <button id="glossary-mode-btn" onclick="toggleGlossaryViewMode()" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] border border-[#E9E9E7] text-xs px-3 py-1.5 rounded">⚡ מצב תרגול</button>
-                    
-                    <div class="export-dropdown">
-                        <button onclick="toggleExportMenu()" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] border border-[#E9E9E7] text-xs px-3 py-1.5 rounded">⬇️ ייצוא</button>
-                        <div class="export-menu" id="exportMenu">
-                            <div class="p-2 text-xs hover:bg-[#EFEEEA] cursor-pointer" onclick="exportGlossary('json')">קובץ JSON</div>
-                            <div class="p-2 text-xs hover:bg-[#EFEEEA] cursor-pointer" onclick="exportGlossary('txt')">קובץ טקסט</div>
-                            <div class="p-2 text-xs hover:bg-[#EFEEEA] cursor-pointer" onclick="exportGlossary('doc')">מסמך Word</div>
-                            <div class="p-2 text-xs hover:bg-[#EFEEEA] cursor-pointer" onclick="exportGlossary('pdf')">קובץ PDF</div>
-                            <div class="p-2 text-xs hover:bg-[#EFEEEA] cursor-pointer" onclick="exportGlossary('excel')">קובץ Excel</div>
-                        </div>
-                    </div>
-
                     <button onclick="openGlossaryModal()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all">+ מושג חדש</button>
                 </div>
             </div>
 
             <div id="glossary-controls-card" class="notion-card p-4 space-y-3">
                 <div class="flex gap-2 items-center">
-                    <input type="text" id="glossary-search-input" oninput="renderGlossaryView()" placeholder="חיפוש מושג, מונח באנגלית או הגדרה..." class="flex-1 p-2 border border-[#E9E9E7] rounded text-xs">
+                    <input type="text" id="glossary-search-input" oninput="renderGlossaryView()" placeholder="חיפוש מושג..." class="flex-1 p-2 border border-[#E9E9E7] rounded text-xs">
                     <button id="glossary-exam-filter-btn" onclick="toggleGlossaryExamOnly()" class="px-3 py-2 border border-[#E9E9E7] rounded text-xs bg-white">⭐ לבחינה בלבד</button>
                 </div>
                 <div id="glossary-course-tabs" class="flex gap-1.5 overflow-x-auto pb-1"></div>
@@ -357,7 +297,7 @@
             <div id="glossary-main-content"></div>
         </div>
 
-        <!-- VIEW 6: TELEGRAM BOT -->
+        <!-- VIEW 5: TELEGRAM BOT -->
         <div id="view-telegram" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div>
@@ -370,7 +310,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="notion-card p-5 space-y-4">
                     <div class="border-b border-[#E9E9E7] pb-3">
-                        <h3 class="text-xs font-bold text-[#37352F]">⚙️ הגדרות הבוט בטלגרם</h3>
+                        <h3 class="text-xs font-bold text-[#37352F]">⚙️ הגדרות הבוט</h3>
                     </div>
                     <div class="space-y-3 text-xs">
                         <div>
@@ -389,15 +329,8 @@
                     <div class="notion-card p-5 space-y-4">
                         <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-3">
                             <h3 class="text-xs font-bold text-[#37352F]">📝 הידור הודעה</h3>
-                            <div class="flex flex-wrap gap-1">
-                                <button onclick="applyTelegramTemplate('reminder')" class="px-2 py-0.5 bg-[#EFEEEA] text-[11px] rounded">📌 תזכורת</button>
-                                <button onclick="applyTelegramTemplate('task')" class="px-2 py-0.5 bg-[#EFEEEA] text-[11px] rounded">⚡ משימה</button>
-                            </div>
                         </div>
-                        <textarea id="tg-msg-text" rows="4" placeholder="רשמי כאן הודעה לשליחה עצמית בטלגרם..." class="w-full p-3 text-xs border border-[#E9E9E7] rounded focus:outline-none"></textarea>
-                        <div class="p-3 bg-[#EFEEEA]/30 border border-dashed border-[#E9E9E7] rounded">
-                            <input type="file" id="tg-file-input" class="block w-full text-xs text-[#787774]">
-                        </div>
+                        <textarea id="tg-msg-text" rows="4" placeholder="רשמי כאן הודעה לשליחה עצמית..." class="w-full p-3 text-xs border border-[#E9E9E7] rounded focus:outline-none"></textarea>
                         <div class="flex items-center justify-between pt-1">
                             <span id="tg-send-status" class="text-xs"></span>
                             <button onclick="sendTelegramMessageFirebase()" class="bg-[#37352F] text-white text-xs px-5 py-2 rounded font-medium">🚀 שליחה לטלגרם</button>
@@ -407,7 +340,7 @@
             </div>
         </div>
 
-        <!-- VIEW 7: NOTES CANVAS -->
+        <!-- VIEW 6: NOTES CANVAS -->
         <div id="view-notes" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
                 <div>
@@ -424,7 +357,84 @@
 
     </main>
 
-    <!-- ALL MODALS -->
+    <!-- UNIFIED ARTICLE & ANALYSIS MODAL -->
+    <div id="article-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+        <div class="notion-card bg-white max-w-3xl w-full p-6 relative shadow-2xl my-8 max-h-[90vh] overflow-y-auto space-y-5">
+            <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-3">
+                <h3 id="article-modal-title" class="text-base font-bold text-[#37352F]">הוספת מאמר וניתוח חדש</h3>
+                <button onclick="closeArticleModal()" class="text-slate-400 hover:text-slate-700 text-sm p-1">✕</button>
+            </div>
+
+            <form onsubmit="handleArticleSubmit(event)" class="space-y-5">
+                <input type="hidden" id="art-edit-id">
+
+                <!-- Article Metadata -->
+                <div class="bg-[#EFEEEA]/30 p-4 rounded-lg border border-[#E9E9E7] space-y-3">
+                    <h4 class="text-xs font-bold text-[#37352F]">📌 פרטי המאמר</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">כותרת המאמר *</label>
+                            <input type="text" id="art-title" required placeholder="למשל: Construal level theory of psychological distance" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">שיוך לקורס *</label>
+                            <select id="art-course" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]"></select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">מחברים</label>
+                            <input type="text" id="art-authors" placeholder="Trope, Y., & Liberman, N." class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">שנת פרסום</label>
+                            <input type="text" id="art-year" placeholder="2010" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">קישור ל-PDF / Drive</label>
+                            <input type="url" id="art-link" placeholder="https://..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Structured 5-Step Analysis Fields -->
+                <div class="space-y-4 pt-1">
+                    <h4 class="text-xs font-bold text-[#37352F] border-b border-[#E9E9E7] pb-2">🔍 ניתוח המאמר (5 השלבים המובנים)</h4>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-[#37352F] mb-1">1. שאלת המחקר והשערות</label>
+                            <textarea id="art-rq" rows="3" placeholder="מה המאמר בודק? מהן ההשערות המרכזיות?" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#37352F] mb-1">2. מתודולוגיה, מדגם וכלים</label>
+                            <textarea id="art-method" rows="3" placeholder="מערך המחקר, כלי המדידה (שאלונים, ניסוי), מדגם..." class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#37352F] mb-1">3. ממצאים מרכזיים ותוצאות</label>
+                            <textarea id="art-findings" rows="3" placeholder="אילו השערות אוששו? מהם הממצאים המרכזיים?" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#37352F] mb-1">4. דיון, מגבלות וביקורת</label>
+                            <textarea id="art-critique" rows="3" placeholder="מגבלות מתודולוגיות, הסברים חלופיים..." class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#37352F] mb-1">5. זיקה למחקר שלי / ציטוטים וסיכום אישי</label>
+                        <textarea id="art-takeaways" rows="2.5" placeholder="כיצד המאמר משרת את העבודה שלי? ציטוטים מרכזיים..." class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-[#E9E9E7] flex justify-end gap-2">
+                    <button type="button" onclick="closeArticleModal()" class="px-4 py-2 bg-[#EFEEEA] hover:bg-[#E2E1DC] text-xs font-medium rounded text-[#37352F]">ביטול</button>
+                    <button type="submit" class="px-5 py-2 bg-[#37352F] hover:bg-black text-white text-xs font-bold rounded shadow-sm transition-all">💾 שמירת מאמר וניתוח</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL: ADD COURSE -->
     <div id="add-course-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
         <div class="notion-card bg-white max-w-md w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto">
@@ -438,16 +448,6 @@
                     <div>
                         <label class="block text-xs font-medium text-[#37352F] mb-1">קוד</label>
                         <input type="text" id="course-code" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-medium text-[#37352F] mb-1">שעות מפגש</label>
-                        <input type="text" id="course-hours" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-[#37352F] mb-1">מיקום</label>
-                        <input type="text" id="course-location" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
                     </div>
                 </div>
                 <div>
@@ -483,59 +483,8 @@
                     <label class="block text-xs font-medium text-[#37352F] mb-1">מועד יעד</label>
                     <input type="date" id="task-modal-date" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">סטטוס</label>
-                    <select id="task-modal-status" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                        <option value="not-started">טרם הוחל</option>
-                        <option value="in-progress">בתהליך</option>
-                        <option value="completed">טופל</option>
-                    </select>
-                </div>
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeAddTaskModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
-                    <button type="submit" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">הוספה</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: ADD ARTICLE -->
-    <div id="add-article-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
-        <div class="notion-card bg-white max-w-md w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto">
-            <h3 class="text-sm font-bold text-[#37352F] mb-3">הוספת מאמר אקדמי חדש</h3>
-            <form onsubmit="handleAddNewArticleSubmit(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">שיוך לקורס *</label>
-                    <select id="article-modal-course" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white"></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">כותרת המאמר *</label>
-                    <input type="text" id="article-modal-title" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <div class="col-span-2">
-                        <label class="block text-xs font-medium text-[#37352F] mb-1">מחברים</label>
-                        <input type="text" id="article-modal-authors" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-[#37352F] mb-1">שנה</label>
-                        <input type="text" id="article-modal-year" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">סטטוס קריאה</label>
-                    <select id="article-modal-status" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white">
-                        <option value="to-read">טרם נקרא</option>
-                        <option value="reading">בתהליך קריאה</option>
-                        <option value="read">נקרא וסוכם</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור ל-PDF / Drive</label>
-                    <input type="url" id="article-modal-link" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeAddArticleModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
                     <button type="submit" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">הוספה</button>
                 </div>
             </form>
@@ -546,50 +495,24 @@
     <div id="glossary-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
         <div class="notion-card bg-white max-w-lg w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto space-y-3">
             <h3 id="glossary-modal-title" class="text-sm font-bold text-[#37352F]">הוספת מושג חדש</h3>
-            <input type="hidden" id="glossary-edit-id">
-            
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">שם המושג (עברית) *</label>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">שם המושג *</label>
                     <input type="text" id="glossary-term-he" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">מונח בלועזית / אנגלית</label>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">מונח בלועזית</label>
                     <input type="text" id="glossary-term-en" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
                 </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">קורס *</label>
-                    <input type="text" id="glossary-course" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">נושא / יחידת לימוד</label>
-                    <input type="text" id="glossary-topic" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                </div>
-            </div>
-
             <div>
-                <label class="block text-xs font-medium text-[#37352F] mb-1">הגדרה / הסבר תמציתי *</label>
+                <label class="block text-xs font-medium text-[#37352F] mb-1">קורס *</label>
+                <input type="text" id="glossary-course" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-[#37352F] mb-1">הגדרה *</label>
                 <textarea id="glossary-definition" rows="3" class="w-full p-2 border border-[#E9E9E7] rounded text-xs"></textarea>
             </div>
-
-            <div>
-                <label class="block text-xs font-medium text-[#37352F] mb-1">דוגמה / הקשר יישומי</label>
-                <textarea id="glossary-example" rows="2" class="w-full p-2 border border-[#E9E9E7] rounded text-xs"></textarea>
-            </div>
-
-            <div>
-                <label class="block text-xs font-medium text-[#37352F] mb-1">תגיות (מופרדות בפסיקים)</label>
-                <input type="text" id="glossary-tags" placeholder="זיכרון, תפיסה, קוגניציה" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-            </div>
-
-            <div class="flex items-center gap-2 pt-1">
-                <input type="checkbox" id="glossary-exam-focus" class="w-4 h-4 rounded border-[#E9E9E7]">
-                <label for="glossary-exam-focus" class="text-xs text-[#37352F] font-medium">⭐ מושג מרכזי / דגש לבחינה</label>
-            </div>
-
             <div class="pt-2 flex justify-end gap-2 border-t border-[#E9E9E7]">
                 <button type="button" onclick="closeGlossaryModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
                 <button type="button" onclick="saveGlossaryTermFirebase()" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">שמירה</button>
@@ -597,20 +520,7 @@
         </div>
     </div>
 
-    <!-- MODAL: SYLLABUS -->
-    <div id="syllabus-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
-        <div class="notion-card bg-white max-w-lg w-full p-5 relative shadow-xl max-h-[85vh] flex flex-col">
-            <h3 id="syllabus-modal-title" class="text-sm font-bold text-[#37352F] mb-2">סילבוס קורס</h3>
-            <div id="syllabus-content-editable" contenteditable="true"
-                 class="flex-1 overflow-y-auto border border-[#E9E9E7] rounded p-3 text-xs text-[#37352F] min-h-[220px] focus:outline-none focus:border-[#37352F]"></div>
-            <div class="pt-3 flex justify-end gap-2 border-t border-[#E9E9E7] mt-3">
-                <button type="button" onclick="closeSyllabusModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">סגירה</button>
-                <button type="button" onclick="saveSyllabusContentFirebase()" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">שמירה</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN FIREBASE MODULE WITH COMPLETE JAVASCRIPT CODE -->
+    <!-- MAIN JAVASCRIPT & FIREBASE INTEGRATION -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getDatabase, ref, onValue, set, update, push, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
@@ -628,12 +538,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let loggedInUser = sessionStorage.getItem('dashboard_user') || null;
+        let loggedInUser = localStorage.getItem('dashboard_user') || null;
         let dbUnsubscribe = null;
         let activeTargetCourseIdForTask = null;
         let activeEditingCourseId = null;
-        let activeSyllabusCourseId = null;
-        let activeAnalysisArticleId = null;
         let noteZIndexCounter = 10;
 
         let localState = {
@@ -649,18 +557,12 @@
             hobbies: [
                 { id: 'h1', name: 'הליכה 🏃‍♀️', days: [false, false, false, false, false, false, false] },
                 { id: 'h2', name: 'קריאת ספר 📖', days: [false, false, false, false, false, false, false] }
-            ],
-            syllabi: {},
-            telegramConfig: { botToken: '', chatId: '' }
+            ]
         };
 
         let selectedGlossaryCourse = "ALL";
         let isGlossaryExamOnly = false;
-        let glossaryViewMode = "list";
-        let flashcardIndex = 0;
-        let showFlashcardDef = false;
 
-        // AUTHENTICATION LOGIC (HELEN / 1234)
         function checkAuthSession() {
             const overlay = document.getElementById('login-overlay');
             const badge = document.getElementById('sync-status-badge');
@@ -687,7 +589,7 @@
 
             if (u === 'helen' && p === '1234') {
                 err.classList.add('hidden');
-                sessionStorage.setItem('dashboard_user', 'helen');
+                localStorage.setItem('dashboard_user', 'helen');
                 loggedInUser = 'helen';
                 checkAuthSession();
             } else {
@@ -697,7 +599,7 @@
 
         window.logoutCustom = function() {
             if (confirm('להתנתק מהמערכת?')) {
-                sessionStorage.removeItem('dashboard_user');
+                localStorage.removeItem('dashboard_user');
                 loggedInUser = null;
                 checkAuthSession();
             }
@@ -718,7 +620,6 @@
                     if (!localState.notes) localState.notes = {};
                     if (!localState.routine) localState.routine = [];
                     if (!localState.hobbies) localState.hobbies = [];
-                    if (!localState.syllabi) localState.syllabi = {};
                 } else {
                     set(userDbRef, localState);
                 }
@@ -746,11 +647,343 @@
             renderUnifiedFocusTasks();
             renderRoutineChecklist();
             renderHobbiesTracker();
+            updateArticleCourseSelect();
             renderArticlesView();
-            updateArticleSelectors();
             renderGlossaryView();
             renderStickyNotesCanvas();
         }
+
+        // --- UNIFIED ARTICLE & ANALYSIS MODAL WORKFLOW ---
+        function updateArticleCourseSelect() {
+            const select = document.getElementById('art-course');
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">-- בחרי קורס משויך --</option>' + 
+                Object.keys(localState.courses || {}).map(cId => `<option value="${cId}" ${cId === currentVal ? 'selected' : ''}>${escapeHtml(localState.courses[cId].title)}</option>`).join('');
+        }
+
+        window.openArticleModal = function(editId = null) {
+            updateArticleCourseSelect();
+            const modalTitle = document.getElementById('article-modal-title');
+            
+            if (editId && localState.articles[editId]) {
+                const art = localState.articles[editId];
+                modalTitle.innerText = `עריכת מאמר וניתוח: ${art.title}`;
+                document.getElementById('art-edit-id').value = editId;
+                document.getElementById('art-title').value = art.title || '';
+                document.getElementById('art-course').value = art.courseId || '';
+                document.getElementById('art-authors').value = art.authors || '';
+                document.getElementById('art-year').value = art.year || '';
+                document.getElementById('art-link').value = art.link || '';
+
+                const an = art.analysis || {};
+                document.getElementById('art-rq').value = an.rq || '';
+                document.getElementById('art-method').value = an.method || '';
+                document.getElementById('art-findings').value = an.findings || '';
+                document.getElementById('art-critique').value = an.critique || '';
+                document.getElementById('art-takeaways').value = an.takeaways || '';
+            } else {
+                modalTitle.innerText = 'הוספת מאמר וניתוח חדש';
+                document.getElementById('art-edit-id').value = '';
+                document.getElementById('art-title').value = '';
+                document.getElementById('art-course').value = '';
+                document.getElementById('art-authors').value = '';
+                document.getElementById('art-year').value = '';
+                document.getElementById('art-link').value = '';
+                document.getElementById('art-rq').value = '';
+                document.getElementById('art-method').value = '';
+                document.getElementById('art-findings').value = '';
+                document.getElementById('art-critique').value = '';
+                document.getElementById('art-takeaways').value = '';
+            }
+
+            document.getElementById('article-modal').classList.remove('hidden');
+        };
+
+        window.closeArticleModal = function() {
+            document.getElementById('article-modal').classList.add('hidden');
+        };
+
+        window.handleArticleSubmit = function(e) {
+            e.preventDefault();
+            if (!loggedInUser) return;
+
+            const editId = document.getElementById('art-edit-id').value;
+            const title = document.getElementById('art-title').value.trim();
+            const courseId = document.getElementById('art-course').value;
+            const authors = document.getElementById('art-authors').value.trim();
+            const year = document.getElementById('art-year').value.trim();
+            const link = document.getElementById('art-link').value.trim();
+
+            const analysis = {
+                rq: document.getElementById('art-rq').value.trim(),
+                method: document.getElementById('art-method').value.trim(),
+                findings: document.getElementById('art-findings').value.trim(),
+                critique: document.getElementById('art-critique').value.trim(),
+                takeaways: document.getElementById('art-takeaways').value.trim()
+            };
+
+            if (!title || !courseId) {
+                alert('אנא הזיני כותרת מאמר ובחרי קורס.');
+                return;
+            }
+
+            const articleObj = { title, courseId, authors, year, link, analysis, status: 'read' };
+
+            if (editId) {
+                update(ref(db, `${getUserPath()}/articles/${editId}`), articleObj);
+            } else {
+                const newKey = push(ref(db, `${getUserPath()}/articles`)).key;
+                set(ref(db, `${getUserPath()}/articles/${newKey}`), articleObj);
+            }
+
+            closeArticleModal();
+        };
+
+        // --- ARTICLES LIST RENDERING ---
+        function renderArticlesView() {
+            const grid = document.getElementById('articles-grid');
+            const filterEl = document.getElementById('articles-course-filter');
+            if (!grid) return;
+
+            const selectedFilter = filterEl ? filterEl.value : 'ALL';
+            if (filterEl) {
+                filterEl.innerHTML = '<option value="ALL">כל הקורסים</option>';
+                Object.keys(localState.courses || {}).forEach(cId => {
+                    filterEl.innerHTML += `<option value="${cId}" ${cId === selectedFilter ? 'selected' : ''}>${escapeHtml(localState.courses[cId].title)}</option>`;
+                });
+            }
+
+            grid.innerHTML = '';
+            const articleKeys = Object.keys(localState.articles || {});
+
+            if (articleKeys.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-2 notion-card p-12 text-center space-y-3">
+                        <p class="text-sm font-bold text-[#37352F]">טרם נותחו מאמרים</p>
+                        <p class="text-xs text-[#787774]">לחצי על "+ מאמר וניתוח חדש" כדי להוסיף מאמר ראשון.</p>
+                        <button onclick="openArticleModal()" class="bg-[#37352F] text-white text-xs px-4 py-2 rounded font-medium">+ הוספת מאמר</button>
+                    </div>
+                `;
+                return;
+            }
+
+            articleKeys.forEach(artId => {
+                const art = localState.articles[artId];
+                if (selectedFilter !== 'ALL' && art.courseId !== selectedFilter) return;
+
+                const courseObj = localState.courses[art.courseId] || { title: 'קורס כללי' };
+                const an = art.analysis || {};
+
+                const card = document.createElement('div');
+                card.className = 'notion-card p-5 flex flex-col justify-between space-y-4';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] bg-[#EFEEEA] px-2 py-0.5 rounded text-[#787774] font-medium">${escapeHtml(courseObj.title)}</span>
+                            <span class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-bold">נותח וסוכם ✓</span>
+                        </div>
+                        <h3 class="font-bold text-sm text-[#37352F] leading-snug cursor-pointer hover:underline" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
+                        <p class="text-[11px] text-[#787774] mt-1">${escapeHtml(art.authors || 'מחברים לא צוינו')} ${art.year ? `(${escapeHtml(art.year)})` : ''}</p>
+
+                        <!-- Analysis Details Breakdown -->
+                        <div class="mt-4 pt-3 border-t border-[#E9E9E7] space-y-2 text-xs">
+                            ${an.rq ? `<div class="bg-[#EFEEEA]/30 p-2 rounded"><strong>שאלת מחקר:</strong> <span class="text-[#37352F]">${escapeHtml(an.rq)}</span></div>` : ''}
+                            ${an.method ? `<div class="bg-[#EFEEEA]/30 p-2 rounded"><strong>מתודולוגיה:</strong> <span class="text-[#37352F]">${escapeHtml(an.method)}</span></div>` : ''}
+                            ${an.findings ? `<div class="bg-[#EFEEEA]/30 p-2 rounded"><strong>ממצאים:</strong> <span class="text-[#37352F]">${escapeHtml(an.findings)}</span></div>` : ''}
+                            ${an.takeaways ? `<div class="bg-amber-50/60 p-2 rounded border-r-2 border-amber-400"><strong>זיקה אישית:</strong> <span class="text-[#37352F]">${escapeHtml(an.takeaways)}</span></div>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-[#E9E9E7] flex items-center justify-between text-xs flex-wrap gap-2">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <button onclick="exportAnalysisToMarkdown('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] border border-[#E9E9E7] px-2 py-1 rounded text-[10px]">📄 Markdown</button>
+                            <button onclick="exportAnalysisToPDF('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] border border-[#E9E9E7] px-2 py-1 rounded text-[10px]">🖨️ PDF</button>
+                            <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] border border-[#E9E9E7] px-2 py-1 rounded text-[10px]">📋 APA</button>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="openArticleModal('${artId}')" class="bg-[#37352F] hover:bg-black text-white px-2.5 py-1 rounded text-[10px] font-bold">✏️ עריכה מלאה</button>
+                            <button onclick="deleteArticleFirebase('${artId}')" class="text-slate-400 hover:text-red-500 text-xs p-1">🗑️</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.copyAPACitation = function(artId) {
+            const art = localState.articles[artId];
+            if (!art) return;
+            const apa = `${art.authors || 'Unknown Author'} (${art.year || 'n.d.'}). ${art.title}.${art.link ? ' ' + art.link : ''}`;
+            navigator.clipboard.writeText(apa).then(() => alert(`ציטוט APA 7th הועתק ללוח:\n\n${apa}`));
+        };
+
+        window.deleteArticleFirebase = function(artId) {
+            if (loggedInUser && confirm('למחוק את המאמר וכל הניתוח שלו?')) {
+                remove(ref(db, `${getUserPath()}/articles/${artId}`));
+            }
+        };
+
+        window.exportAnalysisToMarkdown = function(artId) {
+            const art = localState.articles[artId];
+            if (!art) return;
+            const an = art.analysis || {};
+            const title = art.title || 'ניתוח מאמר';
+            const md = `# ניתוח מאמר אקדמי: ${title}\n**מחברים:** ${art.authors || ''} (${art.year || ''})\n\n### 1. שאלת מחקר והשערות\n${an.rq || ''}\n\n### 2. מתודולוגיה ומדגם\n${an.method || ''}\n\n### 3. ממצאים ותוצאות\n${an.findings || ''}\n\n### 4. דיון וביקורת\n${an.critique || ''}\n\n### 5. זיקה אישית\n${an.takeaways || ''}`;
+            const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Analysis_${title.replace(/\s+/g, '_')}.md`; a.click();
+        };
+
+        window.exportAnalysisToPDF = function(artId) {
+            const art = localState.articles[artId];
+            if (!art) return;
+            const an = art.analysis || {};
+            const courseObj = localState.courses[art.courseId] || { title: 'קורס כללי' };
+
+            const container = document.createElement('div');
+            container.style.direction = 'rtl';
+            container.style.padding = '24px';
+            container.style.fontFamily = 'Heebo, sans-serif';
+            container.innerHTML = `
+                <h1 style="font-size:18px; font-weight:bold; color:#37352F;">ניתוח מאמר: ${escapeHtml(art.title)}</h1>
+                <p style="font-size:12px; color:#787774; margin-top:4px;"><b>מחברים:</b> ${escapeHtml(art.authors || 'לא צוינו')} | <b>שנה:</b> ${escapeHtml(art.year || 'לא צוינה')} | <b>קורס:</b> ${escapeHtml(courseObj.title)}</p>
+                <hr style="margin: 16px 0; border: 0; border-top: 1px solid #E9E9E7;"/>
+                <div style="font-size:12px; line-height:1.6; color:#37352F;">
+                    <h3 style="font-weight:bold; margin-top:12px;">1. שאלת המחקר והשערות</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.rq || 'אין פירוט')}</p>
+                    <h3 style="font-weight:bold; margin-top:12px;">2. מתודולוגיה, מדגם וכלים</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.method || 'אין פירוט')}</p>
+                    <h3 style="font-weight:bold; margin-top:12px;">3. ממצאים מרכזיים ותוצאות</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.findings || 'אין פירוט')}</p>
+                    <h3 style="font-weight:bold; margin-top:12px;">4. דיון, מגבלות וביקורת</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.critique || 'אין פירוט')}</p>
+                    <h3 style="font-weight:bold; margin-top:12px;">5. זיקה למחקר שלי</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.takeaways || 'אין פירוט')}</p>
+                </div>
+            `;
+            document.body.appendChild(container);
+            if (typeof html2pdf !== 'undefined') {
+                html2pdf().from(container).save(`Analysis_${art.title.replace(/\s+/g, '_')}.pdf`).then(() => document.body.removeChild(container));
+            } else {
+                window.print();
+                document.body.removeChild(container);
+            }
+        };
+
+        // --- EDITABLE ROUTINE & HOBBIES LOGIC ---
+        function renderRoutineChecklist() {
+            const list = document.getElementById('routine-checklist-list');
+            if (!list) return;
+            if (!localState.routine || localState.routine.length === 0) {
+                list.innerHTML = '<p class="text-xs text-[#787774] italic">אין סעיפי סנכרון.</p>';
+                return;
+            }
+
+            list.innerHTML = localState.routine.map((item, idx) => `
+                <div class="flex items-center justify-between p-1.5 rounded hover:bg-[#EFEEEA]/50 border border-transparent hover:border-[#E9E9E7] text-xs">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRoutineCheckFirebase(${idx}, this.checked)" class="w-3.5 h-3.5 rounded border-[#E9E9E7]">
+                        <span class="${item.checked ? 'line-through text-[#787774]' : 'text-[#37352F]'}">${escapeHtml(item.text)}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="editRoutineItemFirebase(${idx})" class="text-slate-400 hover:text-slate-700 text-[10px]">✏️</button>
+                        <button onclick="deleteRoutineItemFirebase(${idx})" class="text-slate-400 hover:text-red-500 text-[10px]">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.addRoutineItemFirebase = function() {
+            const text = prompt('הזיני סעיף חדש לסנכרון:');
+            if (!text || !text.trim() || !loggedInUser) return;
+            if (!localState.routine) localState.routine = [];
+            localState.routine.push({ id: 'r_' + Date.now(), text: text.trim(), checked: false });
+            update(ref(db, getUserPath()), { routine: localState.routine });
+        };
+
+        window.editRoutineItemFirebase = function(idx) {
+            const current = localState.routine[idx].text;
+            const updated = prompt('עריכת סעיף סנכרון:', current);
+            if (updated !== null && updated.trim() && loggedInUser) {
+                localState.routine[idx].text = updated.trim();
+                update(ref(db, getUserPath()), { routine: localState.routine });
+            }
+        };
+
+        window.deleteRoutineItemFirebase = function(idx) {
+            if (loggedInUser && confirm('למחוק סעיף זה?')) {
+                localState.routine.splice(idx, 1);
+                update(ref(db, getUserPath()), { routine: localState.routine });
+            }
+        };
+
+        window.toggleRoutineCheckFirebase = function(idx, checked) {
+            localState.routine[idx].checked = checked;
+            if (loggedInUser) update(ref(db, getUserPath()), { routine: localState.routine });
+        };
+
+        window.resetRoutineChecks = function() {
+            if (!localState.routine) return;
+            localState.routine.forEach(r => r.checked = false);
+            if (loggedInUser) update(ref(db, getUserPath()), { routine: localState.routine });
+        };
+
+        function renderHobbiesTracker() {
+            const list = document.getElementById('hobbies-tracker-list');
+            if (!list) return;
+
+            if (!localState.hobbies || localState.hobbies.length === 0) {
+                list.innerHTML = '<tr><td colspan="9" class="py-3 text-center text-xs text-[#787774] italic">אין הרגלים/תחביבים בלוג.</td></tr>';
+                return;
+            }
+
+            list.innerHTML = localState.hobbies.map((h, hIdx) => `
+                <tr class="hover:bg-[#EFEEEA]/30">
+                    <td class="py-2 text-xs font-medium text-[#37352F]">
+                        <span class="cursor-pointer" onclick="editHobbyFirebase(${hIdx})">${escapeHtml(h.name)}</span>
+                    </td>
+                    ${[0,1,2,3,4,5,6].map(d => `<td class="text-center"><input type="checkbox" ${h.days[d] ? 'checked' : ''} onchange="toggleHobbyDayFirebase(${hIdx}, ${d}, this.checked)" class="w-3.5 h-3.5 rounded border-[#E9E9E7]"></td>`).join('')}
+                    <td class="text-center">
+                        <button onclick="deleteHobbyFirebase(${hIdx})" class="text-slate-400 hover:text-red-500 text-[10px]">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        window.addHobbyFirebase = function() {
+            const name = prompt('שם ההרגל / תחביב החדש:');
+            if (!name || !name.trim() || !loggedInUser) return;
+            if (!localState.hobbies) localState.hobbies = [];
+            localState.hobbies.push({ id: 'h_' + Date.now(), name: name.trim(), days: [false, false, false, false, false, false, false] });
+            update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+        };
+
+        window.editHobbyFirebase = function(idx) {
+            const current = localState.hobbies[idx].name;
+            const updated = prompt('עריכת שם ההרגל/תחביב:', current);
+            if (updated !== null && updated.trim() && loggedInUser) {
+                localState.hobbies[idx].name = updated.trim();
+                update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+            }
+        };
+
+        window.deleteHobbyFirebase = function(idx) {
+            if (loggedInUser && confirm('למחוק הרגל זה?')) {
+                localState.hobbies.splice(idx, 1);
+                update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+            }
+        };
+
+        window.toggleHobbyDayFirebase = function(hIdx, day, checked) {
+            localState.hobbies[hIdx].days[day] = checked;
+            if (loggedInUser) update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+        };
+
+        window.resetHobbiesChecks = function() {
+            if (!localState.hobbies) return;
+            localState.hobbies.forEach(h => h.days = [false, false, false, false, false, false, false]);
+            if (loggedInUser) update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+        };
 
         // --- PINNED NOTE ---
         function renderPinnedNote() {
@@ -782,7 +1015,7 @@
             if (!container) return;
             container.innerHTML = '';
 
-            Object.keys(localState.courses).forEach(courseId => {
+            Object.keys(localState.courses || {}).forEach(courseId => {
                 const course = localState.courses[courseId];
                 const taskCount = course.tasks ? Object.keys(course.tasks).length : 0;
 
@@ -791,22 +1024,12 @@
                     Object.keys(course.tasks).forEach(taskId => {
                         const task = course.tasks[taskId];
                         const isDone = task.status === 'completed';
-                        const isInProg = task.status === 'in-progress';
-
-                        let statusBadge = `<span onclick="cycleTaskStatusFirebase('${courseId}', '${taskId}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[10px] bg-[#EFEEEA] text-[#787774]">טרם הוחל</span>`;
-                        if (isDone) statusBadge = `<span onclick="cycleTaskStatusFirebase('${courseId}', '${taskId}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800">טופל</span>`;
-                        else if (isInProg) statusBadge = `<span onclick="cycleTaskStatusFirebase('${courseId}', '${taskId}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800">בתהליך</span>`;
-
                         tasksHtml += `
                             <div class="p-2.5 rounded border border-[#E9E9E7] bg-white flex items-center justify-between">
                                 <div class="flex items-start gap-2">
                                     <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTaskCheckFirebase('${courseId}', '${taskId}', this.checked)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7]">
                                     <div>
                                         <p class="text-xs font-medium text-[#37352F] ${isDone ? 'line-through opacity-60' : ''}">${escapeHtml(task.title)}</p>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            ${task.formattedDate ? `<span class="text-[#787774] text-[10px]">${task.formattedDate}</span>` : ''}
-                                            ${statusBadge}
-                                        </div>
                                     </div>
                                 </div>
                                 <button onclick="deleteTaskFirebase('${courseId}', '${taskId}')" class="text-slate-400 hover:text-red-500 text-xs">✕</button>
@@ -834,8 +1057,7 @@
                             <div class="grid grid-cols-2 gap-1.5 mt-3 text-xs">
                                 <a href="${course.links?.moodle || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Moodle</a>
                                 <a href="${course.links?.docs || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Docs</a>
-                                <button onclick="openSyllabusModal('${courseId}')" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7]">סילבוס</button>
-                                <a href="${course.links?.drive || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Drive</a>
+                                <a href="${course.links?.drive || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center col-span-2">Drive</a>
                             </div>
                         </div>
                         <div class="space-y-2 max-h-64 overflow-y-auto course-scroll pr-1">${tasksHtml}</div>
@@ -853,8 +1075,6 @@
             document.getElementById('course-modal-title').innerText = 'הוספת קורס חדש';
             document.getElementById('course-name').value = '';
             document.getElementById('course-code').value = '';
-            document.getElementById('course-hours').value = '';
-            document.getElementById('course-location').value = '';
             document.getElementById('course-moodle').value = '';
             document.getElementById('course-docs').value = '';
             document.getElementById('course-drive').value = '';
@@ -867,8 +1087,6 @@
             document.getElementById('course-modal-title').innerText = 'עריכת קורס';
             document.getElementById('course-name').value = c.title || '';
             document.getElementById('course-code').value = c.code || '';
-            document.getElementById('course-hours').value = c.hours || '';
-            document.getElementById('course-location').value = c.location || '';
             document.getElementById('course-moodle').value = c.links?.moodle || '';
             document.getElementById('course-docs').value = c.links?.docs || '';
             document.getElementById('course-drive').value = c.links?.drive || '';
@@ -883,8 +1101,6 @@
             const courseObj = {
                 title: document.getElementById('course-name').value.trim(),
                 code: document.getElementById('course-code').value.trim(),
-                hours: document.getElementById('course-hours').value.trim(),
-                location: document.getElementById('course-location').value.trim(),
                 links: {
                     moodle: document.getElementById('course-moodle').value.trim(),
                     docs: document.getElementById('course-docs').value.trim(),
@@ -913,17 +1129,10 @@
             e.preventDefault();
             const text = document.getElementById('task-modal-text').value.trim();
             const dateVal = document.getElementById('task-modal-date').value;
-            const statusVal = document.getElementById('task-modal-status').value;
             if (!text || !activeTargetCourseIdForTask || !loggedInUser) return;
 
-            let formattedDate = '';
-            if (dateVal) {
-                const parts = dateVal.split('-');
-                if (parts.length === 3) formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
-
             const newTaskKey = push(ref(db, `${getUserPath()}/courses/${activeTargetCourseIdForTask}/tasks`)).key;
-            set(ref(db, `${getUserPath()}/courses/${activeTargetCourseIdForTask}/tasks/${newTaskKey}`), { title: text, date: dateVal, formattedDate, status: statusVal });
+            set(ref(db, `${getUserPath()}/courses/${activeTargetCourseIdForTask}/tasks/${newTaskKey}`), { title: text, date: dateVal, status: 'not-started' });
             closeAddTaskModal();
         };
 
@@ -931,137 +1140,9 @@
             if (loggedInUser) update(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`), { status: checked ? 'completed' : 'not-started' });
         };
 
-        window.cycleTaskStatusFirebase = function(courseId, taskId) {
-            if (!loggedInUser) return;
-            const curr = localState.courses[courseId].tasks[taskId].status || 'not-started';
-            let next = 'in-progress';
-            if (curr === 'in-progress') next = 'completed';
-            else if (curr === 'completed') next = 'not-started';
-            update(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`), { status: next });
-        };
-
         window.deleteTaskFirebase = function(courseId, taskId) {
             if (loggedInUser) remove(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`));
         };
-
-        // --- ARTICLES ---
-        function renderArticlesView() {
-            const grid = document.getElementById('articles-grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-            const articleKeys = Object.keys(localState.articles);
-
-            if (articleKeys.length === 0) {
-                grid.innerHTML = '<p class="text-xs text-[#787774] italic col-span-3 text-center py-8">אין מאמרים שמורים.</p>';
-                return;
-            }
-
-            articleKeys.forEach(artId => {
-                const art = localState.articles[artId];
-                const courseObj = localState.courses[art.courseId] || { title: 'קורס כללי' };
-
-                const card = document.createElement('div');
-                card.className = 'notion-card p-4 flex flex-col justify-between';
-                card.innerHTML = `
-                    <div>
-                        <span class="text-[10px] bg-[#EFEEEA] px-2 py-0.5 rounded text-[#787774]">${escapeHtml(courseObj.title)}</span>
-                        <h3 class="font-bold text-xs text-[#37352F] mt-2">${escapeHtml(art.title)}</h3>
-                        <p class="text-[11px] text-[#787774] mt-1">${escapeHtml(art.authors || '')} (${escapeHtml(art.year || '')})</p>
-                    </div>
-                    <div class="pt-3 border-t border-[#E9E9E7] mt-3 flex items-center justify-between text-xs">
-                        <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded text-[10px]">📋 APA</button>
-                        <button onclick="goToArticleAnalysis('${artId}')" class="bg-[#37352F] text-white px-2 py-1 rounded text-[10px]">📝 ניתוח</button>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        window.copyAPACitation = function(artId) {
-            const art = localState.articles[artId];
-            if (!art) return;
-            const apa = `${art.authors || 'Unknown'} (${art.year || 'n.d.'}). ${art.title}. ${art.link || ''}`;
-            navigator.clipboard.writeText(apa).then(() => alert(`ציטוט הועתק ללוח:\n\n${apa}`));
-        };
-
-        window.openAddArticleModal = function() {
-            updateArticleSelectors();
-            document.getElementById('add-article-modal').classList.remove('hidden');
-        };
-
-        window.closeAddArticleModal = function() { document.getElementById('add-article-modal').classList.add('hidden'); };
-
-        window.handleAddNewArticleSubmit = function(e) {
-            e.preventDefault();
-            const courseId = document.getElementById('article-modal-course').value;
-            const title = document.getElementById('article-modal-title').value.trim();
-            const authors = document.getElementById('article-modal-authors').value.trim();
-            const year = document.getElementById('article-modal-year').value.trim();
-            const status = document.getElementById('article-modal-status').value;
-            const link = document.getElementById('article-modal-link').value.trim();
-
-            if (!courseId || !title || !loggedInUser) return;
-            const newKey = push(ref(db, `${getUserPath()}/articles`)).key;
-            set(ref(db, `${getUserPath()}/articles/${newKey}`), { courseId, title, authors, year, status, link, analysis: {} });
-            closeAddArticleModal();
-        };
-
-        function updateArticleSelectors() {
-            const courseSelect = document.getElementById('article-modal-course');
-            const analysisSelect = document.getElementById('analysis-article-selector');
-
-            if (courseSelect) {
-                courseSelect.innerHTML = Object.keys(localState.courses).map(cId => `<option value="${cId}">${escapeHtml(localState.courses[cId].title)}</option>`).join('');
-            }
-            if (analysisSelect) {
-                analysisSelect.innerHTML = '<option value="">-- בחר מאמר --</option>' + Object.keys(localState.articles).map(aId => `<option value="${aId}">${escapeHtml(localState.articles[aId].title)}</option>`).join('');
-            }
-        }
-
-        window.goToArticleAnalysis = function(artId) {
-            switchMode('analysis');
-            loadArticleAnalysisToForm(artId);
-        };
-
-        window.loadArticleAnalysisToForm = function(artId) {
-            activeAnalysisArticleId = artId;
-            const art = localState.articles[artId];
-            if (!art) return;
-
-            document.getElementById('analysis-article-title').innerText = art.title;
-            document.getElementById('analysis-article-meta').innerText = `${art.authors || ''} (${art.year || ''})`;
-
-            const an = art.analysis || {};
-            document.getElementById('an-rq').value = an.rq || '';
-            document.getElementById('an-method').value = an.method || '';
-            document.getElementById('an-findings').value = an.findings || '';
-            document.getElementById('an-critique').value = an.critique || '';
-            document.getElementById('an-takeaways').value = an.takeaways || '';
-        };
-
-        const debouncedSaveAnalysis = debounce(() => {
-            if (!loggedInUser || !activeAnalysisArticleId) return;
-            const analysisObj = {
-                rq: document.getElementById('an-rq').value.trim(),
-                method: document.getElementById('an-method').value.trim(),
-                findings: document.getElementById('an-findings').value.trim(),
-                critique: document.getElementById('an-critique').value.trim(),
-                takeaways: document.getElementById('an-takeaways').value.trim()
-            };
-            update(ref(db, `${getUserPath()}/articles/${activeAnalysisArticleId}/analysis`), analysisObj);
-        }, 500);
-
-        document.querySelectorAll('.analysis-auto-save').forEach(input => input.addEventListener('input', debouncedSaveAnalysis));
-
-        window.exportAnalysisToMarkdown = function() {
-            if (!activeAnalysisArticleId) return alert('בחרי מאמר בטרם הייצוא.');
-            const art = localState.articles[activeAnalysisArticleId];
-            const md = `# ניתוח מאמר: ${art.title}\n\n### שאלת מחקר\n${document.getElementById('an-rq').value}`;
-            const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Analysis.md'; a.click();
-        };
-
-        window.exportAnalysisToPDF = function() { window.print(); };
 
         // --- GLOSSARY LOGIC ---
         function getFilteredGlossary() {
@@ -1080,13 +1161,8 @@
             if (!main) return;
             const filtered = getFilteredGlossary();
 
-            if (glossaryViewMode === 'flashcard') {
-                renderFlashcards(main, filtered);
-                return;
-            }
-
             if (filtered.length === 0) {
-                main.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">לא נמצאו מושגים.</div>`;
+                main.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">לא נמצאו מושגים התואמים את הסינון.</div>`;
                 return;
             }
 
@@ -1100,7 +1176,6 @@
                                     <h3 class="font-bold text-sm text-[#37352F]">${escapeHtml(c.termHe)}</h3>
                                     ${c.termEn ? `<span class="text-xs text-[#787774]">(${escapeHtml(c.termEn)})</span>` : ''}
                                 </div>
-                                ${c.examFocus ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-bold">⭐</span>` : ''}
                             </div>
                             <p class="text-xs text-[#37352F] mt-2 leading-relaxed">${escapeHtml(c.definition)}</p>
                         </div>
@@ -1115,44 +1190,19 @@
             main.innerHTML = html;
         }
 
-        function renderFlashcards(container, filtered) {
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">אין מושגים לתרגול.</div>`;
-                return;
-            }
-            if (flashcardIndex >= filtered.length) flashcardIndex = 0;
-            const current = filtered[flashcardIndex];
-
-            container.innerHTML = `
-                <div class="notion-card p-8 text-center min-h-[240px] flex flex-col justify-center items-center cursor-pointer relative" onclick="toggleFlashcardDef()">
-                    <h2 class="text-xl font-bold text-[#37352F]">${escapeHtml(current.termHe)}</h2>
-                    ${showFlashcardDef ? `<p class="mt-4 text-xs text-[#37352F]">${escapeHtml(current.definition)}</p>` : `<p class="mt-6 text-xs text-[#37352F] font-bold">👇 לחצי לחשיפת ההגדרה</p>`}
-                </div>
-                <div class="flex justify-center gap-4 mt-4">
-                    <button onclick="prevFlashcard(${filtered.length})" class="px-4 py-1.5 bg-[#EFEEEA] text-xs rounded">➡️ הקודם</button>
-                    <button onclick="nextFlashcard(${filtered.length})" class="px-4 py-1.5 bg-[#37352F] text-white text-xs rounded">הבא ⬅️</button>
-                </div>
-            `;
-        }
-
-        window.toggleFlashcardDef = function() { showFlashcardDef = !showFlashcardDef; renderGlossaryView(); };
-        window.nextFlashcard = function(total) { flashcardIndex = (flashcardIndex + 1) % total; showFlashcardDef = false; renderGlossaryView(); };
-        window.prevFlashcard = function(total) { flashcardIndex = (flashcardIndex - 1 + total) % total; showFlashcardDef = false; renderGlossaryView(); };
-
         function renderGlossaryCourseTabs() {
             const tabsContainer = document.getElementById('glossary-course-tabs');
             if (!tabsContainer) return;
             const courses = Array.from(new Set((localState.glossary || []).map(c => c.course).filter(Boolean)));
-            let html = `<button onclick="selectGlossaryCourse('ALL')" class="px-3 py-1 rounded-full text-xs ${selectedGlossaryCourse === 'ALL' ? 'bg-[#37352F] text-white' : 'bg-[#EFEEEA]'}">הכל</button>`;
+            let html = `<button onclick="selectGlossaryCourse('ALL')" class="px-3 py-1 rounded-full text-xs ${selectedGlossaryCourse === 'ALL' ? 'bg-[#37352F] text-white font-bold' : 'bg-[#EFEEEA] text-[#787774]'}">כל הקורסים (${(localState.glossary || []).length})</button>`;
             courses.forEach(c => {
-                html += `<button onclick="selectGlossaryCourse('${c}')" class="px-3 py-1 rounded-full text-xs ${selectedGlossaryCourse === c ? 'bg-[#37352F] text-white' : 'bg-[#EFEEEA]'}">${escapeHtml(c)}</button>`;
+                html += `<button onclick="selectGlossaryCourse('${c}')" class="px-3 py-1 rounded-full text-xs ${selectedGlossaryCourse === c ? 'bg-[#37352F] text-white font-bold' : 'bg-[#EFEEEA] text-[#787774]'}">${escapeHtml(c)}</button>`;
             });
             tabsContainer.innerHTML = html;
         }
 
         window.selectGlossaryCourse = function(course) { selectedGlossaryCourse = course; renderGlossaryView(); };
         window.toggleGlossaryExamOnly = function() { isGlossaryExamOnly = !isGlossaryExamOnly; renderGlossaryView(); };
-        window.toggleGlossaryViewMode = function() { glossaryViewMode = glossaryViewMode === 'list' ? 'flashcard' : 'list'; renderGlossaryView(); };
 
         window.openGlossaryModal = function() { document.getElementById('glossary-modal').classList.remove('hidden'); };
         window.closeGlossaryModal = function() { document.getElementById('glossary-modal').classList.add('hidden'); };
@@ -1166,9 +1216,7 @@
             const newObj = {
                 id: 'c_' + Math.random().toString(36).substr(2, 9),
                 termHe, termEn: document.getElementById('glossary-term-en').value.trim(),
-                course, topic: document.getElementById('glossary-topic').value.trim(),
-                definition, example: document.getElementById('glossary-example').value.trim(),
-                examFocus: document.getElementById('glossary-exam-focus').checked
+                course, definition
             };
 
             const updated = [...(localState.glossary || []), newObj];
@@ -1270,7 +1318,7 @@
             update(ref(db, getUserPath()), { notes: localState.notes });
         };
 
-        // --- TRACKERS & CHECKLISTS ---
+        // --- SUMMARY DASHBOARD RENDER ---
         function renderSemesterCoursesSummary() {
             const list = document.getElementById('semester-courses-list');
             if (!list) return;
@@ -1280,51 +1328,16 @@
 
         function renderUnifiedFocusTasks() {
             const list = document.getElementById('focus-tasks-list');
+            const countEl = document.getElementById('focus-tasks-count');
             if (!list) return;
             let all = [];
             Object.keys(localState.courses || {}).forEach(cId => {
                 const c = localState.courses[cId];
                 if (c.tasks) Object.keys(c.tasks).forEach(tId => all.push({ ...c.tasks[tId], cId, tId, courseTitle: c.title }));
             });
+            if (countEl) countEl.innerText = `${all.length}`;
             list.innerHTML = all.length ? all.map(t => `<div class="p-2.5 border rounded bg-white text-xs flex justify-between items-center"><span>${escapeHtml(t.title)} (${escapeHtml(t.courseTitle)})</span><button onclick="deleteTaskFirebase('${t.cId}', '${t.tId}')" class="text-slate-400">✕</button></div>`).join('') : '<p class="text-xs text-[#787774]">אין משימות</p>';
         }
-
-        function renderRoutineChecklist() {
-            const list = document.getElementById('routine-checklist-list');
-            if (!list) return;
-            list.innerHTML = (localState.routine || []).map((item, idx) => `<div class="flex gap-2 p-1 text-xs"><input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRoutineCheckFirebase(${idx}, this.checked)"><span>${escapeHtml(item.text)}</span></div>`).join('');
-        }
-
-        window.toggleRoutineCheckFirebase = function(idx, checked) {
-            localState.routine[idx].checked = checked;
-            if (loggedInUser) update(ref(db, getUserPath()), { routine: localState.routine });
-        };
-
-        window.resetRoutineChecks = function() {
-            localState.routine.forEach(r => r.checked = false);
-            if (loggedInUser) update(ref(db, getUserPath()), { routine: localState.routine });
-        };
-
-        function renderHobbiesTracker() {
-            const list = document.getElementById('hobbies-tracker-list');
-            if (!list) return;
-            list.innerHTML = (localState.hobbies || []).map((h, hIdx) => `
-                <tr>
-                    <td class="py-2 text-xs">${escapeHtml(h.name)}</td>
-                    ${[0,1,2,3,4,5,6].map(d => `<td class="text-center"><input type="checkbox" ${h.days[d] ? 'checked' : ''} onchange="toggleHobbyDayFirebase(${hIdx}, ${d}, this.checked)"></td>`).join('')}
-                </tr>
-            `).join('');
-        }
-
-        window.toggleHobbyDayFirebase = function(hIdx, day, checked) {
-            localState.hobbies[hIdx].days[day] = checked;
-            if (loggedInUser) update(ref(db, getUserPath()), { hobbies: localState.hobbies });
-        };
-
-        window.resetHobbiesChecks = function() {
-            localState.hobbies.forEach(h => h.days = [false, false, false, false, false, false, false]);
-            if (loggedInUser) update(ref(db, getUserPath()), { hobbies: localState.hobbies });
-        };
 
         // --- COMMAND PALETTE ---
         window.toggleCommandPalette = function() {
@@ -1342,7 +1355,7 @@
             });
             Object.keys(localState.articles || {}).forEach(id => {
                 const a = localState.articles[id];
-                if (!q || a.title.toLowerCase().includes(q)) results.push({ type: 'מאמר', title: a.title, action: () => switchMode('articles') });
+                if (!q || a.title.toLowerCase().includes(q)) results.push({ type: 'מאמר', title: a.title, action: () => openArticleModal(id) });
             });
 
             resultsList.innerHTML = results.length ? results.map(r => `<div onclick="(${r.action})(); toggleCommandPalette();" class="p-2 hover:bg-[#EFEEEA] cursor-pointer flex justify-between text-xs"><span>${escapeHtml(r.title)}</span><span class="text-[10px] bg-slate-100 p-0.5 rounded">${r.type}</span></div>`).join('') : '<p class="text-xs text-center py-4 text-[#787774]">לא נמצאו תוצאות</p>';
@@ -1350,7 +1363,7 @@
 
         // NAVIGATION SWITCHER
         window.switchMode = function(mode) {
-            ['focus', 'manage', 'articles', 'analysis', 'glossary', 'telegram', 'notes'].forEach(m => {
+            ['focus', 'manage', 'articles', 'glossary', 'telegram', 'notes'].forEach(m => {
                 const el = document.getElementById(`view-${m}`);
                 if (el) el.classList.add('hidden');
                 const btn = document.getElementById(`btn-${m}-mode`);
