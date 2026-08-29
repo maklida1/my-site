@@ -166,8 +166,8 @@
                 <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center self-center md:self-auto border border-[#E9E9E7] gap-1 overflow-x-auto max-w-full">
                     <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">מיקוד</button>
                     <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">קורסים</button>
-                    <button id="btn-articles-mode" onclick="switchMode('articles')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📚 מאגר ומאמרים</button>
-                    <button id="btn-glossary-mode" onclick="switchMode('glossary')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📖 מילון מושגים</button>
+                    <button id="btn-articles-mode" onclick="switchMode('articles')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📚 מאמרים</button>
+                    <button id="btn-glossary-mode" onclick="switchMode('glossary')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📖 מושגים</button>
                     <button id="btn-telegram-mode" onclick="switchMode('telegram')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">✈️ טלגרם</button>
                     <button id="btn-notes-mode" onclick="switchMode('notes')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">פתקים</button>
                 </div>
@@ -208,8 +208,9 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- PINNED NOTE -->
+                <!-- PINNED NOTE WITH RED PIN -->
                 <div class="notion-card p-5 bg-[#FBFB9B]/20 border border-[#F4F482]/60 relative flex flex-col justify-center">
+                    <div class="absolute -top-3 right-4 text-base select-none">📌</div>
                     <div id="pinned-note-display" contenteditable="true"
                          class="text-xs text-[#37352F] leading-relaxed min-h-[80px] whitespace-pre-wrap p-2 rounded focus:outline-none focus:ring-1 focus:ring-[#37352F]/30 bg-white/50">
                     </div>
