@@ -159,13 +159,12 @@
                         <span id="user-display-name" class="font-medium text-[#37352F]">helen</span>
                         <span>/</span>
                         <span id="sync-status-badge" class="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800">מתחבר...</span>
-                        <span id="network-status-badge" class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800">🌐 אונליין</span>
                     </div>
                 </div>
 
                 <!-- Navigation Tabs -->
                 <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center self-center md:self-auto border border-[#E9E9E7] gap-1 overflow-x-auto max-w-full">
-                    <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">מיקוד יומי</button>
+                    <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">מיקוד</button>
                     <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">קורסים</button>
                     <button id="btn-articles-mode" onclick="switchMode('articles')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📚 מאגר ומאמרים</button>
                     <button id="btn-glossary-mode" onclick="switchMode('glossary')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📖 מילון מושגים</button>
@@ -174,10 +173,6 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button onclick="toggleCommandPalette()" class="text-xs bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-2.5 py-1 rounded border border-[#E9E9E7] flex items-center gap-1.5 transition-all">
-                        <span>🔍 חיפוש</span>
-                        <kbd class="bg-white border border-[#E9E9E7] text-[10px] px-1 rounded font-mono text-[#787774]">Ctrl+K</kbd>
-                    </button>
                     <button onclick="logoutCustom()" class="text-xs text-[#787774] hover:text-red-600 border border-[#E9E9E7] px-2.5 py-1 rounded bg-white transition-all">התנתקות</button>
                 </div>
 
@@ -209,8 +204,7 @@
         <!-- VIEW 1: FOCUS MODE -->
         <div id="view-focus" class="space-y-6">
             <div class="notion-card p-4 bg-white flex items-center justify-between">
-                <h2 class="text-sm font-bold text-[#37352F]">מיקוד יומי ומשימות דחופות</h2>
-                <span id="save-indicator-pinned" class="text-xs text-[#787774]">סנכרון מאובטח בזמן אמת</span>
+                <h2 class="text-sm font-bold text-[#37352F]">מיקוד</h2>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
