@@ -935,7 +935,7 @@
             </div>
         </div>
 
-        <!-- VIEW 7: LISTS / TASKS BOARD (בדיוק לפי קוד המקור שצורף, ללא משתמשים, מבט על או היסטוריה) -->
+        <!-- VIEW 7: LISTS / TASKS BOARD -->
         <div id="view-lists" class="hidden space-y-6">
             <div id="lists-board-root">
                 <div class="top-bar mb-4 flex justify-between items-center">
@@ -1623,9 +1623,8 @@
             update(ref(db, getUserPath()), { notes: localState.notes });
         };
 
-        // --- LISTS / TASKS BOARD FULL FUNCTIONALITY (FROM USER SNIPPET, WITHOUT USERS, OVERVIEW OR HISTORY) ---
+        // --- LISTS / TASKS BOARD FULL FUNCTIONALITY ---
         let lastFocusCatId = null;
-        let lastFocusNewQid = null;
         let recentlyCreatedQid = null;
         let recentlyCreatedQidTimer = null;
         function protectRecentlyCreatedQid(qId){
@@ -1636,18 +1635,10 @@
                 recentlyCreatedQidTimer = null;
             }, 2000);
         }
-        let lastFocusCommentQid = null;
-        let lastFocusCommentIdx = null;
-        let lastFocusNightQid = null;
-        let lastFocusNightIdx = null;
-        let lastFocusExtraQid = null;
-        let lastFocusExtraIdx = null;
-        let lastFocusExtraSub = null;
         let openMarkPopup = null;
         let openAddCommentPopup = null;
         let openRowAddPopup = null;
         let openQuestionMenu = null;
-        let activeResizeImg = null;
         let pendingDeleteCatId = null;
         let pendingClear = null;
         let pendingDeleteQid = null;
@@ -1801,6 +1792,7 @@
                 comments: [], textMark: null, commentMarks: [], commentNights: [],
                 commentNightsOn: [], commentExtra: [], createdBy: loggedInUser, createdAt: nowHM()
             });
+            lastFocusCatId = catId;
             renderListsBoard();
             saveListsStateToFirebase();
         };
@@ -2442,10 +2434,28 @@
                 const addRow = document.createElement('div');
                 addRow.className = 'add-row mt-3 flex items-center gap-2';
                 const inputId = 'add-input-' + cat.id;
-                addRow.innerHTML = `
-                    <div id="${inputId}" class="qtext new-question-input flex-1 p-2 border border-[#E9E9E7] rounded bg-white text-xs outline-none" contenteditable="true" data-placeholder="משימה חדשה..."></div>
-                    <button onclick="addQuestion('${cat.id}', document.getElementById('${inputId}').innerHTML)" class="bg-[#37352F] text-white text-xs px-3 py-1.5 rounded">+</button>
-                `;
+
+                const addInput = document.createElement('div');
+                addInput.id = inputId;
+                addInput.className = 'qtext new-question-input flex-1 p-2 border border-[#E9E9E7] rounded bg-white text-xs outline-none';
+                addInput.contentEditable = true;
+                addInput.setAttribute('data-placeholder', 'משימה חדשה...');
+                addInput.onkeydown = (e) => {
+                    if(e.key === 'Enter'){
+                        e.preventDefault();
+                        lastFocusCatId = cat.id;
+                        addQuestion(cat.id, addInput.innerHTML);
+                    }
+                };
+                attachImagePaste(addInput, () => {});
+
+                const addBtn = document.createElement('button');
+                addBtn.className = 'bg-[#37352F] text-white text-xs px-3 py-1.5 rounded';
+                addBtn.innerText = '+';
+                addBtn.onclick = () => addQuestion(cat.id, addInput.innerHTML);
+
+                addRow.appendChild(addInput);
+                addRow.appendChild(addBtn);
                 catDiv.appendChild(addRow);
                 board.appendChild(catDiv);
             });
@@ -2457,6 +2467,19 @@
                 <button onclick="addCategory('new-cat-input-bottom')" class="bg-[#37352F] text-white text-xs px-4 py-2 rounded">+ הוסף קטגוריה</button>
             `;
             container.appendChild(addCatRow);
+
+            if(lastFocusCatId){
+                const catIdToFocus = lastFocusCatId;
+                lastFocusCatId = null;
+                [30, 100, 300].forEach(delay => {
+                    setTimeout(() => {
+                        const el = document.getElementById('add-input-' + catIdToFocus);
+                        if(el && document.activeElement !== el){
+                            el.focus();
+                        }
+                    }, delay);
+                });
+            }
         }
 
         // --- GENERAL APP MODES SWITCHING ---
