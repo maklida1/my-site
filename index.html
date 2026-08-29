@@ -35,29 +35,37 @@
         .course-scroll::-webkit-scrollbar-thumb { background: #D3D3D1; border-radius: 4px; }
         input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.5); }
         
+        /* Dynamic Canvas & Note Handling */
         .draggable-note { 
             touch-action: none !important; 
-            -webkit-user-select: none; 
-            user-select: none; 
+            -webkit-user-select: text; 
+            user-select: text; 
             position: absolute; 
-            overflow-y: auto; 
-            min-width: 180px; 
-            min-height: 120px; 
-            will-change: transform;
+            will-change: transform, width, height;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .note-resize-handle { 
             touch-action: none !important; 
             position: absolute; 
-            bottom: 3px; 
-            left: 3px; 
-            width: 22px; 
-            height: 22px; 
+            bottom: 2px; 
+            left: 2px; 
+            width: 18px; 
+            height: 18px; 
             cursor: nesw-resize; 
-            opacity: 0.65;
-            background-image: repeating-linear-gradient(45deg, #A8A29E 0, #A8A29E 2px, transparent 2px, transparent 5px);
+            opacity: 0.5;
+            background-image: repeating-linear-gradient(45deg, #787774 0, #787774 2px, transparent 2px, transparent 4px);
             -webkit-mask-image: linear-gradient(135deg, transparent 45%, black 45%);
             mask-image: linear-gradient(135deg, transparent 45%, black 45%);
             border-radius: 2px;
+        }
+        .note-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 4px 0;
+            resize: both;
+            overflow: auto;
+            display: inline-block;
         }
     </style>
 </head>
@@ -270,11 +278,10 @@
                 </div>
             </div>
 
-            <!-- COMPACT GRID FOR ARTICLES (3 CARDS PER ROW ON LARGE SCREENS) -->
             <div id="articles-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
-        <!-- VIEW 4: COMPACT GLOSSARY (HIDDEN BY DEFAULT TO PREVENT OVERLAP) -->
+        <!-- VIEW 4: COMPACT GLOSSARY -->
         <div id="view-glossary" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
@@ -284,7 +291,6 @@
                 <button onclick="openGlossaryModal()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all">+ מושג חדש</button>
             </div>
 
-            <!-- DUAL FILTER CONTROLS -->
             <div class="notion-card p-3 space-y-2">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div>
@@ -352,19 +358,24 @@
             </div>
         </div>
 
-        <!-- VIEW 6: NOTES CANVAS -->
+        <!-- VIEW 6: ADVANCED INTERACTIVE NOTES CANVAS WITH SNAP LINES -->
         <div id="view-notes" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F]">משטח פתקים ורעיונות</h2>
-                    <p class="text-xs text-[#787774]">גרירה ושינוי גודל חלקים במסכי מגע</p>
+                    <p class="text-xs text-[#787774]">הקלדה ישירה, יישור אוטומטי (Snap Lines), גרירה, צבעים והדבקת תמונות</p>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="resetNotesPositionFirebase()" class="bg-white border border-[#E9E9E7] text-xs px-3 py-1.5 rounded">איפוס מיקומים</button>
-                    <button onclick="addManualNotePromptFirebase()" class="bg-[#37352F] text-white text-xs px-3.5 py-1.5 rounded">+ פתק חדש</button>
+                    <button onclick="resetNotesPositionFirebase()" class="bg-white border border-[#E9E9E7] text-xs px-3 py-1.5 rounded hover:bg-[#EFEEEA]">איפוס מיקומים</button>
+                    <button onclick="createNewNoteDirectFirebase()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all font-medium">+ פתק חדש</button>
                 </div>
             </div>
-            <div id="notes-grid" class="min-h-[550px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-hidden"></div>
+            
+            <div id="notes-grid" class="min-h-[600px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-hidden">
+                <!-- Dynamic Alignment Guide Lines -->
+                <div id="guide-line-v" class="absolute top-0 bottom-0 w-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-r border-dashed border-blue-400"></div>
+                <div id="guide-line-h" class="absolute left-0 right-0 h-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-b border-dashed border-blue-400"></div>
+            </div>
         </div>
 
     </main>
@@ -380,7 +391,6 @@
             <form onsubmit="handleArticleSubmit(event)" class="space-y-5">
                 <input type="hidden" id="art-edit-id">
 
-                <!-- Article Metadata -->
                 <div class="bg-[#EFEEEA]/30 p-4 rounded-lg border border-[#E9E9E7] space-y-3">
                     <h4 class="text-xs font-bold text-[#37352F]">📌 פרטי המאמר</h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -410,7 +420,6 @@
                     </div>
                 </div>
 
-                <!-- Structured 5-Step Analysis Fields -->
                 <div class="space-y-4 pt-1">
                     <h4 class="text-xs font-bold text-[#37352F] border-b border-[#E9E9E7] pb-2">🔍 ניתוח המאמר (5 השלבים המובנים)</h4>
 
@@ -467,7 +476,6 @@
                 </div>
             </div>
 
-            <!-- OPTIONAL LINKING FIELDS -->
             <div class="grid grid-cols-2 gap-3 bg-[#EFEEEA]/30 p-2.5 rounded border border-[#E9E9E7]">
                 <div>
                     <label class="block text-[11px] font-bold text-[#37352F] mb-1">🎓 שיוך לקורס (אופציונלי)</label>
@@ -680,7 +688,259 @@
             renderStickyNotesCanvas();
         }
 
-        // --- COMPACT GLOSSARY LOGIC & EDITING ---
+        // --- ENHANCED NOTES CANVAS WITH SNAP LINES, COLORS & IMAGES ---
+        function renderStickyNotesCanvas() {
+            const grid = document.getElementById('notes-grid');
+            if (!grid) return;
+            
+            // Keep the guide lines inside the grid
+            grid.innerHTML = `
+                <div id="guide-line-v" class="absolute top-0 bottom-0 w-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-r border-dashed border-blue-400"></div>
+                <div id="guide-line-h" class="absolute left-0 right-0 h-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-b border-dashed border-blue-400"></div>
+            `;
+
+            const colors = ['#FEF9C3', '#DCFCE7', '#E0F2FE', '#FCE7F3', '#FED7AA', '#FFFFFF'];
+
+            Object.keys(localState.notes || {}).forEach(noteId => {
+                const note = localState.notes[noteId];
+                const card = document.createElement('div');
+                card.className = 'draggable-note notion-card p-3 flex flex-col justify-between rounded-lg border shadow-sm transition-shadow';
+                card.style.transform = `translate3d(${note.x || 20}px, ${note.y || 20}px, 0)`;
+                card.style.width = `${note.width || 230}px`;
+                card.style.height = `${note.height || 170}px`;
+                card.style.backgroundColor = note.color || '#FEF9C3';
+                card.style.borderColor = 'rgba(0,0,0,0.08)';
+
+                // Clean Header Toolbar with Colors & Image Upload
+                card.innerHTML = `
+                    <div class="note-toolbar flex items-center justify-between pb-1.5 mb-1.5 border-b border-black/10 select-none">
+                        <div class="flex items-center gap-1.5">
+                            ${colors.map(c => `
+                                <button onclick="changeNoteColorFirebase('${noteId}', '${c}')" class="w-3.5 h-3.5 rounded-full border border-black/15 hover:scale-125 transition-transform" style="background-color: ${c}"></button>
+                            `).join('')}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="file" accept="image/*" class="hidden" id="img-upload-${noteId}" onchange="uploadNoteImage('${noteId}', event)">
+                            <button onclick="document.getElementById('img-upload-${noteId}').click()" title="הוספת תמונה" class="text-slate-500 hover:text-black text-xs">📷</button>
+                            <button onclick="deleteNoteFirebase('${noteId}')" title="מחיקה" class="text-slate-400 hover:text-red-500 text-xs">✕</button>
+                        </div>
+                    </div>
+                    
+                    <div contenteditable="true" 
+                         id="note-editable-${noteId}"
+                         oninput="debouncedSaveNoteContent('${noteId}')"
+                         onpaste="handleNotePaste('${noteId}', event)"
+                         class="note-content flex-1 outline-none text-xs text-[#37352F] overflow-y-auto leading-relaxed p-1 focus:bg-white/40 rounded transition-colors">
+                        ${note.content || note.text || ''}
+                    </div>
+
+                    <div class="note-resize-handle"></div>
+                `;
+
+                grid.appendChild(card);
+                makeNoteDraggableAndResizableTouch(card, noteId);
+            });
+        }
+
+        window.createNewNoteDirectFirebase = function() {
+            if (!loggedInUser) return;
+            const newKey = push(ref(db, `${getUserPath()}/notes`)).key;
+            const existingCount = Object.keys(localState.notes || {}).length;
+            const x = 30 + (existingCount % 5) * 45;
+            const y = 30 + (existingCount % 5) * 35;
+            
+            set(ref(db, `${getUserPath()}/notes/${newKey}`), {
+                content: 'הקלידי כאן...',
+                x: x,
+                y: y,
+                width: 230,
+                height: 170,
+                color: '#FEF9C3'
+            }).then(() => {
+                setTimeout(() => {
+                    const el = document.getElementById(`note-editable-${newKey}`);
+                    if (el) el.focus();
+                }, 100);
+            });
+        };
+
+        window.changeNoteColorFirebase = function(noteId, color) {
+            if (!loggedInUser) return;
+            update(ref(db, `${getUserPath()}/notes/${noteId}`), { color });
+        };
+
+        const debouncedSaveNoteContent = debounce((noteId) => {
+            if (!loggedInUser) return;
+            const el = document.getElementById(`note-editable-${noteId}`);
+            if (el) {
+                update(ref(db, `${getUserPath()}/notes/${noteId}`), { content: el.innerHTML });
+            }
+        }, 600);
+        window.debouncedSaveNoteContent = debouncedSaveNoteContent;
+
+        window.uploadNoteImage = function(noteId, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                insertImageToNote(noteId, e.target.result);
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.handleNotePaste = function(noteId, event) {
+            const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
+            if (!items) return;
+            for (let item of items) {
+                if (item.type.indexOf('image') === 0) {
+                    event.preventDefault();
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        insertImageToNote(noteId, e.target.result);
+                    };
+                    reader.readAsDataURL(blob);
+                    return;
+                }
+            }
+        };
+
+        function insertImageToNote(noteId, dataUrl) {
+            const el = document.getElementById(`note-editable-${noteId}`);
+            if (!el) return;
+            const imgHtml = `<div class="my-1.5 border border-black/10 rounded overflow-hidden inline-block max-w-full"><img src="${dataUrl}" class="max-w-full h-auto rounded block" style="max-height: 220px;"></div><br>`;
+            document.execCommand('insertHTML', false, imgHtml);
+            debouncedSaveNoteContent(noteId);
+        }
+
+        function makeNoteDraggableAndResizableTouch(elmnt, noteId) {
+            let posX = localState.notes[noteId]?.x || 20;
+            let posY = localState.notes[noteId]?.y || 20;
+            let width = localState.notes[noteId]?.width || 230;
+            let height = localState.notes[noteId]?.height || 170;
+            let startX = 0, startY = 0;
+
+            const guideV = document.getElementById('guide-line-v');
+            const guideH = document.getElementById('guide-line-h');
+
+            const getCoords = e => e.touches && e.touches.length > 0 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+
+            const hideGuides = () => {
+                if (guideV) guideV.classList.add('hidden');
+                if (guideH) guideH.classList.add('hidden');
+            };
+
+            const checkSnapLines = (currX, currY, currW, currH) => {
+                let snapX = currX, snapY = currY;
+                let showV = false, showH = false, lineVPos = 0, lineHPos = 0;
+                const TH = 6;
+
+                const cL = currX, cR = currX + currW, cCX = currX + currW / 2;
+                const cT = currY, cB = currY + currH, cCY = currY + currH / 2;
+
+                Object.keys(localState.notes || {}).forEach(otherId => {
+                    if (otherId === noteId) return;
+                    const o = localState.notes[otherId];
+                    const oW = o.width || 230, oH = o.height || 170;
+                    const oL = o.x || 20, oR = oL + oW, oCX = oL + oW / 2;
+                    const oT = o.y || 20, oB = oT + oH, oCY = oT + oH / 2;
+
+                    // Vertical alignment check (X-axis)
+                    if (Math.abs(cL - oL) < TH) { snapX = oL; showV = true; lineVPos = oL; }
+                    else if (Math.abs(cR - oR) < TH) { snapX = oR - currW; showV = true; lineVPos = oR; }
+                    else if (Math.abs(cCX - oCX) < TH) { snapX = oCX - currW / 2; showV = true; lineVPos = oCX; }
+                    else if (Math.abs(cL - oR) < TH) { snapX = oR; showV = true; lineVPos = oR; }
+                    else if (Math.abs(cR - oL) < TH) { snapX = oL - currW; showV = true; lineVPos = oL; }
+
+                    // Horizontal alignment check (Y-axis)
+                    if (Math.abs(cT - oT) < TH) { snapY = oT; showH = true; lineHPos = oT; }
+                    else if (Math.abs(cB - oB) < TH) { snapY = oB - currH; showH = true; lineHPos = oB; }
+                    else if (Math.abs(cCY - oCY) < TH) { snapY = oCY - currH / 2; showH = true; lineHPos = oCY; }
+                    else if (Math.abs(cT - oB) < TH) { snapY = oB; showH = true; lineHPos = oB; }
+                    else if (Math.abs(cB - oT) < TH) { snapY = oT - currH; showH = true; lineHPos = oT; }
+                });
+
+                if (showV && guideV) {
+                    guideV.style.left = `${lineVPos}px`;
+                    guideV.classList.remove('hidden');
+                } else if (guideV) guideV.classList.add('hidden');
+
+                if (showH && guideH) {
+                    guideH.style.top = `${lineHPos}px`;
+                    guideH.classList.remove('hidden');
+                } else if (guideH) guideH.classList.add('hidden');
+
+                return { snapX, snapY };
+            };
+
+            const onStartDrag = e => {
+                const target = e.target;
+                if (target.closest('button') || target.closest('input') || target.isContentEditable || target.closest('[contenteditable="true"]')) {
+                    return;
+                }
+
+                const isResize = target.classList.contains('note-resize-handle');
+                if (e.cancelable && !isResize) e.preventDefault();
+
+                const c = getCoords(e);
+                startX = c.x; startY = c.y;
+                noteZIndexCounter++;
+                elmnt.style.zIndex = noteZIndexCounter;
+
+                const onMoveDrag = me => {
+                    if (me.cancelable) me.preventDefault();
+                    const mc = getCoords(me);
+                    const dx = mc.x - startX;
+                    const dy = mc.y - startY;
+
+                    if (isResize) {
+                        width = Math.max(170, width + dx);
+                        height = Math.max(120, height + dy);
+                        startX = mc.x; startY = mc.y;
+                        elmnt.style.width = `${width}px`;
+                        elmnt.style.height = `${height}px`;
+                    } else {
+                        let targetX = posX + dx;
+                        let targetY = posY + dy;
+                        const snapRes = checkSnapLines(targetX, targetY, width, height);
+                        posX = snapRes.snapX;
+                        posY = snapRes.snapY;
+                        startX = mc.x; startY = mc.y;
+                        elmnt.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
+                    }
+                };
+
+                const onEndDrag = () => {
+                    document.removeEventListener('mousemove', onMoveDrag); document.removeEventListener('mouseup', onEndDrag);
+                    document.removeEventListener('touchmove', onMoveDrag); document.removeEventListener('touchend', onEndDrag);
+                    hideGuides();
+                    if (loggedInUser) {
+                        update(ref(db, `${getUserPath()}/notes/${noteId}`), { x: posX, y: posY, width, height });
+                    }
+                };
+
+                document.addEventListener('mousemove', onMoveDrag, { passive: false }); document.addEventListener('mouseup', onEndDrag);
+                document.addEventListener('touchmove', onMoveDrag, { passive: false }); document.addEventListener('touchend', onEndDrag);
+            };
+
+            elmnt.addEventListener('mousedown', onStartDrag);
+            elmnt.addEventListener('touchstart', onStartDrag, { passive: false });
+        }
+
+        window.deleteNoteFirebase = function(noteId) {
+            if (loggedInUser && confirm('למחוק פתק זה?')) remove(ref(db, `${getUserPath()}/notes/${noteId}`));
+        };
+
+        window.resetNotesPositionFirebase = function() {
+            if (!loggedInUser) return;
+            Object.keys(localState.notes || {}).forEach((id, idx) => {
+                localState.notes[id].x = 25 + (idx * 25);
+                localState.notes[id].y = 25 + (idx * 25);
+            });
+            update(ref(db, getUserPath()), { notes: localState.notes });
+        };
+
+        // --- COMPACT GLOSSARY LOGIC ---
         function updateGlossaryFilterDropdowns() {
             const courseSelect = document.getElementById('glossary-filter-course');
             const articleSelect = document.getElementById('glossary-filter-article');
@@ -704,15 +964,8 @@
             }
         }
 
-        window.setGlossaryCourseFilter = function(val) {
-            selectedGlossaryCourse = val;
-            renderGlossaryView();
-        };
-
-        window.setGlossaryArticleFilter = function(val) {
-            selectedGlossaryArticle = val;
-            renderGlossaryView();
-        };
+        window.setGlossaryCourseFilter = function(val) { selectedGlossaryCourse = val; renderGlossaryView(); };
+        window.setGlossaryArticleFilter = function(val) { selectedGlossaryArticle = val; renderGlossaryView(); };
 
         function getFilteredGlossary() {
             const q = (document.getElementById('glossary-search-input')?.value || '').toLowerCase().trim();
@@ -801,9 +1054,7 @@
             document.getElementById('glossary-modal').classList.remove('hidden');
         };
 
-        window.closeGlossaryModal = function() {
-            document.getElementById('glossary-modal').classList.add('hidden');
-        };
+        window.closeGlossaryModal = function() { document.getElementById('glossary-modal').classList.add('hidden'); };
 
         window.saveGlossaryTermFirebase = function() {
             const editId = document.getElementById('glossary-edit-id').value;
@@ -888,9 +1139,7 @@
             document.getElementById('article-modal').classList.remove('hidden');
         };
 
-        window.closeArticleModal = function() {
-            document.getElementById('article-modal').classList.add('hidden');
-        };
+        window.closeArticleModal = function() { document.getElementById('article-modal').classList.add('hidden'); };
 
         window.handleArticleSubmit = function(e) {
             e.preventDefault();
@@ -973,14 +1222,13 @@
                         <h3 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
                         <p class="text-[10px] text-[#787774] mt-0.5">${escapeHtml(art.authors || 'מחברים לא צוינו')} ${art.year ? `(${escapeHtml(art.year)})` : ''}</p>
 
-                        <!-- COMPACT ANALYSIS SUMMARY DETAILS -->
                         <div class="mt-3 pt-2 border-t border-[#E9E9E7] space-y-1.5 text-[11px]">
                             ${an.rq ? `<div class="bg-[#EFEEEA]/30 p-1.5 rounded"><strong>שאלת מחקר:</strong> <span class="text-[#37352F]">${escapeHtml(an.rq)}</span></div>` : ''}
                             ${an.findings ? `<div class="bg-[#EFEEEA]/30 p-1.5 rounded"><strong>ממצאים:</strong> <span class="text-[#37352F]">${escapeHtml(an.findings)}</span></div>` : ''}
                         </div>
                     </div>
 
-                    <div class="pt-2.5 border-t border-[#E9E9E7] flex items-center justify-between text-[10px] flex-wrap gap-1.5">
+                    <div class="pt-2.5 border-t border-[#E9E9E7] flex items-center justify-between text-[10px] flex-wrap gap-1">
                         <div class="flex items-center gap-1 flex-wrap">
                             <button onclick="exportAnalysisToMarkdown('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">📄 MD</button>
                             <button onclick="exportAnalysisToPDF('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">🖨️ PDF</button>
@@ -1327,93 +1575,6 @@
 
         window.deleteTaskFirebase = function(courseId, taskId) {
             if (loggedInUser) remove(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`));
-        };
-
-        // --- STICKY NOTES CANVAS ---
-        function renderStickyNotesCanvas() {
-            const grid = document.getElementById('notes-grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-
-            Object.keys(localState.notes || {}).forEach(noteId => {
-                const note = localState.notes[noteId];
-                const card = document.createElement('div');
-                card.className = 'draggable-note notion-card p-4 flex flex-col justify-between';
-                card.style.transform = `translate3d(${note.x || 10}px, ${note.y || 10}px, 0)`;
-                card.style.width = `${note.width || 210}px`;
-                card.style.height = `${note.height || 140}px`;
-
-                card.innerHTML = `
-                    <div>
-                        <div class="flex items-center justify-between mb-2 pb-1 border-b border-[#E9E9E7]">
-                            <span class="text-[10px] bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded">פתק</span>
-                            <button onclick="deleteNoteFirebase('${noteId}')" class="text-slate-400 hover:text-red-500 text-xs">✕</button>
-                        </div>
-                        <p class="text-xs text-[#37352F] select-text">${escapeHtml(note.text)}</p>
-                    </div>
-                    <div class="note-resize-handle"></div>
-                `;
-
-                grid.appendChild(card);
-                makeNoteDraggableAndResizableTouch(card, noteId);
-            });
-        }
-
-        function makeNoteDraggableAndResizableTouch(elmnt, noteId) {
-            let posX = localState.notes[noteId]?.x || 10;
-            let posY = localState.notes[noteId]?.y || 10;
-            let startX = 0, startY = 0;
-
-            const getCoords = e => e.touches && e.touches.length > 0 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
-
-            const onStartDrag = e => {
-                if (e.target.closest('button') || e.target.classList.contains('note-resize-handle')) return;
-                if (e.cancelable) e.preventDefault();
-                const c = getCoords(e);
-                startX = c.x; startY = c.y;
-                noteZIndexCounter++;
-                elmnt.style.zIndex = noteZIndexCounter;
-
-                const onMoveDrag = me => {
-                    if (me.cancelable) me.preventDefault();
-                    const mc = getCoords(me);
-                    posX += mc.x - startX; posY += mc.y - startY;
-                    startX = mc.x; startY = mc.y;
-                    elmnt.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
-                };
-
-                const onEndDrag = () => {
-                    document.removeEventListener('mousemove', onMoveDrag); document.removeEventListener('mouseup', onEndDrag);
-                    document.removeEventListener('touchmove', onMoveDrag); document.removeEventListener('touchend', onEndDrag);
-                    if (loggedInUser) update(ref(db, `${getUserPath()}/notes/${noteId}`), { x: posX, y: posY });
-                };
-
-                document.addEventListener('mousemove', onMoveDrag, { passive: false }); document.addEventListener('mouseup', onEndDrag);
-                document.addEventListener('touchmove', onMoveDrag, { passive: false }); document.addEventListener('touchend', onEndDrag);
-            };
-
-            elmnt.addEventListener('mousedown', onStartDrag);
-            elmnt.addEventListener('touchstart', onStartDrag, { passive: false });
-        }
-
-        window.addManualNotePromptFirebase = function() {
-            const text = prompt('תוכן הפתק:');
-            if (!text || !text.trim() || !loggedInUser) return;
-            const newKey = push(ref(db, `${getUserPath()}/notes`)).key;
-            set(ref(db, `${getUserPath()}/notes/${newKey}`), { text: text.trim(), x: 30, y: 30, width: 210, height: 140 });
-        };
-
-        window.deleteNoteFirebase = function(noteId) {
-            if (loggedInUser) remove(ref(db, `${getUserPath()}/notes/${noteId}`));
-        };
-
-        window.resetNotesPositionFirebase = function() {
-            if (!loggedInUser) return;
-            Object.keys(localState.notes || {}).forEach((id, idx) => {
-                localState.notes[id].x = 20 + (idx * 20);
-                localState.notes[id].y = 20 + (idx * 20);
-            });
-            update(ref(db, getUserPath()), { notes: localState.notes });
         };
 
         // --- SUMMARY DASHBOARD RENDER ---
