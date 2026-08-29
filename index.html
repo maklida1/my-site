@@ -237,24 +237,24 @@
                 </div>
 
                 <div class="space-y-6">
-                    <!-- EDITABLE ROUTINE CHECKLIST -->
+                    <!-- BULK EDITABLE ROUTINE CHECKLIST -->
                     <div class="notion-card p-5">
                         <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
                             <h3 class="text-xs font-bold text-[#37352F]">🔄 סנכרון לאחר יום לימודים</h3>
                             <div class="flex items-center gap-2">
-                                <button onclick="addRoutineItemFirebase()" class="text-xs font-bold text-[#37352F] hover:underline">+ הוספה</button>
+                                <button onclick="bulkEditRoutineFirebase()" class="text-xs font-bold text-[#37352F] hover:underline">✏️ עריכת הרשימה</button>
                                 <button onclick="resetRoutineChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס</button>
                             </div>
                         </div>
                         <div class="space-y-2" id="routine-checklist-list"></div>
                     </div>
 
-                    <!-- EDITABLE HOBBIES & WEEKLY TRACKER -->
+                    <!-- BULK EDITABLE HOBBIES & WEEKLY TRACKER -->
                     <div class="notion-card p-5">
                         <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
                             <h3 class="text-sm font-bold text-[#37352F]">✨ מעקב שבועי</h3>
                             <div class="flex items-center gap-2">
-                                <button onclick="addHobbyFirebase()" class="text-xs font-bold text-[#37352F] hover:underline">+ הרגל חדש</button>
+                                <button onclick="bulkEditHobbiesFirebase()" class="text-xs font-bold text-[#37352F] hover:underline">✏️ עריכת הרשימה</button>
                                 <button onclick="resetHobbiesChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס שבוע</button>
                             </div>
                         </div>
@@ -270,7 +270,6 @@
                                         <th class="pb-2 text-center w-6">ה'</th>
                                         <th class="pb-2 text-center w-6">ו'</th>
                                         <th class="pb-2 text-center w-6">ש'</th>
-                                        <th class="pb-2 text-center w-8"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="hobbies-tracker-list" class="divide-y divide-[#E9E9E7]/60"></tbody>
@@ -385,7 +384,7 @@
             </div>
         </div>
 
-        <!-- VIEW 6: NOTES CANVAS WITH COLOR DROPDOWN & FULL-LENGTH SNAP LINES -->
+        <!-- VIEW 6: NOTES CANVAS -->
         <div id="view-notes" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
                 <div>
@@ -418,8 +417,8 @@
                 <input type="hidden" id="art-edit-id">
 
                 <div class="bg-[#EFEEEA]/30 p-4 rounded-lg border border-[#E9E9E7] space-y-3">
-                    <h4 class="text-xs font-bold text-[#37352F]">📌 פרטי המאמר</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <h4 class="text-xs font-bold text-[#37352F]">📌 פרטי המאמר והסטטוס</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div class="md:col-span-2">
                             <label class="block text-xs font-medium text-[#37352F] mb-1">כותרת המאמר *</label>
                             <input type="text" id="art-title" required placeholder="כותרת המאמר" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
@@ -427,6 +426,14 @@
                         <div>
                             <label class="block text-xs font-medium text-[#37352F] mb-1">שיוך לקורס *</label>
                             <select id="art-course" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">סטטוס סיכום</label>
+                            <select id="art-status" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F] bg-white">
+                                <option value="not_started">טרם סוכם</option>
+                                <option value="in_progress">בתהליך</option>
+                                <option value="completed">סוכם</option>
+                            </select>
                         </div>
                     </div>
 
@@ -743,14 +750,12 @@
                 card.style.backgroundColor = note.color || '#FEF9C3';
                 card.style.borderColor = 'rgba(0,0,0,0.08)';
 
-                // Toolbar with Dropdown Color Menu Trigger
                 card.innerHTML = `
                     <div class="note-toolbar flex items-center justify-between pb-1.5 mb-1.5 border-b border-black/10 select-none relative">
                         <div class="relative">
                             <button onclick="toggleColorPickerMenu('${noteId}', event)" title="שינוי צבע" class="text-slate-600 hover:text-black text-xs font-bold px-1 py-0.5 rounded hover:bg-black/5 flex items-center gap-1">
                                 🎨 <span>צבע</span>
                             </button>
-                            <!-- Dropdown Menu -->
                             <div id="color-menu-${noteId}" class="hidden absolute right-0 top-6 bg-white border border-[#E9E9E7] shadow-lg rounded-lg p-1.5 z-50 w-28 text-xs space-y-1">
                                 ${colorOptions.map(opt => `
                                     <button onclick="changeNoteColorFirebase('${noteId}', '${opt.code}', event)" class="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-[#EFEEEA] text-right transition-colors">
@@ -786,7 +791,6 @@
             const menu = document.getElementById(`color-menu-${noteId}`);
             if (!menu) return;
             
-            // Close other open color menus
             document.querySelectorAll('[id^="color-menu-"]').forEach(el => {
                 if (el !== menu) el.classList.add('hidden');
             });
@@ -835,7 +839,6 @@
         }, 600);
         window.debouncedSaveNoteContent = debouncedSaveNoteContent;
 
-        // Clipboard Image Paste Handler with Custom Resizable Image Output
         window.handleNotePaste = function(noteId, event) {
             const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
             if (!items) return;
@@ -862,7 +865,6 @@
             debouncedSaveNoteContent(noteId);
         }
 
-        // FULL-LENGTH SNAP ALIGNMENT DRAG & RESIZE SYSTEM
         function makeNoteDraggableAndResizableTouch(elmnt, noteId) {
             let posX = localState.notes[noteId]?.x || 20;
             let posY = localState.notes[noteId]?.y || 20;
@@ -895,14 +897,12 @@
                     const oL = o.x || 20, oR = oL + oW, oCX = oL + oW / 2;
                     const oT = o.y || 20, oB = oT + oH, oCY = oT + oH / 2;
 
-                    // Vertical Full-Height Alignment Check (X-axis)
                     if (Math.abs(cL - oL) < TH) { snapX = oL; showV = true; lineVPos = oL; }
                     else if (Math.abs(cR - oR) < TH) { snapX = oR - currW; showV = true; lineVPos = oR; }
                     else if (Math.abs(cCX - oCX) < TH) { snapX = oCX - currW / 2; showV = true; lineVPos = oCX; }
                     else if (Math.abs(cL - oR) < TH) { snapX = oR; showV = true; lineVPos = oR; }
                     else if (Math.abs(cR - oL) < TH) { snapX = oL - currW; showV = true; lineVPos = oL; }
 
-                    // Horizontal Full-Width Alignment Check (Y-axis)
                     if (Math.abs(cT - oT) < TH) { snapY = oT; showH = true; lineHPos = oT; }
                     else if (Math.abs(cB - oB) < TH) { snapY = oB - currH; showH = true; lineHPos = oB; }
                     else if (Math.abs(cCY - oCY) < TH) { snapY = oCY - currH / 2; showH = true; lineHPos = oCY; }
@@ -1144,7 +1144,7 @@
             }
         };
 
-        // --- COMPACT ARTICLES WORKFLOW ---
+        // --- ARTICLES WITH DYNAMIC STATUS & DEFAULTS ---
         function updateArticleCourseSelect() {
             const select = document.getElementById('art-course');
             if (!select) return;
@@ -1163,6 +1163,7 @@
                 document.getElementById('art-edit-id').value = editId;
                 document.getElementById('art-title').value = art.title || '';
                 document.getElementById('art-course').value = art.courseId || '';
+                document.getElementById('art-status').value = art.status || 'not_started';
                 document.getElementById('art-authors').value = art.authors || '';
                 document.getElementById('art-year').value = art.year || '';
                 document.getElementById('art-link').value = art.link || '';
@@ -1178,6 +1179,7 @@
                 document.getElementById('art-edit-id').value = '';
                 document.getElementById('art-title').value = '';
                 document.getElementById('art-course').value = '';
+                document.getElementById('art-status').value = 'not_started'; // Default "טרם סוכם"
                 document.getElementById('art-authors').value = '';
                 document.getElementById('art-year').value = '';
                 document.getElementById('art-link').value = '';
@@ -1200,6 +1202,7 @@
             const editId = document.getElementById('art-edit-id').value;
             const title = document.getElementById('art-title').value.trim();
             const courseId = document.getElementById('art-course').value;
+            const status = document.getElementById('art-status').value || 'not_started';
             const authors = document.getElementById('art-authors').value.trim();
             const year = document.getElementById('art-year').value.trim();
             const link = document.getElementById('art-link').value.trim();
@@ -1217,7 +1220,7 @@
                 return;
             }
 
-            const articleObj = { title, courseId, authors, year, link, analysis, status: 'read' };
+            const articleObj = { title, courseId, status, authors, year, link, analysis };
 
             if (editId) {
                 update(ref(db, `${getUserPath()}/articles/${editId}`), articleObj);
@@ -1227,6 +1230,11 @@
             }
 
             closeArticleModal();
+        };
+
+        window.updateArticleStatusFirebase = function(artId, newStatus) {
+            if (!loggedInUser) return;
+            update(ref(db, `${getUserPath()}/articles/${artId}`), { status: newStatus });
         };
 
         function renderArticlesView() {
@@ -1262,14 +1270,24 @@
 
                 const courseObj = localState.courses[art.courseId] || { title: 'קורס כללי' };
                 const an = art.analysis || {};
+                const currentStatus = art.status || 'not_started';
 
                 const card = document.createElement('div');
                 card.className = 'notion-card p-4 flex flex-col justify-between space-y-3 hover:border-[#37352F]/40 transition-all';
                 card.innerHTML = `
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[9px] bg-[#EFEEEA] px-1.5 py-0.5 rounded text-[#787774] font-medium truncate max-w-[140px]">${escapeHtml(courseObj.title)}</span>
-                            <span class="text-[9px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">סוכם ✓</span>
+                            <span class="text-[9px] bg-[#EFEEEA] px-1.5 py-0.5 rounded text-[#787774] font-medium truncate max-w-[130px]">${escapeHtml(courseObj.title)}</span>
+                            
+                            <select onchange="updateArticleStatusFirebase('${artId}', this.value)" class="text-[10px] font-bold px-1.5 py-0.5 rounded border focus:outline-none cursor-pointer ${
+                                currentStatus === 'completed' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                                currentStatus === 'in_progress' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+                                'bg-slate-100 text-slate-700 border-slate-200'
+                            }">
+                                <option value="not_started" ${currentStatus === 'not_started' ? 'selected' : ''}>⏳ טרם סוכם</option>
+                                <option value="in_progress" ${currentStatus === 'in_progress' ? 'selected' : ''}>🔄 בתהליך</option>
+                                <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>✓ סוכם</option>
+                            </select>
                         </div>
                         <h3 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
                         <p class="text-[10px] text-[#787774] mt-0.5">${escapeHtml(art.authors || 'מחברים לא צוינו')} ${art.year ? `(${escapeHtml(art.year)})` : ''}</p>
@@ -1355,7 +1373,7 @@
             }
         };
 
-        // --- ROUTINE & HOBBIES LOGIC ---
+        // --- BULK ROUTINE & HOBBIES EDIT LOGIC ---
         function renderRoutineChecklist() {
             const list = document.getElementById('routine-checklist-list');
             if (!list) return;
@@ -1365,41 +1383,30 @@
             }
 
             list.innerHTML = localState.routine.map((item, idx) => `
-                <div class="flex items-center justify-between p-1.5 rounded hover:bg-[#EFEEEA]/50 border border-transparent hover:border-[#E9E9E7] text-xs">
+                <div class="flex items-center justify-between p-1.5 rounded hover:bg-[#EFEEEA]/50 text-xs">
                     <div class="flex items-center gap-2">
                         <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRoutineCheckFirebase(${idx}, this.checked)" class="w-3.5 h-3.5 rounded border-[#E9E9E7]">
                         <span class="${item.checked ? 'line-through text-[#787774]' : 'text-[#37352F]'}">${escapeHtml(item.text)}</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <button onclick="editRoutineItemFirebase(${idx})" class="text-slate-400 hover:text-slate-700 text-[10px]">✏️</button>
-                        <button onclick="deleteRoutineItemFirebase(${idx})" class="text-slate-400 hover:text-red-500 text-[10px]">🗑️</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        window.addRoutineItemFirebase = function() {
-            const text = prompt('הזיני סעיף חדש לסנכרון:');
-            if (!text || !text.trim() || !loggedInUser) return;
-            if (!localState.routine) localState.routine = [];
-            localState.routine.push({ id: 'r_' + Date.now(), text: text.trim(), checked: false });
+        window.bulkEditRoutineFirebase = function() {
+            const currentText = (localState.routine || []).map(r => r.text).join('\n');
+            const newText = prompt('ערכי את כל סעיפי הסנכרון (כל סעיף בשורה חדשה):', currentText);
+            if (newText === null || !loggedInUser) return;
+
+            const lines = newText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            localState.routine = lines.map((text, i) => {
+                const existing = (localState.routine || []).find(r => r.text === text);
+                return {
+                    id: existing ? existing.id : 'r_' + Date.now() + '_' + i,
+                    text: text,
+                    checked: existing ? existing.checked : false
+                };
+            });
             update(ref(db, getUserPath()), { routine: localState.routine });
-        };
-
-        window.editRoutineItemFirebase = function(idx) {
-            const current = localState.routine[idx].text;
-            const updated = prompt('עריכת סעיף סנכרון:', current);
-            if (updated !== null && updated.trim() && loggedInUser) {
-                localState.routine[idx].text = updated.trim();
-                update(ref(db, getUserPath()), { routine: localState.routine });
-            }
-        };
-
-        window.deleteRoutineItemFirebase = function(idx) {
-            if (loggedInUser && confirm('למחוק סעיף זה?')) {
-                localState.routine.splice(idx, 1);
-                update(ref(db, getUserPath()), { routine: localState.routine });
-            }
         };
 
         window.toggleRoutineCheckFirebase = function(idx, checked) {
@@ -1418,45 +1425,35 @@
             if (!list) return;
 
             if (!localState.hobbies || localState.hobbies.length === 0) {
-                list.innerHTML = '<tr><td colspan="9" class="py-3 text-center text-xs text-[#787774] italic">אין הרגלים/תחביבים בלוג.</td></tr>';
+                list.innerHTML = '<tr><td colspan="8" class="py-3 text-center text-xs text-[#787774] italic">אין הרגלים/תחביבים בלוג.</td></tr>';
                 return;
             }
 
             list.innerHTML = localState.hobbies.map((h, hIdx) => `
                 <tr class="hover:bg-[#EFEEEA]/30">
                     <td class="py-2 text-xs font-medium text-[#37352F]">
-                        <span class="cursor-pointer" onclick="editHobbyFirebase(${hIdx})">${escapeHtml(h.name)}</span>
+                        <span>${escapeHtml(h.name)}</span>
                     </td>
                     ${[0,1,2,3,4,5,6].map(d => `<td class="text-center"><input type="checkbox" ${h.days[d] ? 'checked' : ''} onchange="toggleHobbyDayFirebase(${hIdx}, ${d}, this.checked)" class="w-3.5 h-3.5 rounded border-[#E9E9E7]"></td>`).join('')}
-                    <td class="text-center">
-                        <button onclick="deleteHobbyFirebase(${hIdx})" class="text-slate-400 hover:text-red-500 text-[10px]">🗑️</button>
-                    </td>
                 </tr>
             `).join('');
         }
 
-        window.addHobbyFirebase = function() {
-            const name = prompt('שם ההרגל / תחביב החדש:');
-            if (!name || !name.trim() || !loggedInUser) return;
-            if (!localState.hobbies) localState.hobbies = [];
-            localState.hobbies.push({ id: 'h_' + Date.now(), name: name.trim(), days: [false, false, false, false, false, false, false] });
+        window.bulkEditHobbiesFirebase = function() {
+            const currentNames = (localState.hobbies || []).map(h => h.name).join('\n');
+            const newNames = prompt('ערכי את כל ההרגלים/תחביבים (כל הרגל בשורה חדשה):', currentNames);
+            if (newNames === null || !loggedInUser) return;
+
+            const lines = newNames.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            localState.hobbies = lines.map((name, i) => {
+                const existing = (localState.hobbies || []).find(h => h.name === name);
+                return {
+                    id: existing ? existing.id : 'h_' + Date.now() + '_' + i,
+                    name: name,
+                    days: existing ? existing.days : [false, false, false, false, false, false, false]
+                };
+            });
             update(ref(db, getUserPath()), { hobbies: localState.hobbies });
-        };
-
-        window.editHobbyFirebase = function(idx) {
-            const current = localState.hobbies[idx].name;
-            const updated = prompt('עריכת שם ההרגל/תחביב:', current);
-            if (updated !== null && updated.trim() && loggedInUser) {
-                localState.hobbies[idx].name = updated.trim();
-                update(ref(db, getUserPath()), { hobbies: localState.hobbies });
-            }
-        };
-
-        window.deleteHobbyFirebase = function(idx) {
-            if (loggedInUser && confirm('למחוק הרגל זה?')) {
-                localState.hobbies.splice(idx, 1);
-                update(ref(db, getUserPath()), { hobbies: localState.hobbies });
-            }
         };
 
         window.toggleHobbyDayFirebase = function(hIdx, day, checked) {
