@@ -242,8 +242,8 @@
                         <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
                             <h3 class="text-xs font-bold text-[#37352F]">🔄 סנכרון לאחר יום לימודים</h3>
                             <div class="flex items-center gap-2">
-                                <button onclick="bulkEditRoutineFirebase()" class="text-xs font-bold text-[#37352F] hover:underline">✏️ עריכת הרשימה</button>
-                                <button onclick="resetRoutineChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס</button>
+                                <button onclick="bulkEditRoutineFirebase()" title="עריכת רשימה" class="text-xs font-bold text-[#37352F] hover:opacity-70 p-0.5">✏️</button>
+                                <button onclick="resetRoutineChecks()" title="איפוס" class="text-xs text-[#787774] hover:text-[#37352F] p-0.5">🔄</button>
                             </div>
                         </div>
                         <div class="space-y-2" id="routine-checklist-list"></div>
@@ -404,6 +404,22 @@
         </div>
 
     </main>
+
+    <!-- MODAL: BULK EDIT ROUTINE -->
+    <div id="routine-edit-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-md w-full p-5 relative shadow-xl space-y-3">
+            <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-2">
+                <h3 class="text-sm font-bold text-[#37352F]">עריכת סעיפי סנכרון</h3>
+                <button onclick="closeRoutineEditModal()" class="text-slate-400 hover:text-slate-700 text-xs">✕</button>
+            </div>
+            <p class="text-[11px] text-[#787774]">כל סעיף בשורה נפרדת:</p>
+            <textarea id="routine-edit-textarea" rows="6" class="w-full p-2.5 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F] font-sans leading-relaxed"></textarea>
+            <div class="pt-2 flex justify-end gap-2 border-t border-[#E9E9E7]">
+                <button type="button" onclick="closeRoutineEditModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                <button type="button" onclick="saveRoutineBulkFirebase()" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded font-bold">שמירה</button>
+            </div>
+        </div>
+    </div>
 
     <!-- UNIFIED ARTICLE & ANALYSIS MODAL -->
     <div id="article-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
@@ -1443,10 +1459,20 @@
 
         window.bulkEditRoutineFirebase = function() {
             const currentText = (localState.routine || []).map(r => r.text).join('\n');
-            const newText = prompt('ערכי את כל סעיפי הסנכרון (כל סעיף בשורה חדשה):', currentText);
-            if (newText === null || !loggedInUser) return;
+            const textarea = document.getElementById('routine-edit-textarea');
+            if (textarea) textarea.value = currentText;
+            document.getElementById('routine-edit-modal')?.classList.remove('hidden');
+        };
 
-            const lines = newText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        window.closeRoutineEditModal = function() {
+            document.getElementById('routine-edit-modal')?.classList.add('hidden');
+        };
+
+        window.saveRoutineBulkFirebase = function() {
+            if (!loggedInUser) return;
+            const textarea = document.getElementById('routine-edit-textarea');
+            if (!textarea) return;
+            const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             localState.routine = lines.map((text, i) => {
                 const existing = (localState.routine || []).find(r => r.text === text);
                 return {
@@ -1456,6 +1482,7 @@
                 };
             });
             update(ref(db, getUserPath()), { routine: localState.routine });
+            closeRoutineEditModal();
         };
 
         window.toggleRoutineCheckFirebase = function(idx, checked) {
