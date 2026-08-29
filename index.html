@@ -254,10 +254,10 @@
                     </div>
                 </div>
 
-                <!-- 3. PINNED NOTE (SOFT BABY GREEN) -->
-                <div class="notion-card p-4 bg-[#F0FDF4] border border-[#DCFCE7] shadow-none flex flex-col justify-between">
+                <!-- 3. PINNED NOTE (SOFT BABY PINK) -->
+                <div class="notion-card p-4 bg-[#FDF2F8] border border-[#FCE7F3] shadow-none flex flex-col justify-between">
                     <div>
-                        <div class="flex items-center justify-between border-b border-emerald-200/50 pb-2 mb-2">
+                        <div class="flex items-center justify-between border-b border-pink-200/50 pb-2 mb-2">
                             <span class="text-xs opacity-75 select-none">📌</span>
                         </div>
                         <div id="pinned-note-display" contenteditable="true"
@@ -482,14 +482,10 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-medium text-[#37352F] mb-1">מחברים</label>
-                            <input type="text" id="art-authors" placeholder="מחברים" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-[#37352F] mb-1">שנת פרסום</label>
-                            <input type="text" id="art-year" placeholder="2024" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">ציטוט APA (מהעתקה מ-Google Scholar)</label>
+                            <input type="text" id="art-apa" placeholder="הדביקי כאן את ציטוט ה-APA..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-[#37352F] mb-1">קישור ל-PDF / Drive</label>
@@ -528,7 +524,7 @@
 
                 <div class="pt-3 border-t border-[#E9E9E7] flex justify-end gap-2">
                     <button type="button" onclick="closeArticleModal()" class="px-4 py-2 bg-[#EFEEEA] hover:bg-[#E2E1DC] text-xs font-medium rounded text-[#37352F]">ביטול</button>
-                    <button type="submit" class="px-5 py-2 bg-[#37352F] hover:bg-black text-white text-xs font-bold rounded shadow-sm transition-all">💾 שמירת מאמר וניתוח</button>
+                    <button type="submit" class="p-2 bg-[#37352F] hover:bg-black text-white text-xs font-bold rounded shadow-sm transition-all flex items-center justify-center w-9 h-9" title="שמירת שינויים">💾</button>
                 </div>
             </form>
         </div>
@@ -1251,8 +1247,7 @@
                 document.getElementById('art-title').value = art.title || '';
                 document.getElementById('art-course').value = art.courseId || '';
                 document.getElementById('art-status').value = art.status || 'not_started';
-                document.getElementById('art-authors').value = art.authors || '';
-                document.getElementById('art-year').value = art.year || '';
+                document.getElementById('art-apa').value = art.apa || '';
                 document.getElementById('art-link').value = art.link || '';
 
                 const an = art.analysis || {};
@@ -1267,8 +1262,7 @@
                 document.getElementById('art-title').value = '';
                 document.getElementById('art-course').value = '';
                 document.getElementById('art-status').value = 'not_started';
-                document.getElementById('art-authors').value = '';
-                document.getElementById('art-year').value = '';
+                document.getElementById('art-apa').value = '';
                 document.getElementById('art-link').value = '';
                 document.getElementById('art-rq').value = '';
                 document.getElementById('art-method').value = '';
@@ -1290,8 +1284,7 @@
             const title = document.getElementById('art-title').value.trim();
             const courseId = document.getElementById('art-course').value;
             const status = document.getElementById('art-status').value || 'not_started';
-            const authors = document.getElementById('art-authors').value.trim();
-            const year = document.getElementById('art-year').value.trim();
+            const apa = document.getElementById('art-apa').value.trim();
             const link = document.getElementById('art-link').value.trim();
 
             const analysis = {
@@ -1307,7 +1300,7 @@
                 return;
             }
 
-            const articleObj = { title, courseId, status, authors, year, link, analysis };
+            const articleObj = { title, courseId, status, apa, link, analysis };
 
             if (editId) {
                 update(ref(db, `${getUserPath()}/articles/${editId}`), articleObj);
@@ -1377,7 +1370,7 @@
                             </select>
                         </div>
                         <h3 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline flex-shrink-0" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
-                        <p class="text-[10px] text-[#787774] mt-0.5 flex-shrink-0">${escapeHtml(art.authors || 'מחברים לא צוינו')} ${art.year ? `(${escapeHtml(art.year)})` : ''}</p>
+                        <p class="text-[10px] text-[#787774] mt-0.5 flex-shrink-0 font-mono italic">${escapeHtml(art.apa || 'ציטוט APA טרם הוזן')}</p>
 
                         <!-- PREVIEW: RESEARCH QUESTION ONLY WITH MOUSE SCROLL SUPPORT -->
                         <div class="mt-3 pt-2 border-t border-[#E9E9E7] text-[11px] article-summary-scroll pr-1" onwheel="event.stopPropagation()">
@@ -1399,7 +1392,7 @@
                             <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">📋 APA</button>
                         </div>
                         <div class="flex items-center gap-1">
-                            <button onclick="openArticleModal('${artId}')" class="bg-[#37352F] hover:bg-black text-white px-2 py-0.5 rounded text-[9px] font-bold">✏️ עריכה וניתוח</button>
+                            <button onclick="openArticleModal('${artId}')" title="עריכה וניתוח" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-2 py-1 rounded text-[11px] flex items-center justify-center">✏️</button>
                             <button onclick="deleteArticleFirebase('${artId}')" class="text-slate-300 hover:text-red-500 text-[10px] p-0.5">✕</button>
                         </div>
                     </div>
@@ -1411,8 +1404,8 @@
         window.copyAPACitation = function(artId) {
             const art = localState.articles[artId];
             if (!art) return;
-            const apa = `${art.authors || 'Unknown Author'} (${art.year || 'n.d.'}). ${art.title}.${art.link ? ' ' + art.link : ''}`;
-            navigator.clipboard.writeText(apa).then(() => alert(`ציטוט APA 7th הועתק ללוח:\n\n${apa}`));
+            const apa = art.apa || art.title;
+            navigator.clipboard.writeText(apa).then(() => alert(`ציטוט APA הועתק ללוח:\n\n${apa}`));
         };
 
         window.deleteArticleFirebase = function(artId) {
@@ -1426,7 +1419,7 @@
             if (!art) return;
             const an = art.analysis || {};
             const title = art.title || 'ניתוח מאמר';
-            const md = `# ניתוח מאמר אקדמי: ${title}\n**מחברים:** ${art.authors || ''} (${art.year || ''})\n\n### 1. שאלת מחקר והשערות\n${an.rq || ''}\n\n### 2. מתודולוגיה ומדגם\n${an.method || ''}\n\n### 3. ממצאים ותוצאות\n${an.findings || ''}\n\n### 4. דיון וביקורת\n${an.critique || ''}\n\n### 5. זיקה אישית\n${an.takeaways || ''}`;
+            const md = `# ניתוח מאמר אקדמי: ${title}\n**ציטוט APA:** ${art.apa || ''}\n\n### 1. שאלת מחקר והשערות\n${an.rq || ''}\n\n### 2. מתודולוגיה ומדגם\n${an.method || ''}\n\n### 3. ממצאים ותוצאות\n${an.findings || ''}\n\n### 4. דיון וביקורת\n${an.critique || ''}\n\n### 5. זיקה אישית\n${an.takeaways || ''}`;
             const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Analysis_${title.replace(/\s+/g, '_')}.md`; a.click();
         };
@@ -1443,7 +1436,7 @@
             container.style.fontFamily = 'Heebo, sans-serif';
             container.innerHTML = `
                 <h1 style="font-size:18px; font-weight:bold; color:#37352F;">ניתוח מאמר: ${escapeHtml(art.title)}</h1>
-                <p style="font-size:12px; color:#787774; margin-top:4px;"><b>מחברים:</b> ${escapeHtml(art.authors || 'לא צוינו')} | <b>שנה:</b> ${escapeHtml(art.year || 'לא צוינה')} | <b>קורס:</b> ${escapeHtml(courseObj.title)}</p>
+                <p style="font-size:12px; color:#787774; margin-top:4px;"><b>APA:</b> ${escapeHtml(art.apa || 'לא הוזן')} | <b>קורס:</b> ${escapeHtml(courseObj.title)}</p>
                 <hr style="margin: 16px 0; border: 0; border-top: 1px solid #E9E9E7;"/>
                 <div style="font-size:12px; line-height:1.6; color:#37352F;">
                     <h3 style="font-weight:bold; margin-top:12px;">1. שאלת המחקר והשערות</h3>
