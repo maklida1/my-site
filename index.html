@@ -73,7 +73,7 @@
 </head>
 <body class="min-h-screen pb-16">
 
-    <!-- LOGIN OVERLAY WITH HELEN / 1234 -->
+    <!-- LOGIN OVERLAY (HELEN / 1234) -->
     <div id="login-overlay" class="fixed inset-0 bg-white/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-4">
         <div class="notion-card p-8 max-w-sm w-full text-center space-y-4 border border-[#E9E9E7] shadow-xl">
             <div class="w-12 h-12 bg-[#EFEEEA] rounded-full flex items-center justify-center text-2xl mx-auto">🔑</div>
@@ -191,7 +191,7 @@
                     </div>
                 </div>
 
-                <!-- Semester Courses -->
+                <!-- Semester Courses Summary -->
                 <div class="notion-card p-5">
                     <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2.5">
                         <h3 class="text-sm font-bold text-[#37352F]">🎓 קורסי הסמסטר</h3>
@@ -201,16 +201,54 @@
             </div>
 
             <!-- Unified Tasks -->
-            <div class="notion-card p-5">
-                <div class="flex items-center justify-between mb-4 border-b border-[#E9E9E7] pb-3">
-                    <h3 class="text-sm font-bold text-[#37352F]">📋 כל המשימות</h3>
-                    <span id="focus-tasks-count" class="text-xs text-[#787774] font-bold"></span>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="notion-card p-5">
+                        <div class="flex items-center justify-between mb-4 border-b border-[#E9E9E7] pb-3">
+                            <h3 class="text-sm font-bold text-[#37352F]">📋 כל המשימות (ממוינות לפי תאריך)</h3>
+                            <span id="focus-tasks-count" class="text-xs text-[#787774] font-bold"></span>
+                        </div>
+                        <div class="space-y-2.5" id="focus-tasks-list"></div>
+                    </div>
                 </div>
-                <div class="space-y-2.5" id="focus-tasks-list"></div>
+
+                <div class="space-y-6">
+                    <div class="notion-card p-5">
+                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
+                            <h3 class="text-xs font-bold text-[#37352F]">🔄 סנכרון לאחר יום לימודים</h3>
+                            <button onclick="resetRoutineChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס</button>
+                        </div>
+                        <div class="space-y-1.5" id="routine-checklist-list"></div>
+                    </div>
+
+                    <div class="notion-card p-5">
+                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
+                            <h3 class="text-sm font-bold text-[#37352F]">✨ מעקב שבועי</h3>
+                            <button onclick="resetHobbiesChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס שבוע</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead>
+                                    <tr class="border-b border-[#E9E9E7] text-[#787774] text-[11px]">
+                                        <th class="pb-2 font-bold text-[#37352F]">תחביב</th>
+                                        <th class="pb-2 text-center w-6">א'</th>
+                                        <th class="pb-2 text-center w-6">ב'</th>
+                                        <th class="pb-2 text-center w-6">ג'</th>
+                                        <th class="pb-2 text-center w-6">ד'</th>
+                                        <th class="pb-2 text-center w-6">ה'</th>
+                                        <th class="pb-2 text-center w-6">ו'</th>
+                                        <th class="pb-2 text-center w-6">ש'</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hobbies-tracker-list" class="divide-y divide-[#E9E9E7]/60"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- VIEW 2: COURSES -->
+        <!-- VIEW 2: COURSES BOARD -->
         <div id="view-manage" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
                 <h2 class="text-lg font-bold text-[#37352F]">לוח קורסים ומטלות</h2>
@@ -219,34 +257,66 @@
             <div id="courses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- VIEW 3: ARTICLES -->
+        <!-- VIEW 3: ARTICLES LIST -->
         <div id="view-articles" class="hidden space-y-6">
-            <div class="notion-card p-5 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-[#37352F]">מאמרים אקדמיים</h2>
-                <button onclick="openAddArticleModal()" class="bg-[#37352F] text-white text-xs px-3.5 py-1.5 rounded">+ מאמר חדש</button>
+            <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F]">מאמרים אקדמיים לקריאה ומחקר</h2>
+                    <p class="text-xs text-[#787774]">ציטוט אוטומטי בפורמט APA 7th וקישור לניתוחים</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="articles-course-filter" onchange="renderArticlesView()" class="p-1.5 border border-[#E9E9E7] rounded text-xs bg-white">
+                        <option value="ALL">כל הקורסים</option>
+                    </select>
+                    <button onclick="openAddArticleModal()" class="bg-[#37352F] text-white text-xs font-medium px-3.5 py-1.5 rounded">+ מאמר חדש</button>
+                </div>
             </div>
             <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- VIEW 4: ANALYSIS -->
+        <!-- VIEW 4: ARTICLE ANALYSIS -->
         <div id="view-analysis" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <h2 class="text-lg font-bold text-[#37352F]">ניתוח מאמר מובנה</h2>
-                <div class="flex items-center gap-2">
-                    <button onclick="exportAnalysisToMarkdown()" class="bg-[#EFEEEA] border text-xs px-3 py-1.5 rounded">📄 Markdown</button>
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F]">ניתוח מאמר מובנה</h2>
+                    <p class="text-xs text-[#787774]">שמירה אוטומטית בזמן הקלדה | ייצוא ל-Markdown ול-PDF</p>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span id="analysis-save-status" class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">כל השינויים נשמרו</span>
+                    <button onclick="exportAnalysisToMarkdown()" class="bg-[#EFEEEA] text-[#37352F] border border-[#E9E9E7] text-xs px-3 py-1.5 rounded">📄 Markdown</button>
                     <button onclick="exportAnalysisToPDF()" class="bg-[#37352F] text-white text-xs px-3.5 py-1.5 rounded">🖨️ PDF</button>
+                    <select id="analysis-article-selector" onchange="loadArticleAnalysisToForm(this.value)" class="p-1.5 border border-[#E9E9E7] rounded text-xs bg-white"></select>
                 </div>
             </div>
+
             <div id="printable-analysis-area" class="notion-card p-6 bg-white space-y-5">
+                <div class="border-b border-[#E9E9E7] pb-3">
+                    <h3 id="analysis-article-title" class="text-base font-bold text-[#37352F]">בחר מאמר להתחלת ניתוח</h3>
+                    <p id="analysis-article-meta" class="text-xs text-[#787774] mt-0.5">מחברים ושנת פרסום יופיעו כאן</p>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-[#37352F]">1. שאלת המחקר והשערות</label>
-                        <textarea id="an-rq" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded"></textarea>
+                        <textarea id="an-rq" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-[#37352F]">2. מתודולוגיה ומדגם</label>
-                        <textarea id="an-method" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded"></textarea>
+                        <label class="block text-xs font-bold text-[#37352F]">2. מתודולוגיה, מדגם וכלים</label>
+                        <textarea id="an-method" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
                     </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-[#37352F]">3. ממצאים מרכזיים ותוצאות</label>
+                        <textarea id="an-findings" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-[#37352F]">4. דיון, מגבלות וביקורת</label>
+                        <textarea id="an-critique" rows="4" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5 pt-2 border-t border-[#E9E9E7]">
+                    <label class="block text-xs font-bold text-[#37352F]">5. זיקה למחקר שלי / ציטוטים וסיכום אישי</label>
+                    <textarea id="an-takeaways" rows="3" class="analysis-auto-save w-full p-2.5 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
                 </div>
             </div>
         </div>
@@ -287,25 +357,260 @@
             <div id="glossary-main-content"></div>
         </div>
 
-        <!-- VIEW 6: TELEGRAM -->
+        <!-- VIEW 6: TELEGRAM BOT -->
         <div id="view-telegram" class="hidden space-y-6">
-            <div class="notion-card p-5">
-                <h2 class="text-lg font-bold text-[#37352F]">אינטגרציית טלגרם</h2>
+            <div class="notion-card p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-2"><span>✈️</span> שליחה ואינטגרציית טלגרם</h2>
+                    <p class="text-xs text-[#787774]">שליחת הודעות תזכורת וקבלת פתקים ישירות ללוח</p>
+                </div>
+                <div id="telegram-status-badge" class="px-2.5 py-1 rounded text-xs bg-slate-100 text-slate-700">הגדרות טרם הוזנו</div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="notion-card p-5 space-y-4">
+                    <div class="border-b border-[#E9E9E7] pb-3">
+                        <h3 class="text-xs font-bold text-[#37352F]">⚙️ הגדרות הבוט בטלגרם</h3>
+                    </div>
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <label class="block font-medium text-[#37352F] mb-1">Bot Token</label>
+                            <input type="password" id="tg-bot-token" placeholder="123456789:ABC..." class="w-full p-2 border border-[#E9E9E7] rounded font-mono text-[11px]">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-[#37352F] mb-1">Chat ID</label>
+                            <input type="text" id="tg-chat-id" placeholder="987654321" class="w-full p-2 border border-[#E9E9E7] rounded font-mono text-[11px]">
+                        </div>
+                        <button onclick="saveTelegramConfigFirebase()" class="w-full py-2 bg-[#37352F] text-white rounded font-medium">💾 שמירת הגדרות</button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="notion-card p-5 space-y-4">
+                        <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-3">
+                            <h3 class="text-xs font-bold text-[#37352F]">📝 הידור הודעה</h3>
+                            <div class="flex flex-wrap gap-1">
+                                <button onclick="applyTelegramTemplate('reminder')" class="px-2 py-0.5 bg-[#EFEEEA] text-[11px] rounded">📌 תזכורת</button>
+                                <button onclick="applyTelegramTemplate('task')" class="px-2 py-0.5 bg-[#EFEEEA] text-[11px] rounded">⚡ משימה</button>
+                            </div>
+                        </div>
+                        <textarea id="tg-msg-text" rows="4" placeholder="רשמי כאן הודעה לשליחה עצמית בטלגרם..." class="w-full p-3 text-xs border border-[#E9E9E7] rounded focus:outline-none"></textarea>
+                        <div class="p-3 bg-[#EFEEEA]/30 border border-dashed border-[#E9E9E7] rounded">
+                            <input type="file" id="tg-file-input" class="block w-full text-xs text-[#787774]">
+                        </div>
+                        <div class="flex items-center justify-between pt-1">
+                            <span id="tg-send-status" class="text-xs"></span>
+                            <button onclick="sendTelegramMessageFirebase()" class="bg-[#37352F] text-white text-xs px-5 py-2 rounded font-medium">🚀 שליחה לטלגרם</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- VIEW 7: NOTES CANVAS -->
         <div id="view-notes" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-[#37352F]">משטח פתקים</h2>
-                <button onclick="addManualNotePromptFirebase()" class="bg-[#37352F] text-white text-xs px-3.5 py-1.5 rounded">+ פתק חדש</button>
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F]">משטח פתקים ורעיונות</h2>
+                    <p class="text-xs text-[#787774]">גרירה ושינוי גודל חלקים במסכי מגע</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="resetNotesPositionFirebase()" class="bg-white border border-[#E9E9E7] text-xs px-3 py-1.5 rounded">איפוס מיקומים</button>
+                    <button onclick="addManualNotePromptFirebase()" class="bg-[#37352F] text-white text-xs px-3.5 py-1.5 rounded">+ פתק חדש</button>
+                </div>
             </div>
-            <div id="notes-grid" class="min-h-[500px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed relative"></div>
+            <div id="notes-grid" class="min-h-[550px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-hidden"></div>
         </div>
 
     </main>
 
-    <!-- FIREBASE MODULE & CUSTOM HELEN AUTHENTICATION -->
+    <!-- ALL MODALS -->
+    <!-- MODAL: ADD COURSE -->
+    <div id="add-course-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-md w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 id="course-modal-title" class="text-sm font-bold text-[#37352F] mb-3">פרטי קורס</h3>
+            <form onsubmit="handleCourseSubmit(event)" class="space-y-3">
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">שם הקורס *</label>
+                        <input type="text" id="course-name" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">קוד</label>
+                        <input type="text" id="course-code" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">שעות מפגש</label>
+                        <input type="text" id="course-hours" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">מיקום</label>
+                        <input type="text" id="course-location" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Moodle</label>
+                    <input type="url" id="course-moodle" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Docs</label>
+                    <input type="url" id="course-docs" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Drive</label>
+                    <input type="url" id="course-drive" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeAddCourseModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                    <button type="submit" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">שמירה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD TASK -->
+    <div id="add-task-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-sm w-full p-5 relative shadow-xl">
+            <h3 class="text-sm font-bold text-[#37352F] mb-3">הוספת משימה לקורס</h3>
+            <form onsubmit="handleAddNewTaskSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">תיאור המשימה *</label>
+                    <input type="text" id="task-modal-text" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">מועד יעד</label>
+                    <input type="date" id="task-modal-date" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">סטטוס</label>
+                    <select id="task-modal-status" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                        <option value="not-started">טרם הוחל</option>
+                        <option value="in-progress">בתהליך</option>
+                        <option value="completed">טופל</option>
+                    </select>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeAddTaskModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                    <button type="submit" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">הוספה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD ARTICLE -->
+    <div id="add-article-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-md w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-sm font-bold text-[#37352F] mb-3">הוספת מאמר אקדמי חדש</h3>
+            <form onsubmit="handleAddNewArticleSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">שיוך לקורס *</label>
+                    <select id="article-modal-course" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">כותרת המאמר *</label>
+                    <input type="text" id="article-modal-title" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">מחברים</label>
+                        <input type="text" id="article-modal-authors" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">שנה</label>
+                        <input type="text" id="article-modal-year" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">סטטוס קריאה</label>
+                    <select id="article-modal-status" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white">
+                        <option value="to-read">טרם נקרא</option>
+                        <option value="reading">בתהליך קריאה</option>
+                        <option value="read">נקרא וסוכם</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור ל-PDF / Drive</label>
+                    <input type="url" id="article-modal-link" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeAddArticleModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                    <button type="submit" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">הוספה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD GLOSSARY TERM -->
+    <div id="glossary-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-lg w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto space-y-3">
+            <h3 id="glossary-modal-title" class="text-sm font-bold text-[#37352F]">הוספת מושג חדש</h3>
+            <input type="hidden" id="glossary-edit-id">
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">שם המושג (עברית) *</label>
+                    <input type="text" id="glossary-term-he" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">מונח בלועזית / אנגלית</label>
+                    <input type="text" id="glossary-term-en" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קורס *</label>
+                    <input type="text" id="glossary-course" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">נושא / יחידת לימוד</label>
+                    <input type="text" id="glossary-topic" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-[#37352F] mb-1">הגדרה / הסבר תמציתי *</label>
+                <textarea id="glossary-definition" rows="3" class="w-full p-2 border border-[#E9E9E7] rounded text-xs"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-[#37352F] mb-1">דוגמה / הקשר יישומי</label>
+                <textarea id="glossary-example" rows="2" class="w-full p-2 border border-[#E9E9E7] rounded text-xs"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-[#37352F] mb-1">תגיות (מופרדות בפסיקים)</label>
+                <input type="text" id="glossary-tags" placeholder="זיכרון, תפיסה, קוגניציה" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+                <input type="checkbox" id="glossary-exam-focus" class="w-4 h-4 rounded border-[#E9E9E7]">
+                <label for="glossary-exam-focus" class="text-xs text-[#37352F] font-medium">⭐ מושג מרכזי / דגש לבחינה</label>
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2 border-t border-[#E9E9E7]">
+                <button type="button" onclick="closeGlossaryModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                <button type="button" onclick="saveGlossaryTermFirebase()" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">שמירה</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SYLLABUS -->
+    <div id="syllabus-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-lg w-full p-5 relative shadow-xl max-h-[85vh] flex flex-col">
+            <h3 id="syllabus-modal-title" class="text-sm font-bold text-[#37352F] mb-2">סילבוס קורס</h3>
+            <div id="syllabus-content-editable" contenteditable="true"
+                 class="flex-1 overflow-y-auto border border-[#E9E9E7] rounded p-3 text-xs text-[#37352F] min-h-[220px] focus:outline-none focus:border-[#37352F]"></div>
+            <div class="pt-3 flex justify-end gap-2 border-t border-[#E9E9E7] mt-3">
+                <button type="button" onclick="closeSyllabusModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">סגירה</button>
+                <button type="button" onclick="saveSyllabusContentFirebase()" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">שמירה</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN FIREBASE MODULE WITH COMPLETE JAVASCRIPT CODE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getDatabase, ref, onValue, set, update, push, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
@@ -325,13 +630,28 @@
 
         let loggedInUser = sessionStorage.getItem('dashboard_user') || null;
         let dbUnsubscribe = null;
+        let activeTargetCourseIdForTask = null;
+        let activeEditingCourseId = null;
+        let activeSyllabusCourseId = null;
+        let activeAnalysisArticleId = null;
+        let noteZIndexCounter = 10;
 
         let localState = {
             pinnedNote: '',
             courses: {},
             articles: {},
             notes: {},
-            glossary: []
+            glossary: [],
+            routine: [
+                { id: 'r1', text: 'סנכרון סיכומים וטיוטות ל-Docs ול-Drive', checked: false },
+                { id: 'r2', text: 'קליטת מטלות וחובות חדשות ללוח', checked: false }
+            ],
+            hobbies: [
+                { id: 'h1', name: 'הליכה 🏃‍♀️', days: [false, false, false, false, false, false, false] },
+                { id: 'h2', name: 'קריאת ספר 📖', days: [false, false, false, false, false, false, false] }
+            ],
+            syllabi: {},
+            telegramConfig: { botToken: '', chatId: '' }
         };
 
         let selectedGlossaryCourse = "ALL";
@@ -396,6 +716,9 @@
                     if (!localState.articles) localState.articles = {};
                     if (!localState.courses) localState.courses = {};
                     if (!localState.notes) localState.notes = {};
+                    if (!localState.routine) localState.routine = [];
+                    if (!localState.hobbies) localState.hobbies = [];
+                    if (!localState.syllabi) localState.syllabi = {};
                 } else {
                     set(userDbRef, localState);
                 }
@@ -408,9 +731,337 @@
             return `dashboard/${loggedInUser}${subPath ? '/' + subPath : ''}`;
         }
 
-        function renderAllViews() {
-            renderGlossaryView();
+        function debounce(func, delay = 500) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), delay);
+            };
         }
+
+        function renderAllViews() {
+            renderPinnedNote();
+            renderCoursesBoard();
+            renderSemesterCoursesSummary();
+            renderUnifiedFocusTasks();
+            renderRoutineChecklist();
+            renderHobbiesTracker();
+            renderArticlesView();
+            updateArticleSelectors();
+            renderGlossaryView();
+            renderStickyNotesCanvas();
+        }
+
+        // --- PINNED NOTE ---
+        function renderPinnedNote() {
+            const el = document.getElementById('pinned-note-display');
+            if (el && document.activeElement !== el) {
+                el.innerText = localState.pinnedNote || 'לחצי כאן להוספת הערה מוצמדת...';
+            }
+        }
+
+        const debouncedSavePinnedNote = debounce(() => {
+            if (!loggedInUser) return;
+            const text = document.getElementById('pinned-note-display').innerText.trim();
+            const statusEl = document.getElementById('pinned-status-text');
+            if (statusEl) statusEl.innerText = 'שומר...';
+            update(ref(db, getUserPath()), { pinnedNote: text }).then(() => {
+                if (statusEl) statusEl.innerText = 'נשמר אוטומטית ✓';
+            });
+        }, 500);
+
+        document.getElementById('pinned-note-display')?.addEventListener('input', () => {
+            const statusEl = document.getElementById('pinned-status-text');
+            if (statusEl) statusEl.innerText = 'מקליד/ה...';
+            debouncedSavePinnedNote();
+        });
+
+        // --- COURSES & TASKS ---
+        function renderCoursesBoard() {
+            const container = document.getElementById('courses-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            Object.keys(localState.courses).forEach(courseId => {
+                const course = localState.courses[courseId];
+                const taskCount = course.tasks ? Object.keys(course.tasks).length : 0;
+
+                let tasksHtml = '';
+                if (course.tasks) {
+                    Object.keys(course.tasks).forEach(taskId => {
+                        const task = course.tasks[taskId];
+                        const isDone = task.status === 'completed';
+                        const isInProg = task.status === 'in-progress';
+
+                        let statusBadge = `<span onclick="cycleTaskStatusFirebase('${courseId}', '${taskId}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[10px] bg-[#EFEEEA] text-[#787774]">טרם הוחל</span>`;
+                        if (isDone) statusBadge = `<span onclick="cycleTaskStatusFirebase('${courseId}', '${taskId}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800">טופל</span>`;
+                        else if (isInProg) statusBadge = `<span onclick="cycleTaskStatusFirebase('${courseId}', '${taskId}')" class="cursor-pointer px-1.5 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800">בתהליך</span>`;
+
+                        tasksHtml += `
+                            <div class="p-2.5 rounded border border-[#E9E9E7] bg-white flex items-center justify-between">
+                                <div class="flex items-start gap-2">
+                                    <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTaskCheckFirebase('${courseId}', '${taskId}', this.checked)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7]">
+                                    <div>
+                                        <p class="text-xs font-medium text-[#37352F] ${isDone ? 'line-through opacity-60' : ''}">${escapeHtml(task.title)}</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            ${task.formattedDate ? `<span class="text-[#787774] text-[10px]">${task.formattedDate}</span>` : ''}
+                                            ${statusBadge}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="deleteTaskFirebase('${courseId}', '${taskId}')" class="text-slate-400 hover:text-red-500 text-xs">✕</button>
+                            </div>
+                        `;
+                    });
+                } else {
+                    tasksHtml = '<p class="text-xs text-[#787774] italic text-center py-3">אין מטלות בקורס זה.</p>';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'notion-card p-4 flex flex-col justify-between';
+                card.innerHTML = `
+                    <div>
+                        <div class="border-b border-[#E9E9E7] pb-3 mb-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] text-[#787774] bg-[#EFEEEA] px-2 py-0.5 rounded">${escapeHtml(course.code || 'קוד')}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-[#787774]">${taskCount} מטלות</span>
+                                    <button onclick="openEditCourseModal('${courseId}')" class="text-slate-400 hover:text-slate-700 p-1">✏️</button>
+                                    <button onclick="deleteCourseFirebase('${courseId}')" class="text-slate-400 hover:text-red-500 p-1">🗑️</button>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-[#37352F] text-sm mt-1.5">${escapeHtml(course.title)}</h3>
+                            <div class="grid grid-cols-2 gap-1.5 mt-3 text-xs">
+                                <a href="${course.links?.moodle || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Moodle</a>
+                                <a href="${course.links?.docs || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Docs</a>
+                                <button onclick="openSyllabusModal('${courseId}')" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7]">סילבוס</button>
+                                <a href="${course.links?.drive || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Drive</a>
+                            </div>
+                        </div>
+                        <div class="space-y-2 max-h-64 overflow-y-auto course-scroll pr-1">${tasksHtml}</div>
+                    </div>
+                    <div class="pt-3 border-t border-[#E9E9E7] mt-3">
+                        <button onclick="openAddTaskModal('${courseId}')" class="w-full py-1.5 bg-[#EFEEEA]/60 hover:bg-[#EFEEEA] text-[#37352F] text-xs font-medium rounded">+ הוספת משימה</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.openAddCourseModal = function() {
+            activeEditingCourseId = null;
+            document.getElementById('course-modal-title').innerText = 'הוספת קורס חדש';
+            document.getElementById('course-name').value = '';
+            document.getElementById('course-code').value = '';
+            document.getElementById('course-hours').value = '';
+            document.getElementById('course-location').value = '';
+            document.getElementById('course-moodle').value = '';
+            document.getElementById('course-docs').value = '';
+            document.getElementById('course-drive').value = '';
+            document.getElementById('add-course-modal').classList.remove('hidden');
+        };
+
+        window.openEditCourseModal = function(courseId) {
+            activeEditingCourseId = courseId;
+            const c = localState.courses[courseId];
+            document.getElementById('course-modal-title').innerText = 'עריכת קורס';
+            document.getElementById('course-name').value = c.title || '';
+            document.getElementById('course-code').value = c.code || '';
+            document.getElementById('course-hours').value = c.hours || '';
+            document.getElementById('course-location').value = c.location || '';
+            document.getElementById('course-moodle').value = c.links?.moodle || '';
+            document.getElementById('course-docs').value = c.links?.docs || '';
+            document.getElementById('course-drive').value = c.links?.drive || '';
+            document.getElementById('add-course-modal').classList.remove('hidden');
+        };
+
+        window.closeAddCourseModal = function() { document.getElementById('add-course-modal').classList.add('hidden'); };
+
+        window.handleCourseSubmit = function(e) {
+            e.preventDefault();
+            if (!loggedInUser) return;
+            const courseObj = {
+                title: document.getElementById('course-name').value.trim(),
+                code: document.getElementById('course-code').value.trim(),
+                hours: document.getElementById('course-hours').value.trim(),
+                location: document.getElementById('course-location').value.trim(),
+                links: {
+                    moodle: document.getElementById('course-moodle').value.trim(),
+                    docs: document.getElementById('course-docs').value.trim(),
+                    drive: document.getElementById('course-drive').value.trim()
+                }
+            };
+            if (activeEditingCourseId) update(ref(db, `${getUserPath()}/courses/${activeEditingCourseId}`), courseObj);
+            else set(ref(db, `${getUserPath()}/courses/${push(ref(db, `${getUserPath()}/courses`)).key}`), courseObj);
+            closeAddCourseModal();
+        };
+
+        window.deleteCourseFirebase = function(courseId) {
+            if (loggedInUser && confirm('למחוק את הקורס וכל המשימות שלו?')) remove(ref(db, `${getUserPath()}/courses/${courseId}`));
+        };
+
+        window.openAddTaskModal = function(courseId) {
+            activeTargetCourseIdForTask = courseId;
+            document.getElementById('task-modal-text').value = '';
+            document.getElementById('task-modal-date').value = '';
+            document.getElementById('add-task-modal').classList.remove('hidden');
+        };
+
+        window.closeAddTaskModal = function() { document.getElementById('add-task-modal').classList.add('hidden'); };
+
+        window.handleAddNewTaskSubmit = function(e) {
+            e.preventDefault();
+            const text = document.getElementById('task-modal-text').value.trim();
+            const dateVal = document.getElementById('task-modal-date').value;
+            const statusVal = document.getElementById('task-modal-status').value;
+            if (!text || !activeTargetCourseIdForTask || !loggedInUser) return;
+
+            let formattedDate = '';
+            if (dateVal) {
+                const parts = dateVal.split('-');
+                if (parts.length === 3) formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+
+            const newTaskKey = push(ref(db, `${getUserPath()}/courses/${activeTargetCourseIdForTask}/tasks`)).key;
+            set(ref(db, `${getUserPath()}/courses/${activeTargetCourseIdForTask}/tasks/${newTaskKey}`), { title: text, date: dateVal, formattedDate, status: statusVal });
+            closeAddTaskModal();
+        };
+
+        window.toggleTaskCheckFirebase = function(courseId, taskId, checked) {
+            if (loggedInUser) update(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`), { status: checked ? 'completed' : 'not-started' });
+        };
+
+        window.cycleTaskStatusFirebase = function(courseId, taskId) {
+            if (!loggedInUser) return;
+            const curr = localState.courses[courseId].tasks[taskId].status || 'not-started';
+            let next = 'in-progress';
+            if (curr === 'in-progress') next = 'completed';
+            else if (curr === 'completed') next = 'not-started';
+            update(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`), { status: next });
+        };
+
+        window.deleteTaskFirebase = function(courseId, taskId) {
+            if (loggedInUser) remove(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`));
+        };
+
+        // --- ARTICLES ---
+        function renderArticlesView() {
+            const grid = document.getElementById('articles-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            const articleKeys = Object.keys(localState.articles);
+
+            if (articleKeys.length === 0) {
+                grid.innerHTML = '<p class="text-xs text-[#787774] italic col-span-3 text-center py-8">אין מאמרים שמורים.</p>';
+                return;
+            }
+
+            articleKeys.forEach(artId => {
+                const art = localState.articles[artId];
+                const courseObj = localState.courses[art.courseId] || { title: 'קורס כללי' };
+
+                const card = document.createElement('div');
+                card.className = 'notion-card p-4 flex flex-col justify-between';
+                card.innerHTML = `
+                    <div>
+                        <span class="text-[10px] bg-[#EFEEEA] px-2 py-0.5 rounded text-[#787774]">${escapeHtml(courseObj.title)}</span>
+                        <h3 class="font-bold text-xs text-[#37352F] mt-2">${escapeHtml(art.title)}</h3>
+                        <p class="text-[11px] text-[#787774] mt-1">${escapeHtml(art.authors || '')} (${escapeHtml(art.year || '')})</p>
+                    </div>
+                    <div class="pt-3 border-t border-[#E9E9E7] mt-3 flex items-center justify-between text-xs">
+                        <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] text-[#37352F] px-2 py-1 rounded text-[10px]">📋 APA</button>
+                        <button onclick="goToArticleAnalysis('${artId}')" class="bg-[#37352F] text-white px-2 py-1 rounded text-[10px]">📝 ניתוח</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.copyAPACitation = function(artId) {
+            const art = localState.articles[artId];
+            if (!art) return;
+            const apa = `${art.authors || 'Unknown'} (${art.year || 'n.d.'}). ${art.title}. ${art.link || ''}`;
+            navigator.clipboard.writeText(apa).then(() => alert(`ציטוט הועתק ללוח:\n\n${apa}`));
+        };
+
+        window.openAddArticleModal = function() {
+            updateArticleSelectors();
+            document.getElementById('add-article-modal').classList.remove('hidden');
+        };
+
+        window.closeAddArticleModal = function() { document.getElementById('add-article-modal').classList.add('hidden'); };
+
+        window.handleAddNewArticleSubmit = function(e) {
+            e.preventDefault();
+            const courseId = document.getElementById('article-modal-course').value;
+            const title = document.getElementById('article-modal-title').value.trim();
+            const authors = document.getElementById('article-modal-authors').value.trim();
+            const year = document.getElementById('article-modal-year').value.trim();
+            const status = document.getElementById('article-modal-status').value;
+            const link = document.getElementById('article-modal-link').value.trim();
+
+            if (!courseId || !title || !loggedInUser) return;
+            const newKey = push(ref(db, `${getUserPath()}/articles`)).key;
+            set(ref(db, `${getUserPath()}/articles/${newKey}`), { courseId, title, authors, year, status, link, analysis: {} });
+            closeAddArticleModal();
+        };
+
+        function updateArticleSelectors() {
+            const courseSelect = document.getElementById('article-modal-course');
+            const analysisSelect = document.getElementById('analysis-article-selector');
+
+            if (courseSelect) {
+                courseSelect.innerHTML = Object.keys(localState.courses).map(cId => `<option value="${cId}">${escapeHtml(localState.courses[cId].title)}</option>`).join('');
+            }
+            if (analysisSelect) {
+                analysisSelect.innerHTML = '<option value="">-- בחר מאמר --</option>' + Object.keys(localState.articles).map(aId => `<option value="${aId}">${escapeHtml(localState.articles[aId].title)}</option>`).join('');
+            }
+        }
+
+        window.goToArticleAnalysis = function(artId) {
+            switchMode('analysis');
+            loadArticleAnalysisToForm(artId);
+        };
+
+        window.loadArticleAnalysisToForm = function(artId) {
+            activeAnalysisArticleId = artId;
+            const art = localState.articles[artId];
+            if (!art) return;
+
+            document.getElementById('analysis-article-title').innerText = art.title;
+            document.getElementById('analysis-article-meta').innerText = `${art.authors || ''} (${art.year || ''})`;
+
+            const an = art.analysis || {};
+            document.getElementById('an-rq').value = an.rq || '';
+            document.getElementById('an-method').value = an.method || '';
+            document.getElementById('an-findings').value = an.findings || '';
+            document.getElementById('an-critique').value = an.critique || '';
+            document.getElementById('an-takeaways').value = an.takeaways || '';
+        };
+
+        const debouncedSaveAnalysis = debounce(() => {
+            if (!loggedInUser || !activeAnalysisArticleId) return;
+            const analysisObj = {
+                rq: document.getElementById('an-rq').value.trim(),
+                method: document.getElementById('an-method').value.trim(),
+                findings: document.getElementById('an-findings').value.trim(),
+                critique: document.getElementById('an-critique').value.trim(),
+                takeaways: document.getElementById('an-takeaways').value.trim()
+            };
+            update(ref(db, `${getUserPath()}/articles/${activeAnalysisArticleId}/analysis`), analysisObj);
+        }, 500);
+
+        document.querySelectorAll('.analysis-auto-save').forEach(input => input.addEventListener('input', debouncedSaveAnalysis));
+
+        window.exportAnalysisToMarkdown = function() {
+            if (!activeAnalysisArticleId) return alert('בחרי מאמר בטרם הייצוא.');
+            const art = localState.articles[activeAnalysisArticleId];
+            const md = `# ניתוח מאמר: ${art.title}\n\n### שאלת מחקר\n${document.getElementById('an-rq').value}`;
+            const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Analysis.md'; a.click();
+        };
+
+        window.exportAnalysisToPDF = function() { window.print(); };
 
         // --- GLOSSARY LOGIC ---
         function getFilteredGlossary() {
@@ -418,11 +1069,7 @@
             return (localState.glossary || []).filter(c => {
                 const matchCourse = selectedGlossaryCourse === 'ALL' || c.course === selectedGlossaryCourse;
                 const matchExam = !isGlossaryExamOnly || c.examFocus;
-                const matchQuery = !q ||
-                    c.termHe.toLowerCase().includes(q) ||
-                    (c.termEn && c.termEn.toLowerCase().includes(q)) ||
-                    c.definition.toLowerCase().includes(q) ||
-                    (c.tags && c.tags.some(t => t.toLowerCase().includes(q)));
+                const matchQuery = !q || c.termHe.toLowerCase().includes(q) || (c.termEn && c.termEn.toLowerCase().includes(q)) || c.definition.toLowerCase().includes(q);
                 return matchCourse && matchExam && matchQuery;
             });
         }
@@ -431,7 +1078,6 @@
             renderGlossaryCourseTabs();
             const main = document.getElementById('glossary-main-content');
             if (!main) return;
-
             const filtered = getFilteredGlossary();
 
             if (glossaryViewMode === 'flashcard') {
@@ -440,7 +1086,7 @@
             }
 
             if (filtered.length === 0) {
-                main.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">לא נמצאו מושגים התואמים את הסינון.</div>`;
+                main.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">לא נמצאו מושגים.</div>`;
                 return;
             }
 
@@ -452,25 +1098,15 @@
                             <div class="flex justify-between items-start gap-2">
                                 <div>
                                     <h3 class="font-bold text-sm text-[#37352F]">${escapeHtml(c.termHe)}</h3>
-                                    ${c.termEn ? `<span class="text-xs text-[#787774] font-sans">(${escapeHtml(c.termEn)})</span>` : ''}
+                                    ${c.termEn ? `<span class="text-xs text-[#787774]">(${escapeHtml(c.termEn)})</span>` : ''}
                                 </div>
-                                <div class="flex gap-1">
-                                    ${c.course ? `<span class="bg-[#EFEEEA] text-[#787774] text-[10px] px-2 py-0.5 rounded">${escapeHtml(c.course)}</span>` : ''}
-                                    ${c.examFocus ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-bold">⭐</span>` : ''}
-                                </div>
+                                ${c.examFocus ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-bold">⭐</span>` : ''}
                             </div>
-                            <p class="text-xs text-[#37352F] mt-2 whitespace-pre-wrap leading-relaxed">${escapeHtml(c.definition)}</p>
-                            ${c.example ? `<div class="mt-2 text-xs bg-[#EFEEEA]/30 border-r-2 border-[#37352F] p-2 rounded text-[#787774]"><strong>דוגמה:</strong> ${escapeHtml(c.example)}</div>` : ''}
+                            <p class="text-xs text-[#37352F] mt-2 leading-relaxed">${escapeHtml(c.definition)}</p>
                         </div>
-
                         <div class="pt-2 border-t border-[#E9E9E7] flex justify-between items-center text-[10px]">
-                            <div class="flex gap-1 flex-wrap">
-                                ${c.topic ? `<span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">📍 ${escapeHtml(c.topic)}</span>` : ''}
-                                ${(c.tags || []).map(t => `<span class="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">#${escapeHtml(t)}</span>`).join('')}
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="deleteGlossaryTermFirebase('${c.id}')" class="text-slate-400 hover:text-red-500 text-xs">🗑️</button>
-                            </div>
+                            <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${escapeHtml(c.course)}</span>
+                            <button onclick="deleteGlossaryTermFirebase('${c.id}')" class="text-slate-400 hover:text-red-500 text-xs">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -481,33 +1117,19 @@
 
         function renderFlashcards(container, filtered) {
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">אין מושגים לתרגול בקטגוריה זו.</div>`;
+                container.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">אין מושגים לתרגול.</div>`;
                 return;
             }
-
             if (flashcardIndex >= filtered.length) flashcardIndex = 0;
             const current = filtered[flashcardIndex];
 
             container.innerHTML = `
-                <div class="notion-card p-8 text-center min-h-[260px] flex flex-col justify-center items-center cursor-pointer border-2 border-[#E9E9E7] relative" onclick="toggleFlashcardDef()">
-                    <div class="text-[10px] text-[#787774] absolute top-3 right-4">
-                        כרטיס ${flashcardIndex + 1} מתוך ${filtered.length}
-                    </div>
+                <div class="notion-card p-8 text-center min-h-[240px] flex flex-col justify-center items-center cursor-pointer relative" onclick="toggleFlashcardDef()">
                     <h2 class="text-xl font-bold text-[#37352F]">${escapeHtml(current.termHe)}</h2>
-                    ${current.termEn ? `<p class="text-xs text-[#787774] mt-1">${escapeHtml(current.termEn)}</p>` : ''}
-
-                    ${showFlashcardDef ? `
-                        <div class="mt-4 pt-4 border-t border-[#E9E9E7] max-w-lg text-xs text-[#37352F] space-y-2">
-                            <p class="leading-relaxed">${escapeHtml(current.definition)}</p>
-                            ${current.example ? `<p class="text-[11px] text-[#787774] bg-[#EFEEEA]/50 p-2 rounded"><b>דוגמה:</b> ${escapeHtml(current.example)}</p>` : ''}
-                        </div>
-                    ` : `
-                        <div class="mt-6 text-xs text-[#37352F] font-bold">👇 לחצי כאן לצפייה בהגדרה</div>
-                    `}
+                    ${showFlashcardDef ? `<p class="mt-4 text-xs text-[#37352F]">${escapeHtml(current.definition)}</p>` : `<p class="mt-6 text-xs text-[#37352F] font-bold">👇 לחצי לחשיפת ההגדרה</p>`}
                 </div>
-
-                <div class="flex justify-center items-center gap-4 mt-4">
-                    <button onclick="prevFlashcard(${filtered.length})" class="px-4 py-1.5 bg-[#EFEEEA] text-xs rounded border border-[#E9E9E7]">➡️ הקודם</button>
+                <div class="flex justify-center gap-4 mt-4">
+                    <button onclick="prevFlashcard(${filtered.length})" class="px-4 py-1.5 bg-[#EFEEEA] text-xs rounded">➡️ הקודם</button>
                     <button onclick="nextFlashcard(${filtered.length})" class="px-4 py-1.5 bg-[#37352F] text-white text-xs rounded">הבא ⬅️</button>
                 </div>
             `;
@@ -520,28 +1142,213 @@
         function renderGlossaryCourseTabs() {
             const tabsContainer = document.getElementById('glossary-course-tabs');
             if (!tabsContainer) return;
-            const coursesSet = new Set((localState.glossary || []).map(c => c.course).filter(Boolean));
-            const courses = Array.from(coursesSet);
-
-            let html = `<button onclick="selectGlossaryCourse('ALL')" class="px-3 py-1 rounded-full text-xs whitespace-nowrap ${selectedGlossaryCourse === 'ALL' ? 'bg-[#37352F] text-white font-bold' : 'bg-[#EFEEEA] text-[#787774]'}">כל הקורסים (${(localState.glossary || []).length})</button>`;
+            const courses = Array.from(new Set((localState.glossary || []).map(c => c.course).filter(Boolean)));
+            let html = `<button onclick="selectGlossaryCourse('ALL')" class="px-3 py-1 rounded-full text-xs ${selectedGlossaryCourse === 'ALL' ? 'bg-[#37352F] text-white' : 'bg-[#EFEEEA]'}">הכל</button>`;
             courses.forEach(c => {
-                const count = localState.glossary.filter(item => item.course === c).length;
-                html += `<button onclick="selectGlossaryCourse('${c}')" class="px-3 py-1 rounded-full text-xs whitespace-nowrap ${selectedGlossaryCourse === c ? 'bg-[#37352F] text-white font-bold' : 'bg-[#EFEEEA] text-[#787774]'}">${escapeHtml(c)} (${count})</button>`;
+                html += `<button onclick="selectGlossaryCourse('${c}')" class="px-3 py-1 rounded-full text-xs ${selectedGlossaryCourse === c ? 'bg-[#37352F] text-white' : 'bg-[#EFEEEA]'}">${escapeHtml(c)}</button>`;
             });
             tabsContainer.innerHTML = html;
         }
 
-        window.selectGlossaryCourse = function(course) { selectedGlossaryCourse = course; flashcardIndex = 0; showFlashcardDef = false; renderGlossaryView(); };
+        window.selectGlossaryCourse = function(course) { selectedGlossaryCourse = course; renderGlossaryView(); };
         window.toggleGlossaryExamOnly = function() { isGlossaryExamOnly = !isGlossaryExamOnly; renderGlossaryView(); };
         window.toggleGlossaryViewMode = function() { glossaryViewMode = glossaryViewMode === 'list' ? 'flashcard' : 'list'; renderGlossaryView(); };
 
+        window.openGlossaryModal = function() { document.getElementById('glossary-modal').classList.remove('hidden'); };
+        window.closeGlossaryModal = function() { document.getElementById('glossary-modal').classList.add('hidden'); };
+
+        window.saveGlossaryTermFirebase = function() {
+            const termHe = document.getElementById('glossary-term-he').value.trim();
+            const course = document.getElementById('glossary-course').value.trim();
+            const definition = document.getElementById('glossary-definition').value.trim();
+            if (!termHe || !course || !definition || !loggedInUser) return alert('מלאי שדות חובה');
+
+            const newObj = {
+                id: 'c_' + Math.random().toString(36).substr(2, 9),
+                termHe, termEn: document.getElementById('glossary-term-en').value.trim(),
+                course, topic: document.getElementById('glossary-topic').value.trim(),
+                definition, example: document.getElementById('glossary-example').value.trim(),
+                examFocus: document.getElementById('glossary-exam-focus').checked
+            };
+
+            const updated = [...(localState.glossary || []), newObj];
+            update(ref(db, `dashboard/${loggedInUser}`), { glossary: updated });
+            closeGlossaryModal();
+        };
+
         window.deleteGlossaryTermFirebase = function(id) {
             if (loggedInUser && confirm('למחוק מושג זה?')) {
-                const updatedList = localState.glossary.filter(c => c.id !== id);
-                update(ref(db, `dashboard/${loggedInUser}`), { glossary: updatedList });
+                const updated = localState.glossary.filter(c => c.id !== id);
+                update(ref(db, `dashboard/${loggedInUser}`), { glossary: updated });
             }
         };
 
+        // --- STICKY NOTES CANVAS ---
+        function renderStickyNotesCanvas() {
+            const grid = document.getElementById('notes-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            Object.keys(localState.notes || {}).forEach(noteId => {
+                const note = localState.notes[noteId];
+                const card = document.createElement('div');
+                card.className = 'draggable-note notion-card p-4 flex flex-col justify-between';
+                card.style.transform = `translate3d(${note.x || 10}px, ${note.y || 10}px, 0)`;
+                card.style.width = `${note.width || 210}px`;
+                card.style.height = `${note.height || 140}px`;
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-2 pb-1 border-b border-[#E9E9E7]">
+                            <span class="text-[10px] bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded">פתק</span>
+                            <button onclick="deleteNoteFirebase('${noteId}')" class="text-slate-400 hover:text-red-500 text-xs">✕</button>
+                        </div>
+                        <p class="text-xs text-[#37352F] select-text">${escapeHtml(note.text)}</p>
+                    </div>
+                    <div class="note-resize-handle"></div>
+                `;
+
+                grid.appendChild(card);
+                makeNoteDraggableAndResizableTouch(card, noteId);
+            });
+        }
+
+        function makeNoteDraggableAndResizableTouch(elmnt, noteId) {
+            let posX = localState.notes[noteId]?.x || 10;
+            let posY = localState.notes[noteId]?.y || 10;
+            let startX = 0, startY = 0;
+
+            const getCoords = e => e.touches && e.touches.length > 0 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+
+            const onStartDrag = e => {
+                if (e.target.closest('button') || e.target.classList.contains('note-resize-handle')) return;
+                if (e.cancelable) e.preventDefault();
+                const c = getCoords(e);
+                startX = c.x; startY = c.y;
+                noteZIndexCounter++;
+                elmnt.style.zIndex = noteZIndexCounter;
+
+                const onMoveDrag = me => {
+                    if (me.cancelable) me.preventDefault();
+                    const mc = getCoords(me);
+                    posX += mc.x - startX; posY += mc.y - startY;
+                    startX = mc.x; startY = mc.y;
+                    elmnt.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
+                };
+
+                const onEndDrag = () => {
+                    document.removeEventListener('mousemove', onMoveDrag); document.removeEventListener('mouseup', onEndDrag);
+                    document.removeEventListener('touchmove', onMoveDrag); document.removeEventListener('touchend', onEndDrag);
+                    if (loggedInUser) update(ref(db, `${getUserPath()}/notes/${noteId}`), { x: posX, y: posY });
+                };
+
+                document.addEventListener('mousemove', onMoveDrag, { passive: false }); document.addEventListener('mouseup', onEndDrag);
+                document.addEventListener('touchmove', onMoveDrag, { passive: false }); document.addEventListener('touchend', onEndDrag);
+            };
+
+            elmnt.addEventListener('mousedown', onStartDrag);
+            elmnt.addEventListener('touchstart', onStartDrag, { passive: false });
+        }
+
+        window.addManualNotePromptFirebase = function() {
+            const text = prompt('תוכן הפתק:');
+            if (!text || !text.trim() || !loggedInUser) return;
+            const newKey = push(ref(db, `${getUserPath()}/notes`)).key;
+            set(ref(db, `${getUserPath()}/notes/${newKey}`), { text: text.trim(), x: 30, y: 30, width: 210, height: 140 });
+        };
+
+        window.deleteNoteFirebase = function(noteId) {
+            if (loggedInUser) remove(ref(db, `${getUserPath()}/notes/${noteId}`));
+        };
+
+        window.resetNotesPositionFirebase = function() {
+            if (!loggedInUser) return;
+            Object.keys(localState.notes || {}).forEach((id, idx) => {
+                localState.notes[id].x = 20 + (idx * 20);
+                localState.notes[id].y = 20 + (idx * 20);
+            });
+            update(ref(db, getUserPath()), { notes: localState.notes });
+        };
+
+        // --- TRACKERS & CHECKLISTS ---
+        function renderSemesterCoursesSummary() {
+            const list = document.getElementById('semester-courses-list');
+            if (!list) return;
+            const courses = Object.values(localState.courses || {});
+            list.innerHTML = courses.length ? courses.map(c => `<div class="p-2 rounded bg-[#EFEEEA]/40 border border-[#E9E9E7] text-xs font-medium">${escapeHtml(c.title)}</div>`).join('') : '<p class="text-xs text-[#787774]">אין קורסים</p>';
+        }
+
+        function renderUnifiedFocusTasks() {
+            const list = document.getElementById('focus-tasks-list');
+            if (!list) return;
+            let all = [];
+            Object.keys(localState.courses || {}).forEach(cId => {
+                const c = localState.courses[cId];
+                if (c.tasks) Object.keys(c.tasks).forEach(tId => all.push({ ...c.tasks[tId], cId, tId, courseTitle: c.title }));
+            });
+            list.innerHTML = all.length ? all.map(t => `<div class="p-2.5 border rounded bg-white text-xs flex justify-between items-center"><span>${escapeHtml(t.title)} (${escapeHtml(t.courseTitle)})</span><button onclick="deleteTaskFirebase('${t.cId}', '${t.tId}')" class="text-slate-400">✕</button></div>`).join('') : '<p class="text-xs text-[#787774]">אין משימות</p>';
+        }
+
+        function renderRoutineChecklist() {
+            const list = document.getElementById('routine-checklist-list');
+            if (!list) return;
+            list.innerHTML = (localState.routine || []).map((item, idx) => `<div class="flex gap-2 p-1 text-xs"><input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRoutineCheckFirebase(${idx}, this.checked)"><span>${escapeHtml(item.text)}</span></div>`).join('');
+        }
+
+        window.toggleRoutineCheckFirebase = function(idx, checked) {
+            localState.routine[idx].checked = checked;
+            if (loggedInUser) update(ref(db, getUserPath()), { routine: localState.routine });
+        };
+
+        window.resetRoutineChecks = function() {
+            localState.routine.forEach(r => r.checked = false);
+            if (loggedInUser) update(ref(db, getUserPath()), { routine: localState.routine });
+        };
+
+        function renderHobbiesTracker() {
+            const list = document.getElementById('hobbies-tracker-list');
+            if (!list) return;
+            list.innerHTML = (localState.hobbies || []).map((h, hIdx) => `
+                <tr>
+                    <td class="py-2 text-xs">${escapeHtml(h.name)}</td>
+                    ${[0,1,2,3,4,5,6].map(d => `<td class="text-center"><input type="checkbox" ${h.days[d] ? 'checked' : ''} onchange="toggleHobbyDayFirebase(${hIdx}, ${d}, this.checked)"></td>`).join('')}
+                </tr>
+            `).join('');
+        }
+
+        window.toggleHobbyDayFirebase = function(hIdx, day, checked) {
+            localState.hobbies[hIdx].days[day] = checked;
+            if (loggedInUser) update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+        };
+
+        window.resetHobbiesChecks = function() {
+            localState.hobbies.forEach(h => h.days = [false, false, false, false, false, false, false]);
+            if (loggedInUser) update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+        };
+
+        // --- COMMAND PALETTE ---
+        window.toggleCommandPalette = function() {
+            document.getElementById('cmd-palette-modal').classList.toggle('hidden');
+        };
+
+        window.handleCommandSearch = function(query) {
+            const resultsList = document.getElementById('cmd-results-list');
+            const q = query.toLowerCase().trim();
+            resultsList.innerHTML = '';
+            let results = [];
+
+            (localState.glossary || []).forEach(c => {
+                if (!q || c.termHe.toLowerCase().includes(q)) results.push({ type: 'מושג', title: c.termHe, action: () => switchMode('glossary') });
+            });
+            Object.keys(localState.articles || {}).forEach(id => {
+                const a = localState.articles[id];
+                if (!q || a.title.toLowerCase().includes(q)) results.push({ type: 'מאמר', title: a.title, action: () => switchMode('articles') });
+            });
+
+            resultsList.innerHTML = results.length ? results.map(r => `<div onclick="(${r.action})(); toggleCommandPalette();" class="p-2 hover:bg-[#EFEEEA] cursor-pointer flex justify-between text-xs"><span>${escapeHtml(r.title)}</span><span class="text-[10px] bg-slate-100 p-0.5 rounded">${r.type}</span></div>`).join('') : '<p class="text-xs text-center py-4 text-[#787774]">לא נמצאו תוצאות</p>';
+        };
+
+        // NAVIGATION SWITCHER
         window.switchMode = function(mode) {
             ['focus', 'manage', 'articles', 'analysis', 'glossary', 'telegram', 'notes'].forEach(m => {
                 const el = document.getElementById(`view-${m}`);
@@ -561,7 +1368,6 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&#039;").replace(/'/g, "&#039;");
         }
 
-        // Initialize Authentication Status
         checkAuthSession();
     </script>
 </body>
