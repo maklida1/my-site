@@ -58,14 +58,19 @@
             mask-image: linear-gradient(135deg, transparent 45%, black 45%);
             border-radius: 2px;
         }
+        
+        /* Resizable Image inside Editable Notes */
         .note-content img {
             max-width: 100%;
             height: auto;
             border-radius: 4px;
             margin: 4px 0;
+            display: inline-block;
             resize: both;
             overflow: auto;
-            display: inline-block;
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 2px;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -305,7 +310,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-[#787774] mb-1">📄 סינון לפי מאמר</label>
-                        <select id="glossary-filter-article" onchange="setGlossaryArticleFilter(this.value)" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none focus:border-[#37352F]">
+                        <select id="glossary-filter-article" onchange="setGlossaryArticleFilter(this.value)" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-[#FFFFFF] focus:outline-none focus:border-[#37352F]">
                             <option value="ALL">כל המאמרים</option>
                         </select>
                     </div>
@@ -358,12 +363,12 @@
             </div>
         </div>
 
-        <!-- VIEW 6: ADVANCED INTERACTIVE NOTES CANVAS WITH SNAP LINES -->
+        <!-- VIEW 6: NOTES CANVAS WITH PASTE & RESIZABLE IMAGES -->
         <div id="view-notes" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F]">משטח פתקים ורעיונות</h2>
-                    <p class="text-xs text-[#787774]">הקלדה ישירה, יישור אוטומטי (Snap Lines), גרירה, צבעים והדבקת תמונות</p>
+                    <p class="text-xs text-[#787774]">הקלדה ישירה, הדבקת תמונות בלחיצה (Ctrl+V / Paste), שינוי גודל תמונה ופתק, ויישור אוטומטי</p>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="resetNotesPositionFirebase()" class="bg-white border border-[#E9E9E7] text-xs px-3 py-1.5 rounded hover:bg-[#EFEEEA]">איפוס מיקומים</button>
@@ -372,7 +377,6 @@
             </div>
             
             <div id="notes-grid" class="min-h-[600px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-hidden">
-                <!-- Dynamic Alignment Guide Lines -->
                 <div id="guide-line-v" class="absolute top-0 bottom-0 w-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-r border-dashed border-blue-400"></div>
                 <div id="guide-line-h" class="absolute left-0 right-0 h-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-b border-dashed border-blue-400"></div>
             </div>
@@ -688,12 +692,11 @@
             renderStickyNotesCanvas();
         }
 
-        // --- ENHANCED NOTES CANVAS WITH SNAP LINES, COLORS & IMAGES ---
+        // --- ENHANCED NOTES CANVAS WITH PASTE & RESIZABLE IMAGES ---
         function renderStickyNotesCanvas() {
             const grid = document.getElementById('notes-grid');
             if (!grid) return;
             
-            // Keep the guide lines inside the grid
             grid.innerHTML = `
                 <div id="guide-line-v" class="absolute top-0 bottom-0 w-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-r border-dashed border-blue-400"></div>
                 <div id="guide-line-h" class="absolute left-0 right-0 h-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-b border-dashed border-blue-400"></div>
@@ -711,7 +714,7 @@
                 card.style.backgroundColor = note.color || '#FEF9C3';
                 card.style.borderColor = 'rgba(0,0,0,0.08)';
 
-                // Clean Header Toolbar with Colors & Image Upload
+                // Clean Header Toolbar with Color Picker & Delete Only (No Upload Icon)
                 card.innerHTML = `
                     <div class="note-toolbar flex items-center justify-between pb-1.5 mb-1.5 border-b border-black/10 select-none">
                         <div class="flex items-center gap-1.5">
@@ -720,8 +723,6 @@
                             `).join('')}
                         </div>
                         <div class="flex items-center gap-2">
-                            <input type="file" accept="image/*" class="hidden" id="img-upload-${noteId}" onchange="uploadNoteImage('${noteId}', event)">
-                            <button onclick="document.getElementById('img-upload-${noteId}').click()" title="הוספת תמונה" class="text-slate-500 hover:text-black text-xs">📷</button>
                             <button onclick="deleteNoteFirebase('${noteId}')" title="מחיקה" class="text-slate-400 hover:text-red-500 text-xs">✕</button>
                         </div>
                     </div>
@@ -778,19 +779,11 @@
         }, 600);
         window.debouncedSaveNoteContent = debouncedSaveNoteContent;
 
-        window.uploadNoteImage = function(noteId, event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                insertImageToNote(noteId, e.target.result);
-            };
-            reader.readAsDataURL(file);
-        };
-
+        // Clipboard Image Paste Handler with Custom Resizable Image Output
         window.handleNotePaste = function(noteId, event) {
             const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
             if (!items) return;
+
             for (let item of items) {
                 if (item.type.indexOf('image') === 0) {
                     event.preventDefault();
@@ -808,7 +801,7 @@
         function insertImageToNote(noteId, dataUrl) {
             const el = document.getElementById(`note-editable-${noteId}`);
             if (!el) return;
-            const imgHtml = `<div class="my-1.5 border border-black/10 rounded overflow-hidden inline-block max-w-full"><img src="${dataUrl}" class="max-w-full h-auto rounded block" style="max-height: 220px;"></div><br>`;
+            const imgHtml = `<img src="${dataUrl}" style="max-width:100%; width:180px; height:auto; resize:both; overflow:auto; display:inline-block; border-radius:4px; margin:4px 0;" /><br>`;
             document.execCommand('insertHTML', false, imgHtml);
             debouncedSaveNoteContent(noteId);
         }
@@ -845,14 +838,12 @@
                     const oL = o.x || 20, oR = oL + oW, oCX = oL + oW / 2;
                     const oT = o.y || 20, oB = oT + oH, oCY = oT + oH / 2;
 
-                    // Vertical alignment check (X-axis)
                     if (Math.abs(cL - oL) < TH) { snapX = oL; showV = true; lineVPos = oL; }
                     else if (Math.abs(cR - oR) < TH) { snapX = oR - currW; showV = true; lineVPos = oR; }
                     else if (Math.abs(cCX - oCX) < TH) { snapX = oCX - currW / 2; showV = true; lineVPos = oCX; }
                     else if (Math.abs(cL - oR) < TH) { snapX = oR; showV = true; lineVPos = oR; }
                     else if (Math.abs(cR - oL) < TH) { snapX = oL - currW; showV = true; lineVPos = oL; }
 
-                    // Horizontal alignment check (Y-axis)
                     if (Math.abs(cT - oT) < TH) { snapY = oT; showH = true; lineHPos = oT; }
                     else if (Math.abs(cB - oB) < TH) { snapY = oB - currH; showH = true; lineHPos = oB; }
                     else if (Math.abs(cCY - oCY) < TH) { snapY = oCY - currH / 2; showH = true; lineHPos = oCY; }
