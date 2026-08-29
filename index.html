@@ -72,6 +72,28 @@
             padding: 2px;
             box-sizing: border-box;
         }
+
+        /* Full Canvas Alignment Lines */
+        .guide-line-vertical {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1.5px;
+            background-color: #2563eb;
+            z-index: 100;
+            pointer-events: none;
+            border-left: 1px dashed #60a5fa;
+        }
+        .guide-line-horizontal {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1.5px;
+            background-color: #2563eb;
+            z-index: 100;
+            pointer-events: none;
+            border-top: 1px dashed #60a5fa;
+        }
     </style>
 </head>
 <body class="min-h-screen pb-16">
@@ -310,7 +332,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-[#787774] mb-1">📄 סינון לפי מאמר</label>
-                        <select id="glossary-filter-article" onchange="setGlossaryArticleFilter(this.value)" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-[#FFFFFF] focus:outline-none focus:border-[#37352F]">
+                        <select id="glossary-filter-article" onchange="setGlossaryArticleFilter(this.value)" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none focus:border-[#37352F]">
                             <option value="ALL">כל המאמרים</option>
                         </select>
                     </div>
@@ -363,12 +385,12 @@
             </div>
         </div>
 
-        <!-- VIEW 6: NOTES CANVAS WITH PASTE & RESIZABLE IMAGES -->
+        <!-- VIEW 6: NOTES CANVAS WITH COLOR DROPDOWN & FULL-LENGTH SNAP LINES -->
         <div id="view-notes" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F]">משטח פתקים ורעיונות</h2>
-                    <p class="text-xs text-[#787774]">הקלדה ישירה, הדבקת תמונות בלחיצה (Ctrl+V / Paste), שינוי גודל תמונה ופתק, ויישור אוטומטי</p>
+                    <p class="text-xs text-[#787774]">בחירת צבע ברשימה נפתחת, קווי יישור לאורך ולרוחב המשטח, והדבקת תמונות</p>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="resetNotesPositionFirebase()" class="bg-white border border-[#E9E9E7] text-xs px-3 py-1.5 rounded hover:bg-[#EFEEEA]">איפוס מיקומים</button>
@@ -376,9 +398,9 @@
                 </div>
             </div>
             
-            <div id="notes-grid" class="min-h-[600px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-hidden">
-                <div id="guide-line-v" class="absolute top-0 bottom-0 w-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-r border-dashed border-blue-400"></div>
-                <div id="guide-line-h" class="absolute left-0 right-0 h-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-b border-dashed border-blue-400"></div>
+            <div id="notes-grid" onclick="closeAllColorMenus()" class="min-h-[600px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-hidden">
+                <div id="guide-line-v" class="guide-line-vertical hidden"></div>
+                <div id="guide-line-h" class="guide-line-horizontal hidden"></div>
             </div>
         </div>
 
@@ -602,6 +624,15 @@
         let selectedGlossaryCourse = "ALL";
         let selectedGlossaryArticle = "ALL";
 
+        const colorOptions = [
+            { name: 'צהוב', code: '#FEF9C3' },
+            { name: 'ירוק', code: '#DCFCE7' },
+            { name: 'כחול', code: '#E0F2FE' },
+            { name: 'ורוד', code: '#FCE7F3' },
+            { name: 'כתום', code: '#FED7AA' },
+            { name: 'לבן', code: '#FFFFFF' }
+        ];
+
         function checkAuthSession() {
             const overlay = document.getElementById('login-overlay');
             const badge = document.getElementById('sync-status-badge');
@@ -692,17 +723,15 @@
             renderStickyNotesCanvas();
         }
 
-        // --- ENHANCED NOTES CANVAS WITH PASTE & RESIZABLE IMAGES ---
+        // --- ENHANCED NOTES CANVAS WITH DROPDOWN COLOR MENU & FULL LENGTH LINES ---
         function renderStickyNotesCanvas() {
             const grid = document.getElementById('notes-grid');
             if (!grid) return;
             
             grid.innerHTML = `
-                <div id="guide-line-v" class="absolute top-0 bottom-0 w-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-r border-dashed border-blue-400"></div>
-                <div id="guide-line-h" class="absolute left-0 right-0 h-0.5 bg-blue-500/70 z-50 pointer-events-none hidden border-b border-dashed border-blue-400"></div>
+                <div id="guide-line-v" class="guide-line-vertical hidden"></div>
+                <div id="guide-line-h" class="guide-line-horizontal hidden"></div>
             `;
-
-            const colors = ['#FEF9C3', '#DCFCE7', '#E0F2FE', '#FCE7F3', '#FED7AA', '#FFFFFF'];
 
             Object.keys(localState.notes || {}).forEach(noteId => {
                 const note = localState.notes[noteId];
@@ -714,13 +743,22 @@
                 card.style.backgroundColor = note.color || '#FEF9C3';
                 card.style.borderColor = 'rgba(0,0,0,0.08)';
 
-                // Clean Header Toolbar with Color Picker & Delete Only (No Upload Icon)
+                // Toolbar with Dropdown Color Menu Trigger
                 card.innerHTML = `
-                    <div class="note-toolbar flex items-center justify-between pb-1.5 mb-1.5 border-b border-black/10 select-none">
-                        <div class="flex items-center gap-1.5">
-                            ${colors.map(c => `
-                                <button onclick="changeNoteColorFirebase('${noteId}', '${c}')" class="w-3.5 h-3.5 rounded-full border border-black/15 hover:scale-125 transition-transform" style="background-color: ${c}"></button>
-                            `).join('')}
+                    <div class="note-toolbar flex items-center justify-between pb-1.5 mb-1.5 border-b border-black/10 select-none relative">
+                        <div class="relative">
+                            <button onclick="toggleColorPickerMenu('${noteId}', event)" title="שינוי צבע" class="text-slate-600 hover:text-black text-xs font-bold px-1 py-0.5 rounded hover:bg-black/5 flex items-center gap-1">
+                                🎨 <span>צבע</span>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div id="color-menu-${noteId}" class="hidden absolute right-0 top-6 bg-white border border-[#E9E9E7] shadow-lg rounded-lg p-1.5 z-50 w-28 text-xs space-y-1">
+                                ${colorOptions.map(opt => `
+                                    <button onclick="changeNoteColorFirebase('${noteId}', '${opt.code}', event)" class="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-[#EFEEEA] text-right transition-colors">
+                                        <span class="w-3.5 h-3.5 rounded-full border border-black/20" style="background-color: ${opt.code}"></span>
+                                        <span class="text-[11px] font-medium text-[#37352F]">${opt.name}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="deleteNoteFirebase('${noteId}')" title="מחיקה" class="text-slate-400 hover:text-red-500 text-xs">✕</button>
@@ -742,6 +780,22 @@
                 makeNoteDraggableAndResizableTouch(card, noteId);
             });
         }
+
+        window.toggleColorPickerMenu = function(noteId, event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById(`color-menu-${noteId}`);
+            if (!menu) return;
+            
+            // Close other open color menus
+            document.querySelectorAll('[id^="color-menu-"]').forEach(el => {
+                if (el !== menu) el.classList.add('hidden');
+            });
+            menu.classList.toggle('hidden');
+        };
+
+        window.closeAllColorMenus = function() {
+            document.querySelectorAll('[id^="color-menu-"]').forEach(el => el.classList.add('hidden'));
+        };
 
         window.createNewNoteDirectFirebase = function() {
             if (!loggedInUser) return;
@@ -765,9 +819,11 @@
             });
         };
 
-        window.changeNoteColorFirebase = function(noteId, color) {
+        window.changeNoteColorFirebase = function(noteId, color, event) {
+            if (event) event.stopPropagation();
             if (!loggedInUser) return;
             update(ref(db, `${getUserPath()}/notes/${noteId}`), { color });
+            closeAllColorMenus();
         };
 
         const debouncedSaveNoteContent = debounce((noteId) => {
@@ -806,6 +862,7 @@
             debouncedSaveNoteContent(noteId);
         }
 
+        // FULL-LENGTH SNAP ALIGNMENT DRAG & RESIZE SYSTEM
         function makeNoteDraggableAndResizableTouch(elmnt, noteId) {
             let posX = localState.notes[noteId]?.x || 20;
             let posY = localState.notes[noteId]?.y || 20;
@@ -838,12 +895,14 @@
                     const oL = o.x || 20, oR = oL + oW, oCX = oL + oW / 2;
                     const oT = o.y || 20, oB = oT + oH, oCY = oT + oH / 2;
 
+                    // Vertical Full-Height Alignment Check (X-axis)
                     if (Math.abs(cL - oL) < TH) { snapX = oL; showV = true; lineVPos = oL; }
                     else if (Math.abs(cR - oR) < TH) { snapX = oR - currW; showV = true; lineVPos = oR; }
                     else if (Math.abs(cCX - oCX) < TH) { snapX = oCX - currW / 2; showV = true; lineVPos = oCX; }
                     else if (Math.abs(cL - oR) < TH) { snapX = oR; showV = true; lineVPos = oR; }
                     else if (Math.abs(cR - oL) < TH) { snapX = oL - currW; showV = true; lineVPos = oL; }
 
+                    // Horizontal Full-Width Alignment Check (Y-axis)
                     if (Math.abs(cT - oT) < TH) { snapY = oT; showH = true; lineHPos = oT; }
                     else if (Math.abs(cB - oB) < TH) { snapY = oB - currH; showH = true; lineHPos = oB; }
                     else if (Math.abs(cCY - oCY) < TH) { snapY = oCY - currH / 2; showH = true; lineHPos = oCY; }
@@ -866,9 +925,11 @@
 
             const onStartDrag = e => {
                 const target = e.target;
-                if (target.closest('button') || target.closest('input') || target.isContentEditable || target.closest('[contenteditable="true"]')) {
+                if (target.closest('button') || target.closest('input') || target.isContentEditable || target.closest('[contenteditable="true"]') || target.closest('[id^="color-menu-"]')) {
                     return;
                 }
+
+                closeAllColorMenus();
 
                 const isResize = target.classList.contains('note-resize-handle');
                 if (e.cancelable && !isResize) e.preventDefault();
