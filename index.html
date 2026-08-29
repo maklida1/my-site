@@ -164,12 +164,12 @@
 
                 <!-- Navigation Tabs -->
                 <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center self-center md:self-auto border border-[#E9E9E7] gap-1 overflow-x-auto max-w-full">
-                    <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">מיקוד</button>
-                    <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">קורסים</button>
-                    <button id="btn-articles-mode" onclick="switchMode('articles')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📚 מאמרים</button>
-                    <button id="btn-glossary-mode" onclick="switchMode('glossary')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📖 מושגים</button>
+                    <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>מיקוד</button>
+                    <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">🎓 קורסים</button>
+                    <button id="btn-articles-mode" onclick="switchMode('articles')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">📚 מאמרים</button>
+                    <button id="btn-glossary-mode" onclick="switchMode('glossary')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">📖 מושגים</button>
                     <button id="btn-telegram-mode" onclick="switchMode('telegram')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">✈️ טלגרם</button>
-                    <button id="btn-notes-mode" onclick="switchMode('notes')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">פתקים</button>
+                    <button id="btn-notes-mode" onclick="switchMode('notes')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">📝 פתקים</button>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -204,7 +204,7 @@
         <!-- VIEW 1: FOCUS MODE -->
         <div id="view-focus" class="space-y-6">
             <div class="notion-card p-4 bg-white flex items-center justify-between">
-                <h2 class="text-sm font-bold text-[#37352F]">מיקוד</h2>
+                <h2 class="text-sm font-bold text-[#37352F] flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>מיקוד</h2>
             </div>
 
             <!-- TOP 3-COLUMN GRID -->
@@ -296,7 +296,7 @@
         <!-- VIEW 2: COURSES BOARD -->
         <div id="view-manage" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-[#37352F]">לוח קורסים ומטלות</h2>
+                <h2 class="text-lg font-bold text-[#37352F]">🎓 קורסים</h2>
                 <button onclick="openAddCourseModal()" class="bg-[#37352F] text-white text-xs font-medium px-3.5 py-1.5 rounded">+ קורס חדש</button>
             </div>
             <div id="courses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -306,7 +306,7 @@
         <div id="view-articles" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F]">📚 מאגר מאמרים וניתוחים</h2>
+                    <h2 class="text-lg font-bold text-[#37352F]">📚 מאמרים</h2>
                     <p class="text-xs text-[#787774]">תצוגה מקדימה של שאלת המחקר בלבד. לחצי על המאמר לצפייה בסיכום המלא.</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -324,7 +324,7 @@
         <div id="view-glossary" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-2"><span>📖</span> מילון מושגים אקדמי</h2>
+                    <h2 class="text-lg font-bold text-[#37352F]">📖 מושגים</h2>
                     <p class="text-xs text-[#787774]">מושגים מקושרים לקורסים ולמאמרים, בתיבות קומפקטיות ונוחות לסקירה ועריכה</p>
                 </div>
                 <button onclick="openGlossaryModal()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all">+ מושג חדש</button>
@@ -358,7 +358,7 @@
         <div id="view-telegram" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-2"><span>✈️</span> שליחה ואינטגרציית טלגרם</h2>
+                    <h2 class="text-lg font-bold text-[#37352F]">✈️ טלגרם</h2>
                     <p class="text-xs text-[#787774]">שליחת הודעות תזכורת וקבלת פתקים ישירות ללוח</p>
                 </div>
                 <div id="telegram-status-badge" class="px-2.5 py-1 rounded text-xs bg-slate-100 text-slate-700">הגדרות טרם הוזנו</div>
@@ -401,7 +401,7 @@
         <div id="view-notes" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F]">משטח פתקים ורעיונות</h2>
+                    <h2 class="text-lg font-bold text-[#37352F]">📝 פתקים</h2>
                     <p class="text-xs text-[#787774]">ידית הגדלה מוגדלת ונוחה, תנועת עכבר חלקה, ופלטת צבעים נפתחת</p>
                 </div>
                 <div class="flex gap-2">
@@ -1400,7 +1400,7 @@
                             <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">📋 APA</button>
                         </div>
                         <div class="flex items-center gap-1">
-                            <button onclick="openArticleModal('${artId}')" title="עריכה וניתוח" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] w-7 h-7 rounded text-xs flex items-center justify-center">✏️</button>
+                            <button onclick="openArticleModal('${artId}')" title="עריכה" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] w-7 h-7 rounded text-xs flex items-center justify-center">✏️</button>
                             <button onclick="deleteArticleFirebase('${artId}')" title="מחיקה" class="text-slate-300 hover:text-red-500 text-[10px] p-0.5">✕</button>
                         </div>
                     </div>
@@ -1870,13 +1870,21 @@
                 const el = document.getElementById(`view-${m}`);
                 if (el) el.classList.add('hidden');
                 const btn = document.getElementById(`btn-${m}-mode`);
-                if (btn) btn.className = 'px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]';
+                if (btn) {
+                    if (m === 'focus') {
+                        btn.className = 'px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1.5';
+                    } else {
+                        btn.className = 'px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1';
+                    }
+                }
             });
 
             const target = document.getElementById(`view-${mode}`);
             const targetBtn = document.getElementById(`btn-${mode}-mode`);
             if (target) target.classList.remove('hidden');
-            if (targetBtn) targetBtn.className = 'active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap';
+            if (targetBtn) {
+                targetBtn.className = 'active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1';
+            }
         };
 
         function escapeHtml(str) {
