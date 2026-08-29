@@ -209,15 +209,20 @@
 
             <!-- TOP 3-COLUMN GRID -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- 1. PINNED NOTE WITH RED PIN -->
-                <div class="notion-card p-5 bg-[#FBFB9B]/20 border border-[#F4F482]/60 relative flex flex-col justify-center">
-                    <div class="absolute -top-3 right-4 text-base select-none">📌</div>
-                    <div id="pinned-note-display" contenteditable="true"
-                         class="text-xs text-[#37352F] leading-relaxed min-h-[80px] whitespace-pre-wrap p-2 rounded focus:outline-none focus:ring-1 focus:ring-[#37352F]/30 bg-white/50">
+                
+                <!-- 1. PINNED NOTE WITH CLEAN INTEGRATED PIN HEADER -->
+                <div class="notion-card p-4 bg-[#FEF9C3]/60 border border-[#FDE047]/80 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between border-b border-amber-200/80 pb-2 mb-2">
+                            <span class="text-sm select-none">📌</span>
+                        </div>
+                        <div id="pinned-note-display" contenteditable="true"
+                             class="text-xs text-[#37352F] leading-relaxed min-h-[85px] whitespace-pre-wrap p-1.5 rounded focus:outline-none focus:bg-white/50 transition-colors">
+                        </div>
                     </div>
                 </div>
 
-                <!-- 2. BULK EDITABLE ROUTINE CHECKLIST (PLACED BETWEEN PINNED NOTE & COURSES) -->
+                <!-- 2. BULK EDITABLE ROUTINE CHECKLIST -->
                 <div class="notion-card p-5 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
