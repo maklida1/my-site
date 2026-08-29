@@ -103,7 +103,7 @@
                     </div>
                 </div>
 
-                <!-- Navigation Tabs (UNIFIED ARTICLES TAB) -->
+                <!-- Navigation Tabs -->
                 <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center self-center md:self-auto border border-[#E9E9E7] gap-1 overflow-x-auto max-w-full">
                     <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">מיקוד יומי</button>
                     <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">קורסים</button>
@@ -256,7 +256,7 @@
         </div>
 
         <!-- UNIFIED VIEW 3: ARTICLES & ANALYSIS LIBRARY -->
-        <div id="view-articles" class="space-y-6">
+        <div id="view-articles" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F]">📚 מאגר מאמרים וניתוחים</h2>
@@ -273,25 +273,36 @@
             <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
 
-        <!-- VIEW 4: ACADEMIC GLOSSARY -->
-        <div id="view-glossary" class="hidden space-y-6">
+        <!-- VIEW 4: COMPACT ACADEMIC GLOSSARY WITH DUAL FILTERING -->
+        <div id="view-glossary" class="space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-2"><span>📚</span> מילון מושגים אקדמי</h2>
-                    <p class="text-xs text-[#787774]">ארגון מושגים לפי קורס, תרגול בכרטיסיות (Flashcards) וייצוא</p>
+                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-2"><span>📖</span> מילון מושגים אקדמי</h2>
+                    <p class="text-xs text-[#787774]">מושגים מקושרים לקורסים ולמאמרים, בתיבות קומפקטיות ונוחות לסקירה</p>
                 </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <button id="glossary-mode-btn" onclick="toggleGlossaryViewMode()" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] border border-[#E9E9E7] text-xs px-3 py-1.5 rounded">⚡ מצב תרגול</button>
-                    <button onclick="openGlossaryModal()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all">+ מושג חדש</button>
-                </div>
+                <button onclick="openGlossaryModal()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all">+ מושג חדש</button>
             </div>
 
-            <div id="glossary-controls-card" class="notion-card p-4 space-y-3">
-                <div class="flex gap-2 items-center">
-                    <input type="text" id="glossary-search-input" oninput="renderGlossaryView()" placeholder="חיפוש מושג..." class="flex-1 p-2 border border-[#E9E9E7] rounded text-xs">
-                    <button id="glossary-exam-filter-btn" onclick="toggleGlossaryExamOnly()" class="px-3 py-2 border border-[#E9E9E7] rounded text-xs bg-white">⭐ לבחינה בלבד</button>
+            <!-- DUAL FILTER CONTROLS: COURSE & ARTICLE -->
+            <div class="notion-card p-3 space-y-2">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#787774] mb-1">🔍 חיפוש טקסטואלי</label>
+                        <input type="text" id="glossary-search-input" oninput="renderGlossaryView()" placeholder="חיפוש מושג או הגדרה..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#787774] mb-1">🎓 סינון לפי קורס</label>
+                        <select id="glossary-filter-course" onchange="setGlossaryCourseFilter(this.value)" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none focus:border-[#37352F]">
+                            <option value="ALL">כל הקורסים</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#787774] mb-1">📄 סינון לפי מאמר</label>
+                        <select id="glossary-filter-article" onchange="setGlossaryArticleFilter(this.value)" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none focus:border-[#37352F]">
+                            <option value="ALL">כל המאמרים</option>
+                        </select>
+                    </div>
                 </div>
-                <div id="glossary-course-tabs" class="flex gap-1.5 overflow-x-auto pb-1"></div>
             </div>
 
             <div id="glossary-main-content"></div>
@@ -374,7 +385,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div class="md:col-span-2">
                             <label class="block text-xs font-medium text-[#37352F] mb-1">כותרת המאמר *</label>
-                            <input type="text" id="art-title" required placeholder="למשל: Construal level theory of psychological distance" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                            <input type="text" id="art-title" required placeholder="כותרת המאמר" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-[#37352F] mb-1">שיוך לקורס *</label>
@@ -385,11 +396,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-xs font-medium text-[#37352F] mb-1">מחברים</label>
-                            <input type="text" id="art-authors" placeholder="Trope, Y., & Liberman, N." class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                            <input type="text" id="art-authors" placeholder="מחברים" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-[#37352F] mb-1">שנת פרסום</label>
-                            <input type="text" id="art-year" placeholder="2010" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                            <input type="text" id="art-year" placeholder="2024" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-[#37352F] mb-1">קישור ל-PDF / Drive</label>
@@ -405,25 +416,25 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-[#37352F] mb-1">1. שאלת המחקר והשערות</label>
-                            <textarea id="art-rq" rows="3" placeholder="מה המאמר בודק? מהן ההשערות המרכזיות?" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                            <textarea id="art-rq" rows="3" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-[#37352F] mb-1">2. מתודולוגיה, מדגם וכלים</label>
-                            <textarea id="art-method" rows="3" placeholder="מערך המחקר, כלי המדידה (שאלונים, ניסוי), מדגם..." class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                            <textarea id="art-method" rows="3" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-[#37352F] mb-1">3. ממצאים מרכזיים ותוצאות</label>
-                            <textarea id="art-findings" rows="3" placeholder="אילו השערות אוששו? מהם הממצאים המרכזיים?" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                            <textarea id="art-findings" rows="3" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-[#37352F] mb-1">4. דיון, מגבלות וביקורת</label>
-                            <textarea id="art-critique" rows="3" placeholder="מגבלות מתודולוגיות, הסברים חלופיים..." class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                            <textarea id="art-critique" rows="3" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-[#37352F] mb-1">5. זיקה למחקר שלי / ציטוטים וסיכום אישי</label>
-                        <textarea id="art-takeaways" rows="2.5" placeholder="כיצד המאמר משרת את העבודה שלי? ציטוטים מרכזיים..." class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                        <textarea id="art-takeaways" rows="2.5" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
                     </div>
                 </div>
 
@@ -432,6 +443,50 @@
                     <button type="submit" class="px-5 py-2 bg-[#37352F] hover:bg-black text-white text-xs font-bold rounded shadow-sm transition-all">💾 שמירת מאמר וניתוח</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT GLOSSARY TERM (WITH OPTIONAL COURSE & ARTICLE LINKING) -->
+    <div id="glossary-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-lg w-full p-5 relative shadow-xl max-h-[90vh] overflow-y-auto space-y-3">
+            <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-2">
+                <h3 id="glossary-modal-title" class="text-sm font-bold text-[#37352F]">הוספת מושג חדש</h3>
+                <button onclick="closeGlossaryModal()" class="text-slate-400 hover:text-slate-700 text-xs">✕</button>
+            </div>
+            <input type="hidden" id="glossary-edit-id">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">שם המושג (עברית) *</label>
+                    <input type="text" id="glossary-term-he" required placeholder="למשל: תפיסה מרחבית" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">מונח בלועזית / אנגלית</label>
+                    <input type="text" id="glossary-term-en" placeholder="Spatial Perception" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                </div>
+            </div>
+
+            <!-- OPTIONAL LINKING FIELDS -->
+            <div class="grid grid-cols-2 gap-3 bg-[#EFEEEA]/30 p-2.5 rounded border border-[#E9E9E7]">
+                <div>
+                    <label class="block text-[11px] font-bold text-[#37352F] mb-1">🎓 שיוך לקורס (אופציונלי)</label>
+                    <select id="glossary-modal-course" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-[#37352F] mb-1">📄 שיוך למאמר (אופציונלי)</label>
+                    <select id="glossary-modal-article" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none"></select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-[#37352F] mb-1">הגדרה / הסבר תמציתי *</label>
+                <textarea id="glossary-definition" rows="3" required placeholder="הגדירי את המושג בקצרה..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]"></textarea>
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2 border-t border-[#E9E9E7]">
+                <button type="button" onclick="closeGlossaryModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                <button type="button" onclick="saveGlossaryTermFirebase()" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded font-bold">שמירה</button>
+            </div>
         </div>
     </div>
 
@@ -491,35 +546,6 @@
         </div>
     </div>
 
-    <!-- MODAL: ADD GLOSSARY TERM -->
-    <div id="glossary-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
-        <div class="notion-card bg-white max-w-lg w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto space-y-3">
-            <h3 id="glossary-modal-title" class="text-sm font-bold text-[#37352F]">הוספת מושג חדש</h3>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">שם המושג *</label>
-                    <input type="text" id="glossary-term-he" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-[#37352F] mb-1">מונח בלועזית</label>
-                    <input type="text" id="glossary-term-en" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-[#37352F] mb-1">קורס *</label>
-                <input type="text" id="glossary-course" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-[#37352F] mb-1">הגדרה *</label>
-                <textarea id="glossary-definition" rows="3" class="w-full p-2 border border-[#E9E9E7] rounded text-xs"></textarea>
-            </div>
-            <div class="pt-2 flex justify-end gap-2 border-t border-[#E9E9E7]">
-                <button type="button" onclick="closeGlossaryModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
-                <button type="button" onclick="saveGlossaryTermFirebase()" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">שמירה</button>
-            </div>
-        </div>
-    </div>
-
     <!-- MAIN JAVASCRIPT & FIREBASE INTEGRATION -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
@@ -561,7 +587,7 @@
         };
 
         let selectedGlossaryCourse = "ALL";
-        let isGlossaryExamOnly = false;
+        let selectedGlossaryArticle = "ALL";
 
         function checkAuthSession() {
             const overlay = document.getElementById('login-overlay');
@@ -653,7 +679,168 @@
             renderStickyNotesCanvas();
         }
 
-        // --- UNIFIED ARTICLE & ANALYSIS MODAL WORKFLOW ---
+        // --- COMPACT GLOSSARY LOGIC WITH DUAL LINKING & FILTERING ---
+        function updateGlossaryFilterDropdowns() {
+            const courseSelect = document.getElementById('glossary-filter-course');
+            const articleSelect = document.getElementById('glossary-filter-article');
+
+            if (courseSelect) {
+                const current = selectedGlossaryCourse;
+                let html = '<option value="ALL">כל הקורסים</option>';
+                Object.keys(localState.courses || {}).forEach(cId => {
+                    html += `<option value="${cId}" ${cId === current ? 'selected' : ''}>${escapeHtml(localState.courses[cId].title)}</option>`;
+                });
+                courseSelect.innerHTML = html;
+            }
+
+            if (articleSelect) {
+                const current = selectedGlossaryArticle;
+                let html = '<option value="ALL">כל המאמרים</option>';
+                Object.keys(localState.articles || {}).forEach(aId => {
+                    html += `<option value="${aId}" ${aId === current ? 'selected' : ''}>${escapeHtml(localState.articles[aId].title)}</option>`;
+                });
+                articleSelect.innerHTML = html;
+            }
+        }
+
+        window.setGlossaryCourseFilter = function(val) {
+            selectedGlossaryCourse = val;
+            renderGlossaryView();
+        };
+
+        window.setGlossaryArticleFilter = function(val) {
+            selectedGlossaryArticle = val;
+            renderGlossaryView();
+        };
+
+        function getFilteredGlossary() {
+            const q = (document.getElementById('glossary-search-input')?.value || '').toLowerCase().trim();
+            return (localState.glossary || []).filter(item => {
+                const matchCourse = selectedGlossaryCourse === 'ALL' || item.courseId === selectedGlossaryCourse;
+                const matchArticle = selectedGlossaryArticle === 'ALL' || item.articleId === selectedGlossaryArticle;
+                const matchQuery = !q || 
+                    (item.termHe && item.termHe.toLowerCase().includes(q)) || 
+                    (item.termEn && item.termEn.toLowerCase().includes(q)) || 
+                    (item.definition && item.definition.toLowerCase().includes(q));
+                return matchCourse && matchArticle && matchQuery;
+            });
+        }
+
+        function renderGlossaryView() {
+            updateGlossaryFilterDropdowns();
+            const main = document.getElementById('glossary-main-content');
+            if (!main) return;
+            const filtered = getFilteredGlossary();
+
+            if (filtered.length === 0) {
+                main.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">לא נמצאו מושגים התואמים את הסינון שנבחר.</div>`;
+                return;
+            }
+
+            // SMALL COMPACT GRID (3 TO 4 CARDS PER ROW)
+            let html = `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">`;
+            filtered.forEach(c => {
+                const linkedCourse = localState.courses[c.courseId];
+                const linkedArticle = localState.articles[c.articleId];
+
+                html += `
+                    <div class="notion-card p-3 flex flex-col justify-between space-y-2 hover:border-[#37352F]/40 transition-all">
+                        <div>
+                            <div class="flex items-start justify-between gap-1 mb-1">
+                                <h4 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline" onclick="openGlossaryModal('${c.id}')">${escapeHtml(c.termHe)}</h4>
+                                <button onclick="deleteGlossaryTermFirebase('${c.id}')" class="text-slate-300 hover:text-red-500 text-[11px] p-0.5">✕</button>
+                            </div>
+                            ${c.termEn ? `<p class="text-[10px] text-[#787774] italic -mt-0.5 mb-1.5 font-mono">${escapeHtml(c.termEn)}</p>` : ''}
+                            <p class="text-[11px] text-[#37352F] leading-relaxed">${escapeHtml(c.definition)}</p>
+                        </div>
+                        
+                        <!-- COMPACT LINKED BADGES -->
+                        <div class="pt-2 border-t border-[#E9E9E7]/80 flex flex-wrap gap-1 text-[9px]">
+                            ${linkedCourse ? `<span class="bg-[#EFEEEA] text-[#787774] px-1.5 py-0.5 rounded font-medium truncate max-w-[130px]">🎓 ${escapeHtml(linkedCourse.title)}</span>` : ''}
+                            ${linkedArticle ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-medium truncate max-w-[130px]">📄 ${escapeHtml(linkedArticle.title)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            main.innerHTML = html;
+        }
+
+        window.openGlossaryModal = function(editId = null) {
+            const courseSelect = document.getElementById('glossary-modal-course');
+            const articleSelect = document.getElementById('glossary-modal-article');
+            const modalTitle = document.getElementById('glossary-modal-title');
+
+            // Populate Dropdowns
+            courseSelect.innerHTML = '<option value="">-- ללא שיוך לקורס --</option>' + 
+                Object.keys(localState.courses || {}).map(cId => `<option value="${cId}">${escapeHtml(localState.courses[cId].title)}</option>`).join('');
+
+            articleSelect.innerHTML = '<option value="">-- ללא שיוך למאמר --</option>' + 
+                Object.keys(localState.articles || {}).map(aId => `<option value="${aId}">${escapeHtml(localState.articles[aId].title)}</option>`).join('');
+
+            if (editId && (localState.glossary || []).find(g => g.id === editId)) {
+                const item = localState.glossary.find(g => g.id === editId);
+                modalTitle.innerText = `עריכת מושג: ${item.termHe}`;
+                document.getElementById('glossary-edit-id').value = editId;
+                document.getElementById('glossary-term-he').value = item.termHe || '';
+                document.getElementById('glossary-term-en').value = item.termEn || '';
+                document.getElementById('glossary-definition').value = item.definition || '';
+                courseSelect.value = item.courseId || '';
+                articleSelect.value = item.articleId || '';
+            } else {
+                modalTitle.innerText = 'הוספת מושג חדש';
+                document.getElementById('glossary-edit-id').value = '';
+                document.getElementById('glossary-term-he').value = '';
+                document.getElementById('glossary-term-en').value = '';
+                document.getElementById('glossary-definition').value = '';
+                courseSelect.value = '';
+                articleSelect.value = '';
+            }
+
+            document.getElementById('glossary-modal').classList.remove('hidden');
+        };
+
+        window.closeGlossaryModal = function() {
+            document.getElementById('glossary-modal').classList.add('hidden');
+        };
+
+        window.saveGlossaryTermFirebase = function() {
+            const editId = document.getElementById('glossary-edit-id').value;
+            const termHe = document.getElementById('glossary-term-he').value.trim();
+            const termEn = document.getElementById('glossary-term-en').value.trim();
+            const definition = document.getElementById('glossary-definition').value.trim();
+            const courseId = document.getElementById('glossary-modal-course').value;
+            const articleId = document.getElementById('glossary-modal-article').value;
+
+            if (!termHe || !definition || !loggedInUser) {
+                alert('אנא הזיני שם מושג והגדרה.');
+                return;
+            }
+
+            let list = [...(localState.glossary || [])];
+
+            if (editId) {
+                const idx = list.findIndex(g => g.id === editId);
+                if (idx !== -1) {
+                    list[idx] = { id: editId, termHe, termEn, definition, courseId, articleId };
+                }
+            } else {
+                const newId = 'c_' + Math.random().toString(36).substr(2, 9);
+                list.push({ id: newId, termHe, termEn, definition, courseId, articleId });
+            }
+
+            update(ref(db, `dashboard/${loggedInUser}`), { glossary: list });
+            closeGlossaryModal();
+        };
+
+        window.deleteGlossaryTermFirebase = function(id) {
+            if (loggedInUser && confirm('למחוק מושג זה?')) {
+                const updated = (localState.glossary || []).filter(c => c.id !== id);
+                update(ref(db, `dashboard/${loggedInUser}`), { glossary: updated });
+            }
+        };
+
+        // --- ARTICLES WORKFLOW ---
         function updateArticleCourseSelect() {
             const select = document.getElementById('art-course');
             if (!select) return;
@@ -740,7 +927,6 @@
             closeArticleModal();
         };
 
-        // --- ARTICLES LIST RENDERING ---
         function renderArticlesView() {
             const grid = document.getElementById('articles-grid');
             const filterEl = document.getElementById('articles-course-filter');
@@ -786,7 +972,6 @@
                         <h3 class="font-bold text-sm text-[#37352F] leading-snug cursor-pointer hover:underline" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
                         <p class="text-[11px] text-[#787774] mt-1">${escapeHtml(art.authors || 'מחברים לא צוינו')} ${art.year ? `(${escapeHtml(art.year)})` : ''}</p>
 
-                        <!-- Analysis Details Breakdown -->
                         <div class="mt-4 pt-3 border-t border-[#E9E9E7] space-y-2 text-xs">
                             ${an.rq ? `<div class="bg-[#EFEEEA]/30 p-2 rounded"><strong>שאלת מחקר:</strong> <span class="text-[#37352F]">${escapeHtml(an.rq)}</span></div>` : ''}
                             ${an.method ? `<div class="bg-[#EFEEEA]/30 p-2 rounded"><strong>מתודולוגיה:</strong> <span class="text-[#37352F]">${escapeHtml(an.method)}</span></div>` : ''}
@@ -1144,93 +1329,6 @@
             if (loggedInUser) remove(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`));
         };
 
-        // --- GLOSSARY LOGIC ---
-        function getFilteredGlossary() {
-            const q = (document.getElementById('glossary-search-input')?.value || '').toLowerCase().trim();
-            return (localState.glossary || []).filter(c => {
-                const matchCourse = selectedGlossaryCourse === 'ALL' || c.course === selectedGlossaryCourse;
-                const matchExam = !isGlossaryExamOnly || c.examFocus;
-                const matchQuery = !q || c.termHe.toLowerCase().includes(q) || (c.termEn && c.termEn.toLowerCase().includes(q)) || c.definition.toLowerCase().includes(q);
-                return matchCourse && matchExam && matchQuery;
-            });
-        }
-
-        function renderGlossaryView() {
-            renderGlossaryCourseTabs();
-            const main = document.getElementById('glossary-main-content');
-            if (!main) return;
-            const filtered = getFilteredGlossary();
-
-            if (filtered.length === 0) {
-                main.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">לא נמצאו מושגים התואמים את הסינון.</div>`;
-                return;
-            }
-
-            let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
-            filtered.forEach(c => {
-                html += `
-                    <div class="notion-card p-4 flex flex-col justify-between space-y-3">
-                        <div>
-                            <div class="flex justify-between items-start gap-2">
-                                <div>
-                                    <h3 class="font-bold text-sm text-[#37352F]">${escapeHtml(c.termHe)}</h3>
-                                    ${c.termEn ? `<span class="text-xs text-[#787774]">(${escapeHtml(c.termEn)})</span>` : ''}
-                                </div>
-                            </div>
-                            <p class="text-xs text-[#37352F] mt-2 leading-relaxed">${escapeHtml(c.definition)}</p>
-                        </div>
-                        <div class="pt-2 border-t border-[#E9E9E7] flex justify-between items-center text-[10px]">
-                            <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${escapeHtml(c.course)}</span>
-                            <button onclick="deleteGlossaryTermFirebase('${c.id}')" class="text-slate-400 hover:text-red-500 text-xs">🗑️</button>
-                        </div>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            main.innerHTML = html;
-        }
-
-        function renderGlossaryCourseTabs() {
-            const tabsContainer = document.getElementById('glossary-course-tabs');
-            if (!tabsContainer) return;
-            const courses = Array.from(new Set((localState.glossary || []).map(c => c.course).filter(Boolean)));
-            let html = `<button onclick="selectGlossaryCourse('ALL')" class="px-3 py-1 rounded-full text-xs ${selectedGlossaryCourse === 'ALL' ? 'bg-[#37352F] text-white font-bold' : 'bg-[#EFEEEA] text-[#787774]'}">כל הקורסים (${(localState.glossary || []).length})</button>`;
-            courses.forEach(c => {
-                html += `<button onclick="selectGlossaryCourse('${c}')" class="px-3 py-1 rounded-full text-xs ${selectedGlossaryCourse === c ? 'bg-[#37352F] text-white font-bold' : 'bg-[#EFEEEA] text-[#787774]'}">${escapeHtml(c)}</button>`;
-            });
-            tabsContainer.innerHTML = html;
-        }
-
-        window.selectGlossaryCourse = function(course) { selectedGlossaryCourse = course; renderGlossaryView(); };
-        window.toggleGlossaryExamOnly = function() { isGlossaryExamOnly = !isGlossaryExamOnly; renderGlossaryView(); };
-
-        window.openGlossaryModal = function() { document.getElementById('glossary-modal').classList.remove('hidden'); };
-        window.closeGlossaryModal = function() { document.getElementById('glossary-modal').classList.add('hidden'); };
-
-        window.saveGlossaryTermFirebase = function() {
-            const termHe = document.getElementById('glossary-term-he').value.trim();
-            const course = document.getElementById('glossary-course').value.trim();
-            const definition = document.getElementById('glossary-definition').value.trim();
-            if (!termHe || !course || !definition || !loggedInUser) return alert('מלאי שדות חובה');
-
-            const newObj = {
-                id: 'c_' + Math.random().toString(36).substr(2, 9),
-                termHe, termEn: document.getElementById('glossary-term-en').value.trim(),
-                course, definition
-            };
-
-            const updated = [...(localState.glossary || []), newObj];
-            update(ref(db, `dashboard/${loggedInUser}`), { glossary: updated });
-            closeGlossaryModal();
-        };
-
-        window.deleteGlossaryTermFirebase = function(id) {
-            if (loggedInUser && confirm('למחוק מושג זה?')) {
-                const updated = localState.glossary.filter(c => c.id !== id);
-                update(ref(db, `dashboard/${loggedInUser}`), { glossary: updated });
-            }
-        };
-
         // --- STICKY NOTES CANVAS ---
         function renderStickyNotesCanvas() {
             const grid = document.getElementById('notes-grid');
@@ -1351,7 +1449,7 @@
             let results = [];
 
             (localState.glossary || []).forEach(c => {
-                if (!q || c.termHe.toLowerCase().includes(q)) results.push({ type: 'מושג', title: c.termHe, action: () => switchMode('glossary') });
+                if (!q || (c.termHe && c.termHe.toLowerCase().includes(q))) results.push({ type: 'מושג', title: c.termHe, action: () => switchMode('glossary') });
             });
             Object.keys(localState.articles || {}).forEach(id => {
                 const a = localState.articles[id];
