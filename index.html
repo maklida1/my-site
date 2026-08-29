@@ -483,11 +483,11 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-[#37352F] mb-1">ציטוט APA (מהעתקה מ-Google Scholar)</label>
-                            <input type="text" id="art-apa" placeholder="הדביקי כאן את ציטוט ה-APA..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">ציטוט APA מלא (מועתק מ-Google Scholar)</label>
+                            <textarea id="art-apa" rows="2" placeholder="הדביקי כאן את ציטוט ה-APA המלא..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono focus:outline-none focus:border-[#37352F]"></textarea>
                         </div>
-                        <div>
+                        <div class="md:col-span-2">
                             <label class="block text-xs font-medium text-[#37352F] mb-1">קישור ל-PDF / Drive</label>
                             <input type="url" id="art-link" placeholder="https://..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono focus:outline-none">
                         </div>
@@ -1231,7 +1231,7 @@
             }
         };
 
-        // --- ARTICLES WITH RESEARCH QUESTION ONLY PREVIEW ---
+        // --- ARTICLES WITH FULL APA CITATION PREVIEW ---
         function updateArticleCourseSelect() {
             const select = document.getElementById('art-course');
             if (!select) return;
@@ -1374,7 +1374,11 @@
                             </select>
                         </div>
                         <h3 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline flex-shrink-0" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
-                        <p class="text-[10px] text-[#787774] mt-0.5 flex-shrink-0 font-mono italic">${escapeHtml(art.apa || 'ציטוט APA טרם הוזן')}</p>
+                        
+                        <!-- FULL APA CITATION DISPLAY -->
+                        <div class="mt-1.5 bg-[#EFEEEA]/30 p-2 rounded border border-[#E9E9E7]/60 text-[10px] text-[#787774] font-mono leading-relaxed select-all">
+                            ${escapeHtml(art.apa || 'ציטוט APA מלא טרם הוזן (להדביק מגוגל סקלר)')}
+                        </div>
 
                         <!-- PREVIEW: RESEARCH QUESTION ONLY WITH MOUSE SCROLL SUPPORT -->
                         <div class="mt-3 pt-2 border-t border-[#E9E9E7] text-[11px] article-summary-scroll pr-1" onwheel="event.stopPropagation()">
@@ -1396,8 +1400,8 @@
                             <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">📋 APA</button>
                         </div>
                         <div class="flex items-center gap-1">
-                            <button onclick="openArticleModal('${artId}')" title="עריכה וניתוח" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-2 py-1 rounded text-[11px] flex items-center justify-center">✏️</button>
-                            <button onclick="deleteArticleFirebase('${artId}')" class="text-slate-300 hover:text-red-500 text-[10px] p-0.5">✕</button>
+                            <button onclick="openArticleModal('${artId}')" title="עריכה וניתוח" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] w-7 h-7 rounded text-xs flex items-center justify-center">✏️</button>
+                            <button onclick="deleteArticleFirebase('${artId}')" title="מחיקה" class="text-slate-300 hover:text-red-500 text-[10px] p-0.5">✕</button>
                         </div>
                     </div>
                 `;
