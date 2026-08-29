@@ -296,7 +296,7 @@
         <!-- VIEW 2: COURSES BOARD -->
         <div id="view-manage" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-[#37352F]">🎓 קורסים</h2>
+                <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">🎓 קורסים</h2>
                 <button onclick="openAddCourseModal()" class="bg-[#37352F] text-white text-xs font-medium px-3.5 py-1.5 rounded">+ קורס חדש</button>
             </div>
             <div id="courses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -306,7 +306,7 @@
         <div id="view-articles" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F]">📚 מאמרים</h2>
+                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📚 מאמרים</h2>
                     <p class="text-xs text-[#787774]">תצוגה מקדימה של שאלת המחקר בלבד. לחצי על המאמר לצפייה בסיכום המלא.</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -324,7 +324,7 @@
         <div id="view-glossary" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F]">📖 מושגים</h2>
+                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📖 מושגים</h2>
                     <p class="text-xs text-[#787774]">מושגים מקושרים לקורסים ולמאמרים, בתיבות קומפקטיות ונוחות לסקירה ועריכה</p>
                 </div>
                 <button onclick="openGlossaryModal()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all">+ מושג חדש</button>
@@ -358,7 +358,7 @@
         <div id="view-telegram" class="hidden space-y-6">
             <div class="notion-card p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F]">✈️ טלגרם</h2>
+                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">✈️ טלגרם</h2>
                     <p class="text-xs text-[#787774]">שליחת הודעות תזכורת וקבלת פתקים ישירות ללוח</p>
                 </div>
                 <div id="telegram-status-badge" class="px-2.5 py-1 rounded text-xs bg-slate-100 text-slate-700">הגדרות טרם הוזנו</div>
@@ -401,7 +401,7 @@
         <div id="view-notes" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
                 <div>
-                    <h2 class="text-lg font-bold text-[#37352F]">📝 פתקים</h2>
+                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📝 פתקים</h2>
                     <p class="text-xs text-[#787774]">ידית הגדלה מוגדלת ונוחה, תנועת עכבר חלקה, ופלטת צבעים נפתחת</p>
                 </div>
                 <div class="flex gap-2">
@@ -1883,7 +1883,11 @@
             const targetBtn = document.getElementById(`btn-${mode}-mode`);
             if (target) target.classList.remove('hidden');
             if (targetBtn) {
-                targetBtn.className = 'active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1';
+                if (mode === 'focus') {
+                    targetBtn.className = 'active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1.5';
+                } else {
+                    targetBtn.className = 'active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1';
+                }
             }
         };
 
