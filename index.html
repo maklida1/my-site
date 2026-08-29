@@ -106,9 +106,9 @@
             border-top: 1px dashed #60a5fa;
         }
 
-        /* Isolated External Scroll for Article Summaries */
+        /* Isolated External Scroll for Research Question Preview */
         .article-summary-scroll {
-            max-height: 200px;
+            max-height: 140px;
             overflow-y: auto;
             overscroll-behavior: contain;
         }
@@ -319,7 +319,7 @@
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F]">📚 מאגר מאמרים וניתוחים</h2>
-                    <p class="text-xs text-[#787774]">גלילה חופשית של כל הסיכומים ישירות מהכרטיסייה בעזרת העכבר</p>
+                    <p class="text-xs text-[#787774]">תצוגה מקדימה של שאלת המחקר בלבד. לחצי על המאמר לצפייה בסיכום המלא.</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <select id="articles-course-filter" onchange="renderArticlesView()" class="p-1.5 border border-[#E9E9E7] rounded text-xs bg-white">
@@ -963,7 +963,6 @@
                 const onMoveResize = (me) => {
                     if (me.cancelable) me.preventDefault();
                     const curC = getCoords(me);
-                    // In RTL, bottom-left resize handle: moving left expands width
                     width = Math.max(180, startW - (curC.x - startC.x));
                     height = Math.max(130, startH + (curC.y - startC.y));
                     
@@ -1212,7 +1211,7 @@
             }
         };
 
-        // --- ARTICLES WITH DYNAMIC STATUS & EXTERNAL SCROLL SUMMARY ---
+        // --- ARTICLES WITH RESEARCH QUESTION ONLY PREVIEW ---
         function updateArticleCourseSelect() {
             const select = document.getElementById('art-course');
             if (!select) return;
@@ -1341,7 +1340,7 @@
                 const currentStatus = art.status || 'not_started';
 
                 const card = document.createElement('div');
-                card.className = 'notion-card p-4 flex flex-col justify-between space-y-3 hover:border-[#37352F]/40 transition-all max-h-[380px]';
+                card.className = 'notion-card p-4 flex flex-col justify-between space-y-3 hover:border-[#37352F]/40 transition-all border border-[#E9E9E7]';
                 card.innerHTML = `
                     <div class="flex flex-col overflow-hidden">
                         <div class="flex items-center justify-between mb-1.5 flex-shrink-0">
@@ -1360,13 +1359,16 @@
                         <h3 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline flex-shrink-0" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
                         <p class="text-[10px] text-[#787774] mt-0.5 flex-shrink-0">${escapeHtml(art.authors || 'מחברים לא צוינו')} ${art.year ? `(${escapeHtml(art.year)})` : ''}</p>
 
-                        <!-- ISOLATED SCROLLABLE SUMMARY BOX -->
-                        <div class="mt-3 pt-2 border-t border-[#E9E9E7] space-y-1.5 text-[11px] article-summary-scroll pr-1" onwheel="event.stopPropagation()">
-                            ${an.rq ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>1. שאלת מחקר:</strong> <span class="text-[#37352F]">${escapeHtml(an.rq)}</span></div>` : ''}
-                            ${an.method ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>2. מתודולוגיה:</strong> <span class="text-[#37352F]">${escapeHtml(an.method)}</span></div>` : ''}
-                            ${an.findings ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>3. ממצאים:</strong> <span class="text-[#37352F]">${escapeHtml(an.findings)}</span></div>` : ''}
-                            ${an.critique ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>4. דיון וביקורת:</strong> <span class="text-[#37352F]">${escapeHtml(an.critique)}</span></div>` : ''}
-                            ${an.takeaways ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>5. זיקה אישית:</strong> <span class="text-[#37352F]">${escapeHtml(an.takeaways)}</span></div>` : ''}
+                        <!-- PREVIEW: RESEARCH QUESTION ONLY WITH MOUSE SCROLL SUPPORT -->
+                        <div class="mt-3 pt-2 border-t border-[#E9E9E7] text-[11px] article-summary-scroll pr-1" onwheel="event.stopPropagation()">
+                            ${an.rq ? `
+                                <div class="bg-[#EFEEEA]/40 p-2.5 rounded border border-[#E9E9E7]/60">
+                                    <strong class="block text-[10px] text-[#787774] mb-1 font-bold">❓ שאלת המחקר והשערות:</strong>
+                                    <span class="text-[#37352F] leading-relaxed block">${escapeHtml(an.rq)}</span>
+                                </div>
+                            ` : `
+                                <p class="text-[10px] text-[#787774] italic">טרם הוזנה שאלת מחקר.</p>
+                            `}
                         </div>
                     </div>
 
@@ -1377,7 +1379,7 @@
                             <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">📋 APA</button>
                         </div>
                         <div class="flex items-center gap-1">
-                            <button onclick="openArticleModal('${artId}')" class="bg-[#37352F] hover:bg-black text-white px-2 py-0.5 rounded text-[9px] font-bold">✏️ עריכה</button>
+                            <button onclick="openArticleModal('${artId}')" class="bg-[#37352F] hover:bg-black text-white px-2 py-0.5 rounded text-[9px] font-bold">✏️ עריכה וניתוח</button>
                             <button onclick="deleteArticleFirebase('${artId}')" class="text-slate-300 hover:text-red-500 text-[10px] p-0.5">✕</button>
                         </div>
                     </div>
