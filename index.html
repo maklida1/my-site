@@ -207,8 +207,9 @@
                 <h2 class="text-sm font-bold text-[#37352F]">מיקוד</h2>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- PINNED NOTE WITH RED PIN -->
+            <!-- TOP 3-COLUMN GRID -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 1. PINNED NOTE WITH RED PIN -->
                 <div class="notion-card p-5 bg-[#FBFB9B]/20 border border-[#F4F482]/60 relative flex flex-col justify-center">
                     <div class="absolute -top-3 right-4 text-base select-none">📌</div>
                     <div id="pinned-note-display" contenteditable="true"
@@ -216,16 +217,32 @@
                     </div>
                 </div>
 
-                <!-- Semester Courses Summary -->
-                <div class="notion-card p-5">
-                    <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2.5">
-                        <h3 class="text-sm font-bold text-[#37352F]">🎓 קורסי הסמסטר</h3>
+                <!-- 2. BULK EDITABLE ROUTINE CHECKLIST (PLACED BETWEEN PINNED NOTE & COURSES) -->
+                <div class="notion-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
+                            <h3 class="text-xs font-bold text-[#37352F]">🔄 סנכרון לאחר יום לימודים</h3>
+                            <div class="flex items-center gap-2">
+                                <button onclick="bulkEditRoutineFirebase()" title="עריכת רשימה" class="text-xs font-bold text-[#37352F] hover:opacity-70 p-0.5">✏️</button>
+                                <button onclick="resetRoutineChecks()" title="איפוס" class="text-xs text-slate-400 hover:text-slate-600 p-0.5">🔄</button>
+                            </div>
+                        </div>
+                        <div class="space-y-2" id="routine-checklist-list"></div>
                     </div>
-                    <div id="semester-courses-list" class="space-y-2"></div>
+                </div>
+
+                <!-- 3. Semester Courses Summary -->
+                <div class="notion-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2.5">
+                            <h3 class="text-sm font-bold text-[#37352F]">🎓 קורסי הסמסטר</h3>
+                        </div>
+                        <div id="semester-courses-list" class="space-y-2"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Unified Tasks & Checklists -->
+            <!-- Unified Tasks & Weekly Tracker Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 space-y-6">
                     <div class="notion-card p-5">
@@ -238,25 +255,13 @@
                 </div>
 
                 <div class="space-y-6">
-                    <!-- BULK EDITABLE ROUTINE CHECKLIST -->
-                    <div class="notion-card p-5">
-                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
-                            <h3 class="text-xs font-bold text-[#37352F]">🔄 סנכרון לאחר יום לימודים</h3>
-                            <div class="flex items-center gap-2">
-                                <button onclick="bulkEditRoutineFirebase()" title="עריכת רשימה" class="text-xs font-bold text-[#37352F] hover:opacity-70 p-0.5">✏️</button>
-                                <button onclick="resetRoutineChecks()" title="איפוס" class="text-xs text-[#787774] hover:text-[#37352F] p-0.5">🔄</button>
-                            </div>
-                        </div>
-                        <div class="space-y-2" id="routine-checklist-list"></div>
-                    </div>
-
                     <!-- BULK EDITABLE HOBBIES & WEEKLY TRACKER -->
                     <div class="notion-card p-5">
                         <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
                             <h3 class="text-sm font-bold text-[#37352F]">✨ מעקב שבועי</h3>
                             <div class="flex items-center gap-2">
                                 <button onclick="bulkEditHobbiesFirebase()" title="עריכת רשימה" class="text-xs font-bold text-[#37352F] hover:opacity-70 p-0.5">✏️</button>
-                                <button onclick="resetHobbiesChecks()" title="איפוס שבוע" class="text-xs text-[#787774] hover:text-[#37352F] p-0.5">🔄</button>
+                                <button onclick="resetHobbiesChecks()" title="איפוס שבוע" class="text-xs text-slate-400 hover:text-slate-600 p-0.5">🔄</button>
                             </div>
                         </div>
                         <div class="overflow-x-auto">
