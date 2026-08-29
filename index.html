@@ -1,4 +1,1725 @@
-// --- TELEGRAM BOT INTEGRATION ---
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>דשבורד אקדמי ואישי - helen</title>
+    <!-- PWA Web App Manifest -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Academic Dashboard","short_name":"Dashboard","start_url":".","display":"standalone","background_color":"#FBFBFA","theme_color":"#37352F"}'>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PDF & Excel Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Heebo', 'sans-serif'], rubik: ['Rubik', 'sans-serif'] },
+                    colors: { notion: { bg: '#FBFBFA', card: '#FFFFFF', border: '#E9E9E7', text: '#37352F', muted: '#787774', hover: '#EFEEEA' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Heebo', sans-serif; background-color: #FBFBFA; color: #37352F; }
+        .notion-card { background-color: #FFFFFF; border: 1px solid #E9E9E7; border-radius: 8px; box-shadow: rgba(15, 15, 15, 0.03) 0px 1px 2px; }
+        .active-tab { background-color: #EFEEEA !important; color: #37352F !important; font-weight: 600; }
+        .course-scroll::-webkit-scrollbar { width: 4px; }
+        .course-scroll::-webkit-scrollbar-thumb { background: #D3D3D1; border-radius: 4px; }
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.5); }
+        
+        /* Dynamic Canvas & Note Handling */
+        .draggable-note { 
+            touch-action: none !important; 
+            position: absolute; 
+            will-change: transform, width, height;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            min-width: 180px;
+            min-height: 130px;
+        }
+
+        .note-resize-handle { 
+            touch-action: none !important; 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            width: 26px; 
+            height: 26px; 
+            cursor: nesw-resize; 
+            background-color: rgba(0,0,0,0.08);
+            border-top-right-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            z-index: 20;
+        }
+        .note-resize-handle:hover {
+            background-color: rgba(0,0,0,0.2);
+        }
+        .note-resize-handle::after {
+            content: '⇱';
+            font-size: 12px;
+            color: #475569;
+        }
+        
+        /* Resizable Image inside Editable Notes */
+        .note-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 4px 0;
+            display: inline-block;
+            resize: both;
+            overflow: auto;
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 2px;
+            box-sizing: border-box;
+        }
+
+        /* Full Canvas Alignment Lines */
+        .guide-line-vertical {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1.5px;
+            background-color: #2563eb;
+            z-index: 100;
+            pointer-events: none;
+            border-left: 1px dashed #60a5fa;
+        }
+        .guide-line-horizontal {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1.5px;
+            background-color: #2563eb;
+            z-index: 100;
+            pointer-events: none;
+            border-top: 1px dashed #60a5fa;
+        }
+
+        /* Isolated External Scroll for Article Summaries */
+        .article-summary-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        .article-summary-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        .article-summary-scroll::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-16">
+
+    <!-- LOGIN OVERLAY -->
+    <div id="login-overlay" class="fixed inset-0 bg-white/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-4">
+        <div class="notion-card p-8 max-w-sm w-full text-center space-y-4 border border-[#E9E9E7] shadow-xl">
+            <div class="w-12 h-12 bg-[#EFEEEA] rounded-full flex items-center justify-center text-2xl mx-auto">🔑</div>
+            <div>
+                <h1 class="text-xl font-bold text-[#37352F]">התחברות לדשבורד</h1>
+                <p class="text-xs text-[#787774] mt-1">הזיני שם משתמש וסיסמה לגישה למערכת</p>
+            </div>
+            <form onsubmit="handleCustomLogin(event)" class="space-y-3 text-right">
+                <div>
+                    <label class="block text-xs font-bold text-[#37352F] mb-1">שם משתמש</label>
+                    <input type="text" id="login-username" placeholder="helen" required class="w-full p-2.5 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#37352F] mb-1">סיסמה</label>
+                    <input type="password" id="login-password" placeholder="••••" required class="w-full p-2.5 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                </div>
+                <p id="login-error" class="text-xs text-rose-600 font-bold text-center hidden">שם משתמש או סיסמה שגויים</p>
+                <button type="submit" class="w-full py-2.5 px-4 bg-[#37352F] hover:bg-black text-white text-xs font-medium rounded-lg transition-all shadow-sm">
+                    התחברות וזכירת משתמש
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="bg-[#FBFBFA] border-b border-[#E9E9E7] sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                
+                <div class="flex items-center space-x-2.5 space-x-reverse">
+                    <div id="user-avatar" class="w-7 h-7 rounded-full bg-[#EFEEEA] flex items-center justify-center text-sm font-bold">🌿</div>
+                    <div class="flex items-center gap-2 text-xs text-[#787774]">
+                        <span id="user-display-name" class="font-medium text-[#37352F]">helen</span>
+                        <span>/</span>
+                        <span id="sync-status-badge" class="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800">מתחבר...</span>
+                        <span id="network-status-badge" class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800">🌐 אונליין</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <div class="bg-[#EFEEEA]/60 p-1 rounded-lg flex items-center self-center md:self-auto border border-[#E9E9E7] gap-1 overflow-x-auto max-w-full">
+                    <button id="btn-focus-mode" onclick="switchMode('focus')" class="active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">מיקוד יומי</button>
+                    <button id="btn-manage-mode" onclick="switchMode('manage')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">קורסים</button>
+                    <button id="btn-articles-mode" onclick="switchMode('articles')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📚 מאגר ומאמרים</button>
+                    <button id="btn-glossary-mode" onclick="switchMode('glossary')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">📖 מילון מושגים</button>
+                    <button id="btn-telegram-mode" onclick="switchMode('telegram')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1">✈️ טלגרם</button>
+                    <button id="btn-notes-mode" onclick="switchMode('notes')" class="px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]">פתקים</button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleCommandPalette()" class="text-xs bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-2.5 py-1 rounded border border-[#E9E9E7] flex items-center gap-1.5 transition-all">
+                        <span>🔍 חיפוש</span>
+                        <kbd class="bg-white border border-[#E9E9E7] text-[10px] px-1 rounded font-mono text-[#787774]">Ctrl+K</kbd>
+                    </button>
+                    <button onclick="logoutCustom()" class="text-xs text-[#787774] hover:text-red-600 border border-[#E9E9E7] px-2.5 py-1 rounded bg-white transition-all">התנתקות</button>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- COMMAND PALETTE MODAL -->
+    <div id="cmd-palette-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] flex items-start justify-center pt-20 hidden p-4">
+        <div class="notion-card bg-white max-w-xl w-full p-4 relative shadow-2xl space-y-3">
+            <div class="relative">
+                <input type="text" id="cmd-search-input" oninput="handleCommandSearch(this.value)" placeholder="חיפוש מהיר במשימות, מאמרים, מושגים, קורסים ופתקים..."
+                       class="w-full p-3 pr-9 border border-[#E9E9E7] rounded-lg text-xs focus:outline-none focus:border-[#37352F] font-sans">
+                <span class="absolute right-3 top-3 text-slate-400 text-xs">🔍</span>
+            </div>
+            <div id="cmd-results-list" class="max-h-80 overflow-y-auto space-y-1 divide-y divide-[#E9E9E7]/60 text-xs">
+                <p class="text-xs text-[#787774] italic text-center py-4">הקלידי לחיפוש רוחבי...</p>
+            </div>
+            <div class="pt-2 border-t border-[#E9E9E7] flex justify-between text-[10px] text-[#787774]">
+                <span>לחצי על תוצאה למעבר מהיר</span>
+                <span class="font-mono">Esc לסגירה</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+
+        <!-- VIEW 1: FOCUS MODE -->
+        <div id="view-focus" class="space-y-6">
+            <div class="notion-card p-4 bg-white flex items-center justify-between">
+                <h2 class="text-sm font-bold text-[#37352F]">מיקוד יומי ומשימות דחופות</h2>
+                <span id="save-indicator-pinned" class="text-xs text-[#787774]">סנכרון מאובטח בזמן אמת</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- PINNED NOTE -->
+                <div class="notion-card p-5 bg-[#FBFB9B]/20 border border-[#F4F482]/60 relative">
+                    <div class="flex items-center justify-between mb-2.5 border-b border-[#E9E9E7]/60 pb-2">
+                        <span class="text-xs font-bold text-[#37352F] flex items-center gap-1">📌 פתק מוצמד</span>
+                        <span id="pinned-status-text" class="text-[10px] text-[#787774]">נשמר אוטומטית</span>
+                    </div>
+                    <div id="pinned-note-display" contenteditable="true"
+                         class="text-xs text-[#37352F] leading-relaxed min-h-[80px] whitespace-pre-wrap p-2 rounded focus:outline-none focus:ring-1 focus:ring-[#37352F]/30 bg-white/50">
+                    </div>
+                </div>
+
+                <!-- Schedule -->
+                <div class="notion-card p-5">
+                    <div class="flex items-center gap-2 mb-4 border-b border-[#E9E9E7] pb-3">
+                        <span class="text-sm">📅</span>
+                        <h3 class="text-sm font-bold text-[#37352F]">סדר יום משוער</h3>
+                    </div>
+                    <div class="space-y-3 relative before:absolute before:right-2.5 before:top-2 before:bottom-2 before:w-px before:bg-[#E9E9E7]">
+                        <div class="pr-6 relative">
+                            <span class="absolute right-1.5 top-1.5 w-2 h-2 rounded-full bg-emerald-600"></span>
+                            <p class="text-[10px] text-[#787774]">08:00 - 15:00</p>
+                            <p class="text-xs font-bold text-[#37352F]">משמרת עבודה - דיור מוגן</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Semester Courses Summary -->
+                <div class="notion-card p-5">
+                    <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2.5">
+                        <h3 class="text-sm font-bold text-[#37352F]">🎓 קורסי הסמסטר</h3>
+                    </div>
+                    <div id="semester-courses-list" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Unified Tasks & Checklists -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="notion-card p-5">
+                        <div class="flex items-center justify-between mb-4 border-b border-[#E9E9E7] pb-3">
+                            <h3 class="text-sm font-bold text-[#37352F]">📋 כל המשימות (ממוינות לפי תאריך)</h3>
+                            <span id="focus-tasks-count" class="text-xs text-[#787774] font-bold"></span>
+                        </div>
+                        <div class="space-y-2.5" id="focus-tasks-list"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- BULK EDITABLE ROUTINE CHECKLIST -->
+                    <div class="notion-card p-5">
+                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
+                            <h3 class="text-xs font-bold text-[#37352F]">🔄 סנכרון לאחר יום לימודים</h3>
+                            <div class="flex items-center gap-2">
+                                <button onclick="bulkEditRoutineFirebase()" class="text-xs font-bold text-[#37352F] hover:underline">✏️ עריכת הרשימה</button>
+                                <button onclick="resetRoutineChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס</button>
+                            </div>
+                        </div>
+                        <div class="space-y-2" id="routine-checklist-list"></div>
+                    </div>
+
+                    <!-- BULK EDITABLE HOBBIES & WEEKLY TRACKER -->
+                    <div class="notion-card p-5">
+                        <div class="flex items-center justify-between mb-3 border-b border-[#E9E9E7] pb-2">
+                            <h3 class="text-sm font-bold text-[#37352F]">✨ מעקב שבועי</h3>
+                            <div class="flex items-center gap-2">
+                                <button onclick="bulkEditHobbiesFirebase()" class="text-xs font-bold text-[#37352F] hover:underline">✏️ עריכת הרשימה</button>
+                                <button onclick="resetHobbiesChecks()" class="text-slate-400 hover:text-slate-700 text-xs">איפוס שבוע</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead>
+                                    <tr class="border-b border-[#E9E9E7] text-[#787774] text-[11px]">
+                                        <th class="pb-2 font-bold text-[#37352F]">הרגל / תחביב</th>
+                                        <th class="pb-2 text-center w-6">א'</th>
+                                        <th class="pb-2 text-center w-6">ב'</th>
+                                        <th class="pb-2 text-center w-6">ג'</th>
+                                        <th class="pb-2 text-center w-6">ד'</th>
+                                        <th class="pb-2 text-center w-6">ה'</th>
+                                        <th class="pb-2 text-center w-6">ו'</th>
+                                        <th class="pb-2 text-center w-6">ש'</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hobbies-tracker-list" class="divide-y divide-[#E9E9E7]/60"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: COURSES BOARD -->
+        <div id="view-manage" class="hidden space-y-6">
+            <div class="notion-card p-5 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-[#37352F]">לוח קורסים ומטלות</h2>
+                <button onclick="openAddCourseModal()" class="bg-[#37352F] text-white text-xs font-medium px-3.5 py-1.5 rounded">+ קורס חדש</button>
+            </div>
+            <div id="courses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- UNIFIED VIEW 3: COMPACT ARTICLES LIBRARY -->
+        <div id="view-articles" class="hidden space-y-6">
+            <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F]">📚 מאגר מאמרים וניתוחים</h2>
+                    <p class="text-xs text-[#787774]">גלילה חופשית של כל הסיכומים ישירות מהכרטיסייה בעזרת העכבר</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="articles-course-filter" onchange="renderArticlesView()" class="p-1.5 border border-[#E9E9E7] rounded text-xs bg-white">
+                        <option value="ALL">כל הקורסים</option>
+                    </select>
+                    <button onclick="openArticleModal()" class="bg-[#37352F] text-white text-xs font-medium px-3.5 py-1.5 rounded transition-all">+ מאמר חדש</button>
+                </div>
+            </div>
+
+            <div id="articles-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- VIEW 4: COMPACT GLOSSARY -->
+        <div id="view-glossary" class="hidden space-y-6">
+            <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-2"><span>📖</span> מילון מושגים אקדמי</h2>
+                    <p class="text-xs text-[#787774]">מושגים מקושרים לקורסים ולמאמרים, בתיבות קומפקטיות ונוחות לסקירה ועריכה</p>
+                </div>
+                <button onclick="openGlossaryModal()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all">+ מושג חדש</button>
+            </div>
+
+            <div class="notion-card p-3 space-y-2">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#787774] mb-1">🔍 חיפוש טקסטואלי</label>
+                        <input type="text" id="glossary-search-input" oninput="renderGlossaryView()" placeholder="חיפוש מושג או הגדרה..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#787774] mb-1">🎓 סינון לפי קורס</label>
+                        <select id="glossary-filter-course" onchange="setGlossaryCourseFilter(this.value)" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none focus:border-[#37352F]">
+                            <option value="ALL">כל הקורסים</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#787774] mb-1">📄 סינון לפי מאמר</label>
+                        <select id="glossary-filter-article" onchange="setGlossaryArticleFilter(this.value)" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none focus:border-[#37352F]">
+                            <option value="ALL">כל המאמרים</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="glossary-main-content"></div>
+        </div>
+
+        <!-- VIEW 5: TELEGRAM BOT -->
+        <div id="view-telegram" class="hidden space-y-6">
+            <div class="notion-card p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-2"><span>✈️</span> שליחה ואינטגרציית טלגרם</h2>
+                    <p class="text-xs text-[#787774]">שליחת הודעות תזכורת וקבלת פתקים ישירות ללוח</p>
+                </div>
+                <div id="telegram-status-badge" class="px-2.5 py-1 rounded text-xs bg-slate-100 text-slate-700">הגדרות טרם הוזנו</div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="notion-card p-5 space-y-4">
+                    <div class="border-b border-[#E9E9E7] pb-3">
+                        <h3 class="text-xs font-bold text-[#37352F]">⚙️ הגדרות הבוט</h3>
+                    </div>
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <label class="block font-medium text-[#37352F] mb-1">Bot Token</label>
+                            <input type="password" id="tg-bot-token" placeholder="123456789:ABC..." class="w-full p-2 border border-[#E9E9E7] rounded font-mono text-[11px]">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-[#37352F] mb-1">Chat ID</label>
+                            <input type="text" id="tg-chat-id" placeholder="987654321" class="w-full p-2 border border-[#E9E9E7] rounded font-mono text-[11px]">
+                        </div>
+                        <button onclick="saveTelegramConfigFirebase()" class="w-full py-2 bg-[#37352F] text-white rounded font-medium">💾 שמירת הגדרות</button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="notion-card p-5 space-y-4">
+                        <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-3">
+                            <h3 class="text-xs font-bold text-[#37352F]">📝 הידור הודעה</h3>
+                        </div>
+                        <textarea id="tg-msg-text" rows="4" placeholder="רשמי כאן הודעה לשליחה עצמית..." class="w-full p-3 text-xs border border-[#E9E9E7] rounded focus:outline-none"></textarea>
+                        <div class="flex items-center justify-between pt-1">
+                            <span id="tg-send-status" class="text-xs"></span>
+                            <button onclick="sendTelegramMessageFirebase()" class="bg-[#37352F] text-white text-xs px-5 py-2 rounded font-medium">🚀 שליחה לטלגרם</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 6: NOTES CANVAS -->
+        <div id="view-notes" class="hidden space-y-6">
+            <div class="notion-card p-5 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-bold text-[#37352F]">משטח פתקים ורעיונות</h2>
+                    <p class="text-xs text-[#787774]">ידית הגדלה מוגדלת ונוחה, תנועת עכבר חלקה, ופלטת צבעים נפתחת</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="resetNotesPositionFirebase()" class="bg-white border border-[#E9E9E7] text-xs px-3 py-1.5 rounded hover:bg-[#EFEEEA]">איפוס מיקומים</button>
+                    <button onclick="createNewNoteDirectFirebase()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all font-medium">+ פתק חדש</button>
+                </div>
+            </div>
+            
+            <div id="notes-grid" onclick="closeAllColorMenus()" class="min-h-[600px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-hidden">
+                <div id="guide-line-v" class="guide-line-vertical hidden"></div>
+                <div id="guide-line-h" class="guide-line-horizontal hidden"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- UNIFIED ARTICLE & ANALYSIS MODAL -->
+    <div id="article-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+        <div class="notion-card bg-white max-w-3xl w-full p-6 relative shadow-2xl my-8 max-h-[90vh] overflow-y-auto space-y-5">
+            <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-3">
+                <h3 id="article-modal-title" class="text-base font-bold text-[#37352F]">הוספת מאמר וניתוח חדש</h3>
+                <button onclick="closeArticleModal()" class="text-slate-400 hover:text-slate-700 text-sm p-1">✕</button>
+            </div>
+
+            <form onsubmit="handleArticleSubmit(event)" class="space-y-5">
+                <input type="hidden" id="art-edit-id">
+
+                <div class="bg-[#EFEEEA]/30 p-4 rounded-lg border border-[#E9E9E7] space-y-3">
+                    <h4 class="text-xs font-bold text-[#37352F]">📌 פרטי המאמר והסטטוס</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">כותרת המאמר *</label>
+                            <input type="text" id="art-title" required placeholder="כותרת המאמר" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">שיוך לקורס *</label>
+                            <select id="art-course" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">סטטוס סיכום</label>
+                            <select id="art-status" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F] bg-white">
+                                <option value="not_started">טרם סוכם</option>
+                                <option value="in_progress">בתהליך</option>
+                                <option value="completed">סוכם</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">מחברים</label>
+                            <input type="text" id="art-authors" placeholder="מחברים" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">שנת פרסום</label>
+                            <input type="text" id="art-year" placeholder="2024" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#37352F] mb-1">קישור ל-PDF / Drive</label>
+                            <input type="url" id="art-link" placeholder="https://..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-1">
+                    <h4 class="text-xs font-bold text-[#37352F] border-b border-[#E9E9E7] pb-2">🔍 ניתוח המאמר (5 השלבים המובנים)</h4>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-[#37352F] mb-1">1. שאלת המחקר והשערות</label>
+                            <textarea id="art-rq" rows="3" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#37352F] mb-1">2. מתודולוגיה, מדגם וכלים</label>
+                            <textarea id="art-method" rows="3" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#37352F] mb-1">3. ממצאים מרכזיים ותוצאות</label>
+                            <textarea id="art-findings" rows="3" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#37352F] mb-1">4. דיון, מגבלות וביקורת</label>
+                            <textarea id="art-critique" rows="3" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#37352F] mb-1">5. זיקה למחקר שלי / ציטוטים וסיכום אישי</label>
+                        <textarea id="art-takeaways" rows="2.5" class="w-full p-2 text-xs border border-[#E9E9E7] rounded focus:outline-none focus:border-[#37352F]"></textarea>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-[#E9E9E7] flex justify-end gap-2">
+                    <button type="button" onclick="closeArticleModal()" class="px-4 py-2 bg-[#EFEEEA] hover:bg-[#E2E1DC] text-xs font-medium rounded text-[#37352F]">ביטול</button>
+                    <button type="submit" class="px-5 py-2 bg-[#37352F] hover:bg-black text-white text-xs font-bold rounded shadow-sm transition-all">💾 שמירת מאמר וניתוח</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT GLOSSARY TERM -->
+    <div id="glossary-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-lg w-full p-5 relative shadow-xl max-h-[90vh] overflow-y-auto space-y-3">
+            <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-2">
+                <h3 id="glossary-modal-title" class="text-sm font-bold text-[#37352F]">הוספת מושג חדש</h3>
+                <button onclick="closeGlossaryModal()" class="text-slate-400 hover:text-slate-700 text-xs">✕</button>
+            </div>
+            <input type="hidden" id="glossary-edit-id">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">שם המושג (עברית) *</label>
+                    <input type="text" id="glossary-term-he" required placeholder="למשל: תפיסה מרחבית" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">מונח בלועזית / אנגלית</label>
+                    <input type="text" id="glossary-term-en" placeholder="Spatial Perception" class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 bg-[#EFEEEA]/30 p-2.5 rounded border border-[#E9E9E7]">
+                <div>
+                    <label class="block text-[11px] font-bold text-[#37352F] mb-1">🎓 שיוך לקורס (אופציונלי)</label>
+                    <select id="glossary-modal-course" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none"></select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-[#37352F] mb-1">📄 שיוך למאמר (אופציונלי)</label>
+                    <select id="glossary-modal-article" class="w-full p-2 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none"></select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-[#37352F] mb-1">הגדרה / הסבר תמציתי *</label>
+                <textarea id="glossary-definition" rows="3" required placeholder="הגדירי את המושג בקצרה..." class="w-full p-2 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]"></textarea>
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2 border-t border-[#E9E9E7]">
+                <button type="button" onclick="closeGlossaryModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                <button type="button" onclick="saveGlossaryTermFirebase()" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded font-bold">שמירה</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD COURSE -->
+    <div id="add-course-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-md w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 id="course-modal-title" class="text-sm font-bold text-[#37352F] mb-3">פרטי קורס</h3>
+            <form onsubmit="handleCourseSubmit(event)" class="space-y-3">
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">שם הקורס *</label>
+                        <input type="text" id="course-name" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-[#37352F] mb-1">קוד</label>
+                        <input type="text" id="course-code" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Moodle</label>
+                    <input type="url" id="course-moodle" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Docs</label>
+                    <input type="url" id="course-docs" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">קישור Drive</label>
+                    <input type="url" id="course-drive" class="w-full p-2 border border-[#E9E9E7] rounded text-xs font-mono">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeAddCourseModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                    <button type="submit" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">שמירה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD TASK -->
+    <div id="add-task-modal" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center hidden p-4">
+        <div class="notion-card bg-white max-w-sm w-full p-5 relative shadow-xl">
+            <h3 class="text-sm font-bold text-[#37352F] mb-3">הוספת משימה לקורס</h3>
+            <form onsubmit="handleAddNewTaskSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">תיאור המשימה *</label>
+                    <input type="text" id="task-modal-text" required class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-[#37352F] mb-1">מועד יעד</label>
+                    <input type="date" id="task-modal-date" class="w-full p-2 border border-[#E9E9E7] rounded text-xs">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeAddTaskModal()" class="px-3 py-1 bg-[#EFEEEA] text-xs rounded">ביטול</button>
+                    <button type="submit" class="px-3 py-1 bg-[#37352F] text-white text-xs rounded">הוספה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT & FIREBASE INTEGRATION -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, update, push, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPGqqiNBEAb1x082bfPUR8mzsks71wKcU",
+            authDomain: "academic-tasks-4b84c.firebaseapp.com",
+            databaseURL: "https://academic-tasks-4b84c-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "academic-tasks-4b84c",
+            storageBucket: "academic-tasks-4b84c.firebasestorage.app",
+            messagingSenderId: "790453742502",
+            appId: "1:790453742502:web:266c824d72762fc6cf7d67"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let loggedInUser = localStorage.getItem('dashboard_user') || null;
+        let dbUnsubscribe = null;
+        let activeTargetCourseIdForTask = null;
+        let activeEditingCourseId = null;
+        let noteZIndexCounter = 10;
+
+        let localState = {
+            pinnedNote: '',
+            courses: {},
+            articles: {},
+            notes: {},
+            glossary: [],
+            routine: [
+                { id: 'r1', text: 'סנכרון סיכומים וטיוטות ל-Docs ול-Drive', checked: false },
+                { id: 'r2', text: 'קליטת מטלות וחובות חדשות ללוח', checked: false }
+            ],
+            hobbies: [
+                { id: 'h1', name: 'הליכה 🏃‍♀️', days: [false, false, false, false, false, false, false] },
+                { id: 'h2', name: 'קריאת ספר 📖', days: [false, false, false, false, false, false, false] }
+            ],
+            telegram: { token: '', chatId: '' }
+        };
+
+        let selectedGlossaryCourse = "ALL";
+        let selectedGlossaryArticle = "ALL";
+
+        const colorOptions = [
+            { name: 'צהוב', code: '#FEF9C3' },
+            { name: 'ירוק', code: '#DCFCE7' },
+            { name: 'כחול', code: '#E0F2FE' },
+            { name: 'ורוד', code: '#FCE7F3' },
+            { name: 'כתום', code: '#FED7AA' },
+            { name: 'לבן', code: '#FFFFFF' }
+        ];
+
+        function checkAuthSession() {
+            const overlay = document.getElementById('login-overlay');
+            const badge = document.getElementById('sync-status-badge');
+            const nameEl = document.getElementById('user-display-name');
+
+            if (loggedInUser === 'helen') {
+                overlay.classList.add('hidden');
+                nameEl.innerText = 'helen';
+                badge.innerText = 'מחובר (helen)';
+                badge.className = 'px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold';
+                connectUserDatabase();
+            } else {
+                overlay.classList.remove('hidden');
+                badge.innerText = 'לא מחובר';
+                badge.className = 'px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold';
+            }
+        }
+
+        window.handleCustomLogin = function(e) {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value.trim();
+            const err = document.getElementById('login-error');
+
+            if (u === 'helen' && p === '1234') {
+                err.classList.add('hidden');
+                localStorage.setItem('dashboard_user', 'helen');
+                loggedInUser = 'helen';
+                checkAuthSession();
+            } else {
+                err.classList.remove('hidden');
+            }
+        };
+
+        window.logoutCustom = function() {
+            if (confirm('להתנתק מהמערכת?')) {
+                localStorage.removeItem('dashboard_user');
+                loggedInUser = null;
+                checkAuthSession();
+            }
+        };
+
+        function connectUserDatabase() {
+            if (!loggedInUser) return;
+            const userDbRef = ref(db, `dashboard/${loggedInUser}`);
+            if (dbUnsubscribe) dbUnsubscribe();
+
+            dbUnsubscribe = onValue(userDbRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    localState = data;
+                    if (!localState.glossary) localState.glossary = [];
+                    if (!localState.articles) localState.articles = {};
+                    if (!localState.courses) localState.courses = {};
+                    if (!localState.notes) localState.notes = {};
+                    if (!localState.routine) localState.routine = [];
+                    if (!localState.hobbies) localState.hobbies = [];
+                    if (!localState.telegram) localState.telegram = { token: '', chatId: '' };
+                } else {
+                    set(userDbRef, localState);
+                }
+                renderAllViews();
+                loadTelegramConfig();
+            });
+        }
+
+        function getUserPath(subPath = '') {
+            if (!loggedInUser) return null;
+            return `dashboard/${loggedInUser}${subPath ? '/' + subPath : ''}`;
+        }
+
+        function debounce(func, delay = 500) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), delay);
+            };
+        }
+
+        function renderAllViews() {
+            renderPinnedNote();
+            renderCoursesBoard();
+            renderSemesterCoursesSummary();
+            renderUnifiedFocusTasks();
+            renderRoutineChecklist();
+            renderHobbiesTracker();
+            updateArticleCourseSelect();
+            renderArticlesView();
+            renderGlossaryView();
+            renderStickyNotesCanvas();
+        }
+
+        // --- ENHANCED NOTES CANVAS WITH DROPDOWN COLOR MENU & SEPARATE RESIZE / DRAG ---
+        function renderStickyNotesCanvas() {
+            const grid = document.getElementById('notes-grid');
+            if (!grid) return;
+            
+            grid.innerHTML = `
+                <div id="guide-line-v" class="guide-line-vertical hidden"></div>
+                <div id="guide-line-h" class="guide-line-horizontal hidden"></div>
+            `;
+
+            Object.keys(localState.notes || {}).forEach(noteId => {
+                const note = localState.notes[noteId];
+                const card = document.createElement('div');
+                card.className = 'draggable-note notion-card p-3 flex flex-col justify-between rounded-lg border shadow-sm transition-shadow';
+                card.style.transform = `translate3d(${note.x || 20}px, ${note.y || 20}px, 0)`;
+                card.style.width = `${note.width || 230}px`;
+                card.style.height = `${note.height || 170}px`;
+                card.style.backgroundColor = note.color || '#FEF9C3';
+                card.style.borderColor = 'rgba(0,0,0,0.08)';
+
+                card.innerHTML = `
+                    <div class="note-toolbar flex items-center justify-between pb-1.5 mb-1.5 border-b border-black/10 select-none relative">
+                        <div class="relative">
+                            <button onclick="toggleColorPickerMenu('${noteId}', event)" title="שינוי צבע" class="text-slate-600 hover:text-black text-xs font-bold px-1 py-0.5 rounded hover:bg-black/5 flex items-center gap-1">
+                                🎨 <span>צבע</span>
+                            </button>
+                            <div id="color-menu-${noteId}" class="hidden absolute right-0 top-6 bg-white border border-[#E9E9E7] shadow-lg rounded-lg p-1.5 z-50 w-28 text-xs space-y-1">
+                                ${colorOptions.map(opt => `
+                                    <button onclick="changeNoteColorFirebase('${noteId}', '${opt.code}', event)" class="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-[#EFEEEA] text-right transition-colors">
+                                        <span class="w-3.5 h-3.5 rounded-full border border-black/20" style="background-color: ${opt.code}"></span>
+                                        <span class="text-[11px] font-medium text-[#37352F]">${opt.name}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="deleteNoteFirebase('${noteId}')" title="מחיקה" class="text-slate-400 hover:text-red-500 text-xs">✕</button>
+                        </div>
+                    </div>
+                    
+                    <div contenteditable="true" 
+                         id="note-editable-${noteId}"
+                         oninput="debouncedSaveNoteContent('${noteId}')"
+                         onpaste="handleNotePaste('${noteId}', event)"
+                         class="note-content flex-1 outline-none text-xs text-[#37352F] overflow-y-auto leading-relaxed p-1 focus:bg-white/40 rounded transition-colors">
+                        ${note.content || note.text || ''}
+                    </div>
+
+                    <div class="note-resize-handle" title="לחיצה וגרירה לשינוי גודל"></div>
+                `;
+
+                grid.appendChild(card);
+                makeNoteDraggableAndResizableTouch(card, noteId);
+            });
+        }
+
+        window.toggleColorPickerMenu = function(noteId, event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById(`color-menu-${noteId}`);
+            if (!menu) return;
+            
+            document.querySelectorAll('[id^="color-menu-"]').forEach(el => {
+                if (el !== menu) el.classList.add('hidden');
+            });
+            menu.classList.toggle('hidden');
+        };
+
+        window.closeAllColorMenus = function() {
+            document.querySelectorAll('[id^="color-menu-"]').forEach(el => el.classList.add('hidden'));
+        };
+
+        window.createNewNoteDirectFirebase = function() {
+            if (!loggedInUser) return;
+            const newKey = push(ref(db, `${getUserPath()}/notes`)).key;
+            const existingCount = Object.keys(localState.notes || {}).length;
+            const x = 30 + (existingCount % 5) * 45;
+            const y = 30 + (existingCount % 5) * 35;
+            
+            set(ref(db, `${getUserPath()}/notes/${newKey}`), {
+                content: 'הקלידי כאן...',
+                x: x,
+                y: y,
+                width: 230,
+                height: 170,
+                color: '#FEF9C3'
+            }).then(() => {
+                setTimeout(() => {
+                    const el = document.getElementById(`note-editable-${newKey}`);
+                    if (el) el.focus();
+                }, 100);
+            });
+        };
+
+        window.changeNoteColorFirebase = function(noteId, color, event) {
+            if (event) event.stopPropagation();
+            if (!loggedInUser) return;
+            update(ref(db, `${getUserPath()}/notes/${noteId}`), { color });
+            closeAllColorMenus();
+        };
+
+        const debouncedSaveNoteContent = debounce((noteId) => {
+            if (!loggedInUser) return;
+            const el = document.getElementById(`note-editable-${noteId}`);
+            if (el) {
+                update(ref(db, `${getUserPath()}/notes/${noteId}`), { content: el.innerHTML });
+            }
+        }, 600);
+        window.debouncedSaveNoteContent = debouncedSaveNoteContent;
+
+        window.handleNotePaste = function(noteId, event) {
+            const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
+            if (!items) return;
+
+            for (let item of items) {
+                if (item.type.indexOf('image') === 0) {
+                    event.preventDefault();
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        insertImageToNote(noteId, e.target.result);
+                    };
+                    reader.readAsDataURL(blob);
+                    return;
+                }
+            }
+        };
+
+        function insertImageToNote(noteId, dataUrl) {
+            const el = document.getElementById(`note-editable-${noteId}`);
+            if (!el) return;
+            const imgHtml = `<img src="${dataUrl}" style="max-width:100%; width:180px; height:auto; resize:both; overflow:auto; display:inline-block; border-radius:4px; margin:4px 0;" /><br>`;
+            document.execCommand('insertHTML', false, imgHtml);
+            debouncedSaveNoteContent(noteId);
+        }
+
+        function makeNoteDraggableAndResizableTouch(elmnt, noteId) {
+            let posX = localState.notes[noteId]?.x || 20;
+            let posY = localState.notes[noteId]?.y || 20;
+            let width = localState.notes[noteId]?.width || 230;
+            let height = localState.notes[noteId]?.height || 170;
+
+            const guideV = document.getElementById('guide-line-v');
+            const guideH = document.getElementById('guide-line-h');
+            const resizeHandle = elmnt.querySelector('.note-resize-handle');
+
+            const getCoords = e => e.touches && e.touches.length > 0 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+
+            const hideGuides = () => {
+                if (guideV) guideV.classList.add('hidden');
+                if (guideH) guideH.classList.add('hidden');
+            };
+
+            const checkSnapLines = (currX, currY, currW, currH) => {
+                let snapX = currX, snapY = currY;
+                let showV = false, showH = false, lineVPos = 0, lineHPos = 0;
+                const TH = 6;
+
+                const cL = currX, cR = currX + currW, cCX = currX + currW / 2;
+                const cT = currY, cB = currY + currH, cCY = currY + currH / 2;
+
+                Object.keys(localState.notes || {}).forEach(otherId => {
+                    if (otherId === noteId) return;
+                    const o = localState.notes[otherId];
+                    const oW = o.width || 230, oH = o.height || 170;
+                    const oL = o.x || 20, oR = oL + oW, oCX = oL + oW / 2;
+                    const oT = o.y || 20, oB = oT + oH, oCY = oT + oH / 2;
+
+                    if (Math.abs(cL - oL) < TH) { snapX = oL; showV = true; lineVPos = oL; }
+                    else if (Math.abs(cR - oR) < TH) { snapX = oR - currW; showV = true; lineVPos = oR; }
+                    else if (Math.abs(cCX - oCX) < TH) { snapX = oCX - currW / 2; showV = true; lineVPos = oCX; }
+                    else if (Math.abs(cL - oR) < TH) { snapX = oR; showV = true; lineVPos = oR; }
+                    else if (Math.abs(cR - oL) < TH) { snapX = oL - currW; showV = true; lineVPos = oL; }
+
+                    if (Math.abs(cT - oT) < TH) { snapY = oT; showH = true; lineHPos = oT; }
+                    else if (Math.abs(cB - oB) < TH) { snapY = oB - currH; showH = true; lineHPos = oB; }
+                    else if (Math.abs(cCY - oCY) < TH) { snapY = oCY - currH / 2; showH = true; lineHPos = oCY; }
+                    else if (Math.abs(cT - oB) < TH) { snapY = oB; showH = true; lineHPos = oB; }
+                    else if (Math.abs(cB - oT) < TH) { snapY = oT - currH; showH = true; lineHPos = oT; }
+                });
+
+                if (showV && guideV) {
+                    guideV.style.left = `${lineVPos}px`;
+                    guideV.classList.remove('hidden');
+                } else if (guideV) guideV.classList.add('hidden');
+
+                if (showH && guideH) {
+                    guideH.style.top = `${lineHPos}px`;
+                    guideH.classList.remove('hidden');
+                } else if (guideH) guideH.classList.add('hidden');
+
+                return { snapX, snapY };
+            };
+
+            // --- SEPARATE RESIZE EVENT HANDLER ---
+            const onStartResize = (e) => {
+                e.stopPropagation();
+                if (e.cancelable) e.preventDefault();
+                
+                let startC = getCoords(e);
+                let startW = width;
+                let startH = height;
+
+                const onMoveResize = (me) => {
+                    if (me.cancelable) me.preventDefault();
+                    const curC = getCoords(me);
+                    // In RTL, bottom-left resize handle: moving left expands width
+                    width = Math.max(180, startW - (curC.x - startC.x));
+                    height = Math.max(130, startH + (curC.y - startC.y));
+                    
+                    elmnt.style.width = `${width}px`;
+                    elmnt.style.height = `${height}px`;
+                };
+
+                const onEndResize = () => {
+                    document.removeEventListener('mousemove', onMoveResize);
+                    document.removeEventListener('mouseup', onEndResize);
+                    document.removeEventListener('touchmove', onMoveResize);
+                    document.removeEventListener('touchend', onEndResize);
+                    if (loggedInUser) {
+                        update(ref(db, `${getUserPath()}/notes/${noteId}`), { width, height });
+                    }
+                };
+
+                document.addEventListener('mousemove', onMoveResize, { passive: false });
+                document.addEventListener('mouseup', onEndResize);
+                document.addEventListener('touchmove', onMoveResize, { passive: false });
+                document.addEventListener('touchend', onEndResize);
+            };
+
+            if (resizeHandle) {
+                resizeHandle.addEventListener('mousedown', onStartResize);
+                resizeHandle.addEventListener('touchstart', onStartResize, { passive: false });
+            }
+
+            // --- SEPARATE DRAG EVENT HANDLER ---
+            const onStartDrag = (e) => {
+                const target = e.target;
+                if (target.closest('button') || target.closest('input') || target.isContentEditable || target.closest('[contenteditable="true"]') || target.closest('.note-resize-handle') || target.closest('[id^="color-menu-"]')) {
+                    return;
+                }
+
+                closeAllColorMenus();
+                const c = getCoords(e);
+                let startX = c.x;
+                let startY = c.y;
+
+                noteZIndexCounter++;
+                elmnt.style.zIndex = noteZIndexCounter;
+
+                const onMoveDrag = (me) => {
+                    if (me.cancelable) me.preventDefault();
+                    const mc = getCoords(me);
+                    const dx = mc.x - startX;
+                    const dy = mc.y - startY;
+
+                    let targetX = posX + dx;
+                    let targetY = posY + dy;
+
+                    const snapRes = checkSnapLines(targetX, targetY, width, height);
+                    posX = snapRes.snapX;
+                    posY = snapRes.snapY;
+
+                    startX = mc.x;
+                    startY = mc.y;
+
+                    elmnt.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
+                };
+
+                const onEndDrag = () => {
+                    document.removeEventListener('mousemove', onMoveDrag);
+                    document.removeEventListener('mouseup', onEndDrag);
+                    document.removeEventListener('touchmove', onMoveDrag);
+                    document.removeEventListener('touchend', onEndDrag);
+                    hideGuides();
+                    if (loggedInUser) {
+                        update(ref(db, `${getUserPath()}/notes/${noteId}`), { x: posX, y: posY });
+                    }
+                };
+
+                document.addEventListener('mousemove', onMoveDrag, { passive: false });
+                document.addEventListener('mouseup', onEndDrag);
+                document.addEventListener('touchmove', onMoveDrag, { passive: false });
+                document.addEventListener('touchend', onEndDrag);
+            };
+
+            elmnt.addEventListener('mousedown', onStartDrag);
+            elmnt.addEventListener('touchstart', onStartDrag, { passive: false });
+        }
+
+        window.deleteNoteFirebase = function(noteId) {
+            if (loggedInUser && confirm('למחוק פתק זה?')) remove(ref(db, `${getUserPath()}/notes/${noteId}`));
+        };
+
+        window.resetNotesPositionFirebase = function() {
+            if (!loggedInUser) return;
+            Object.keys(localState.notes || {}).forEach((id, idx) => {
+                localState.notes[id].x = 25 + (idx * 25);
+                localState.notes[id].y = 25 + (idx * 25);
+            });
+            update(ref(db, getUserPath()), { notes: localState.notes });
+        };
+
+        // --- COMPACT GLOSSARY LOGIC ---
+        function updateGlossaryFilterDropdowns() {
+            const courseSelect = document.getElementById('glossary-filter-course');
+            const articleSelect = document.getElementById('glossary-filter-article');
+
+            if (courseSelect) {
+                const current = selectedGlossaryCourse;
+                let html = '<option value="ALL">כל הקורסים</option>';
+                Object.keys(localState.courses || {}).forEach(cId => {
+                    html += `<option value="${cId}" ${cId === current ? 'selected' : ''}>${escapeHtml(localState.courses[cId].title)}</option>`;
+                });
+                courseSelect.innerHTML = html;
+            }
+
+            if (articleSelect) {
+                const current = selectedGlossaryArticle;
+                let html = '<option value="ALL">כל המאמרים</option>';
+                Object.keys(localState.articles || {}).forEach(aId => {
+                    html += `<option value="${aId}" ${aId === current ? 'selected' : ''}>${escapeHtml(localState.articles[aId].title)}</option>`;
+                });
+                articleSelect.innerHTML = html;
+            }
+        }
+
+        window.setGlossaryCourseFilter = function(val) { selectedGlossaryCourse = val; renderGlossaryView(); };
+        window.setGlossaryArticleFilter = function(val) { selectedGlossaryArticle = val; renderGlossaryView(); };
+
+        function getFilteredGlossary() {
+            const q = (document.getElementById('glossary-search-input')?.value || '').toLowerCase().trim();
+            return (localState.glossary || []).filter(item => {
+                const matchCourse = selectedGlossaryCourse === 'ALL' || item.courseId === selectedGlossaryCourse;
+                const matchArticle = selectedGlossaryArticle === 'ALL' || item.articleId === selectedGlossaryArticle;
+                const matchQuery = !q || 
+                    (item.termHe && item.termHe.toLowerCase().includes(q)) || 
+                    (item.termEn && item.termEn.toLowerCase().includes(q)) || 
+                    (item.definition && item.definition.toLowerCase().includes(q));
+                return matchCourse && matchArticle && matchQuery;
+            });
+        }
+
+        function renderGlossaryView() {
+            updateGlossaryFilterDropdowns();
+            const main = document.getElementById('glossary-main-content');
+            if (!main) return;
+            const filtered = getFilteredGlossary();
+
+            if (filtered.length === 0) {
+                main.innerHTML = `<div class="notion-card p-8 text-center text-xs text-[#787774]">לא נמצאו מושגים התואמים את הסינון שנבחר.</div>`;
+                return;
+            }
+
+            let html = `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">`;
+            filtered.forEach(c => {
+                const linkedCourse = localState.courses[c.courseId];
+                const linkedArticle = localState.articles[c.articleId];
+
+                html += `
+                    <div class="notion-card p-3 flex flex-col justify-between space-y-2 hover:border-[#37352F]/40 transition-all">
+                        <div>
+                            <div class="flex items-start justify-between gap-1 mb-1">
+                                <h4 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline" onclick="openGlossaryModal('${c.id}')">${escapeHtml(c.termHe)}</h4>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="openGlossaryModal('${c.id}')" title="עריכת מושג" class="text-slate-400 hover:text-slate-700 text-[11px] p-0.5">✏️</button>
+                                    <button onclick="deleteGlossaryTermFirebase('${c.id}')" title="מחיקת מושג" class="text-slate-300 hover:text-red-500 text-[11px] p-0.5">✕</button>
+                                </div>
+                            </div>
+                            ${c.termEn ? `<p class="text-[10px] text-[#787774] italic -mt-0.5 mb-1 font-mono">${escapeHtml(c.termEn)}</p>` : ''}
+                            <p class="text-[11px] text-[#37352F] leading-relaxed">${escapeHtml(c.definition)}</p>
+                        </div>
+                        
+                        <div class="pt-2 border-t border-[#E9E9E7]/80 flex flex-wrap gap-1 text-[9px]">
+                            ${linkedCourse ? `<span class="bg-[#EFEEEA] text-[#787774] px-1.5 py-0.5 rounded font-medium truncate max-w-[130px]">🎓 ${escapeHtml(linkedCourse.title)}</span>` : ''}
+                            ${linkedArticle ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-medium truncate max-w-[130px]">📄 ${escapeHtml(linkedArticle.title)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            main.innerHTML = html;
+        }
+
+        window.openGlossaryModal = function(editId = null) {
+            const courseSelect = document.getElementById('glossary-modal-course');
+            const articleSelect = document.getElementById('glossary-modal-article');
+            const modalTitle = document.getElementById('glossary-modal-title');
+
+            courseSelect.innerHTML = '<option value="">-- ללא שיוך לקורס --</option>' + 
+                Object.keys(localState.courses || {}).map(cId => `<option value="${cId}">${escapeHtml(localState.courses[cId].title)}</option>`).join('');
+
+            articleSelect.innerHTML = '<option value="">-- ללא שיוך למאמר --</option>' + 
+                Object.keys(localState.articles || {}).map(aId => `<option value="${aId}">${escapeHtml(localState.articles[aId].title)}</option>`).join('');
+
+            if (editId && (localState.glossary || []).find(g => g.id === editId)) {
+                const item = localState.glossary.find(g => g.id === editId);
+                modalTitle.innerText = `עריכת מושג: ${item.termHe}`;
+                document.getElementById('glossary-edit-id').value = editId;
+                document.getElementById('glossary-term-he').value = item.termHe || '';
+                document.getElementById('glossary-term-en').value = item.termEn || '';
+                document.getElementById('glossary-definition').value = item.definition || '';
+                courseSelect.value = item.courseId || '';
+                articleSelect.value = item.articleId || '';
+            } else {
+                modalTitle.innerText = 'הוספת מושג חדש';
+                document.getElementById('glossary-edit-id').value = '';
+                document.getElementById('glossary-term-he').value = '';
+                document.getElementById('glossary-term-en').value = '';
+                document.getElementById('glossary-definition').value = '';
+                courseSelect.value = '';
+                articleSelect.value = '';
+            }
+
+            document.getElementById('glossary-modal').classList.remove('hidden');
+        };
+
+        window.closeGlossaryModal = function() { document.getElementById('glossary-modal').classList.add('hidden'); };
+
+        window.saveGlossaryTermFirebase = function() {
+            const editId = document.getElementById('glossary-edit-id').value;
+            const termHe = document.getElementById('glossary-term-he').value.trim();
+            const termEn = document.getElementById('glossary-term-en').value.trim();
+            const definition = document.getElementById('glossary-definition').value.trim();
+            const courseId = document.getElementById('glossary-modal-course').value;
+            const articleId = document.getElementById('glossary-modal-article').value;
+
+            if (!termHe || !definition || !loggedInUser) {
+                alert('אנא הזיני שם מושג והגדרה.');
+                return;
+            }
+
+            let list = [...(localState.glossary || [])];
+
+            if (editId) {
+                const idx = list.findIndex(g => g.id === editId);
+                if (idx !== -1) {
+                    list[idx] = { id: editId, termHe, termEn, definition, courseId, articleId };
+                }
+            } else {
+                const newId = 'c_' + Math.random().toString(36).substr(2, 9);
+                list.push({ id: newId, termHe, termEn, definition, courseId, articleId });
+            }
+
+            update(ref(db, `dashboard/${loggedInUser}`), { glossary: list });
+            closeGlossaryModal();
+        };
+
+        window.deleteGlossaryTermFirebase = function(id) {
+            if (loggedInUser && confirm('למחוק מושג זה?')) {
+                const updated = (localState.glossary || []).filter(c => c.id !== id);
+                update(ref(db, `dashboard/${loggedInUser}`), { glossary: updated });
+            }
+        };
+
+        // --- ARTICLES WITH DYNAMIC STATUS & EXTERNAL SCROLL SUMMARY ---
+        function updateArticleCourseSelect() {
+            const select = document.getElementById('art-course');
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">-- בחרי קורס משויך --</option>' + 
+                Object.keys(localState.courses || {}).map(cId => `<option value="${cId}" ${cId === currentVal ? 'selected' : ''}>${escapeHtml(localState.courses[cId].title)}</option>`).join('');
+        }
+
+        window.openArticleModal = function(editId = null) {
+            updateArticleCourseSelect();
+            const modalTitle = document.getElementById('article-modal-title');
+            
+            if (editId && localState.articles[editId]) {
+                const art = localState.articles[editId];
+                modalTitle.innerText = `עריכת מאמר וניתוח: ${art.title}`;
+                document.getElementById('art-edit-id').value = editId;
+                document.getElementById('art-title').value = art.title || '';
+                document.getElementById('art-course').value = art.courseId || '';
+                document.getElementById('art-status').value = art.status || 'not_started';
+                document.getElementById('art-authors').value = art.authors || '';
+                document.getElementById('art-year').value = art.year || '';
+                document.getElementById('art-link').value = art.link || '';
+
+                const an = art.analysis || {};
+                document.getElementById('art-rq').value = an.rq || '';
+                document.getElementById('art-method').value = an.method || '';
+                document.getElementById('art-findings').value = an.findings || '';
+                document.getElementById('art-critique').value = an.critique || '';
+                document.getElementById('art-takeaways').value = an.takeaways || '';
+            } else {
+                modalTitle.innerText = 'הוספת מאמר וניתוח חדש';
+                document.getElementById('art-edit-id').value = '';
+                document.getElementById('art-title').value = '';
+                document.getElementById('art-course').value = '';
+                document.getElementById('art-status').value = 'not_started';
+                document.getElementById('art-authors').value = '';
+                document.getElementById('art-year').value = '';
+                document.getElementById('art-link').value = '';
+                document.getElementById('art-rq').value = '';
+                document.getElementById('art-method').value = '';
+                document.getElementById('art-findings').value = '';
+                document.getElementById('art-critique').value = '';
+                document.getElementById('art-takeaways').value = '';
+            }
+
+            document.getElementById('article-modal').classList.remove('hidden');
+        };
+
+        window.closeArticleModal = function() { document.getElementById('article-modal').classList.add('hidden'); };
+
+        window.handleArticleSubmit = function(e) {
+            e.preventDefault();
+            if (!loggedInUser) return;
+
+            const editId = document.getElementById('art-edit-id').value;
+            const title = document.getElementById('art-title').value.trim();
+            const courseId = document.getElementById('art-course').value;
+            const status = document.getElementById('art-status').value || 'not_started';
+            const authors = document.getElementById('art-authors').value.trim();
+            const year = document.getElementById('art-year').value.trim();
+            const link = document.getElementById('art-link').value.trim();
+
+            const analysis = {
+                rq: document.getElementById('art-rq').value.trim(),
+                method: document.getElementById('art-method').value.trim(),
+                findings: document.getElementById('art-findings').value.trim(),
+                critique: document.getElementById('art-critique').value.trim(),
+                takeaways: document.getElementById('art-takeaways').value.trim()
+            };
+
+            if (!title || !courseId) {
+                alert('אנא הזיני כותרת מאמר ובחרי קורס.');
+                return;
+            }
+
+            const articleObj = { title, courseId, status, authors, year, link, analysis };
+
+            if (editId) {
+                update(ref(db, `${getUserPath()}/articles/${editId}`), articleObj);
+            } else {
+                const newKey = push(ref(db, `${getUserPath()}/articles`)).key;
+                set(ref(db, `${getUserPath()}/articles/${newKey}`), articleObj);
+            }
+
+            closeArticleModal();
+        };
+
+        window.updateArticleStatusFirebase = function(artId, newStatus) {
+            if (!loggedInUser) return;
+            update(ref(db, `${getUserPath()}/articles/${artId}`), { status: newStatus });
+        };
+
+        function renderArticlesView() {
+            const grid = document.getElementById('articles-grid');
+            const filterEl = document.getElementById('articles-course-filter');
+            if (!grid) return;
+
+            const selectedFilter = filterEl ? filterEl.value : 'ALL';
+            if (filterEl) {
+                filterEl.innerHTML = '<option value="ALL">כל הקורסים</option>';
+                Object.keys(localState.courses || {}).forEach(cId => {
+                    filterEl.innerHTML += `<option value="${cId}" ${cId === selectedFilter ? 'selected' : ''}>${escapeHtml(localState.courses[cId].title)}</option>`;
+                });
+            }
+
+            grid.innerHTML = '';
+            const articleKeys = Object.keys(localState.articles || {});
+
+            if (articleKeys.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-3 notion-card p-10 text-center space-y-3">
+                        <p class="text-sm font-bold text-[#37352F]">טרם נותחו מאמרים</p>
+                        <p class="text-xs text-[#787774]">לחצי על "+ מאמר חדש" כדי להוסיף מאמר ראשון.</p>
+                        <button onclick="openArticleModal()" class="bg-[#37352F] text-white text-xs px-4 py-2 rounded font-medium">+ הוספת מאמר</button>
+                    </div>
+                `;
+                return;
+            }
+
+            articleKeys.forEach(artId => {
+                const art = localState.articles[artId];
+                if (selectedFilter !== 'ALL' && art.courseId !== selectedFilter) return;
+
+                const courseObj = localState.courses[art.courseId] || { title: 'קורס כללי' };
+                const an = art.analysis || {};
+                const currentStatus = art.status || 'not_started';
+
+                const card = document.createElement('div');
+                card.className = 'notion-card p-4 flex flex-col justify-between space-y-3 hover:border-[#37352F]/40 transition-all max-h-[380px]';
+                card.innerHTML = `
+                    <div class="flex flex-col overflow-hidden">
+                        <div class="flex items-center justify-between mb-1.5 flex-shrink-0">
+                            <span class="text-[9px] bg-[#EFEEEA] px-1.5 py-0.5 rounded text-[#787774] font-medium truncate max-w-[130px]">${escapeHtml(courseObj.title)}</span>
+                            
+                            <select onchange="updateArticleStatusFirebase('${artId}', this.value)" class="text-[10px] font-bold px-1.5 py-0.5 rounded border focus:outline-none cursor-pointer ${
+                                currentStatus === 'completed' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                                currentStatus === 'in_progress' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+                                'bg-slate-100 text-slate-700 border-slate-200'
+                            }">
+                                <option value="not_started" ${currentStatus === 'not_started' ? 'selected' : ''}>⏳ טרם סוכם</option>
+                                <option value="in_progress" ${currentStatus === 'in_progress' ? 'selected' : ''}>🔄 בתהליך</option>
+                                <option value="completed" ${currentStatus === 'completed' ? 'selected' : ''}>✓ סוכם</option>
+                            </select>
+                        </div>
+                        <h3 class="font-bold text-xs text-[#37352F] leading-snug cursor-pointer hover:underline flex-shrink-0" onclick="openArticleModal('${artId}')">${escapeHtml(art.title)}</h3>
+                        <p class="text-[10px] text-[#787774] mt-0.5 flex-shrink-0">${escapeHtml(art.authors || 'מחברים לא צוינו')} ${art.year ? `(${escapeHtml(art.year)})` : ''}</p>
+
+                        <!-- ISOLATED SCROLLABLE SUMMARY BOX -->
+                        <div class="mt-3 pt-2 border-t border-[#E9E9E7] space-y-1.5 text-[11px] article-summary-scroll pr-1" onwheel="event.stopPropagation()">
+                            ${an.rq ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>1. שאלת מחקר:</strong> <span class="text-[#37352F]">${escapeHtml(an.rq)}</span></div>` : ''}
+                            ${an.method ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>2. מתודולוגיה:</strong> <span class="text-[#37352F]">${escapeHtml(an.method)}</span></div>` : ''}
+                            ${an.findings ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>3. ממצאים:</strong> <span class="text-[#37352F]">${escapeHtml(an.findings)}</span></div>` : ''}
+                            ${an.critique ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>4. דיון וביקורת:</strong> <span class="text-[#37352F]">${escapeHtml(an.critique)}</span></div>` : ''}
+                            ${an.takeaways ? `<div class="bg-[#EFEEEA]/40 p-2 rounded"><strong>5. זיקה אישית:</strong> <span class="text-[#37352F]">${escapeHtml(an.takeaways)}</span></div>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="pt-2.5 border-t border-[#E9E9E7] flex items-center justify-between text-[10px] flex-wrap gap-1 flex-shrink-0">
+                        <div class="flex items-center gap-1 flex-wrap">
+                            <button onclick="exportAnalysisToMarkdown('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">📄 MD</button>
+                            <button onclick="exportAnalysisToPDF('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">🖨️ PDF</button>
+                            <button onclick="copyAPACitation('${artId}')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] px-1.5 py-0.5 rounded text-[9px]">📋 APA</button>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="openArticleModal('${artId}')" class="bg-[#37352F] hover:bg-black text-white px-2 py-0.5 rounded text-[9px] font-bold">✏️ עריכה</button>
+                            <button onclick="deleteArticleFirebase('${artId}')" class="text-slate-300 hover:text-red-500 text-[10px] p-0.5">✕</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.copyAPACitation = function(artId) {
+            const art = localState.articles[artId];
+            if (!art) return;
+            const apa = `${art.authors || 'Unknown Author'} (${art.year || 'n.d.'}). ${art.title}.${art.link ? ' ' + art.link : ''}`;
+            navigator.clipboard.writeText(apa).then(() => alert(`ציטוט APA 7th הועתק ללוח:\n\n${apa}`));
+        };
+
+        window.deleteArticleFirebase = function(artId) {
+            if (loggedInUser && confirm('למחוק את המאמר וכל הניתוח שלו?')) {
+                remove(ref(db, `${getUserPath()}/articles/${artId}`));
+            }
+        };
+
+        window.exportAnalysisToMarkdown = function(artId) {
+            const art = localState.articles[artId];
+            if (!art) return;
+            const an = art.analysis || {};
+            const title = art.title || 'ניתוח מאמר';
+            const md = `# ניתוח מאמר אקדמי: ${title}\n**מחברים:** ${art.authors || ''} (${art.year || ''})\n\n### 1. שאלת מחקר והשערות\n${an.rq || ''}\n\n### 2. מתודולוגיה ומדגם\n${an.method || ''}\n\n### 3. ממצאים ותוצאות\n${an.findings || ''}\n\n### 4. דיון וביקורת\n${an.critique || ''}\n\n### 5. זיקה אישית\n${an.takeaways || ''}`;
+            const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Analysis_${title.replace(/\s+/g, '_')}.md`; a.click();
+        };
+
+        window.exportAnalysisToPDF = function(artId) {
+            const art = localState.articles[artId];
+            if (!art) return;
+            const an = art.analysis || {};
+            const courseObj = localState.courses[art.courseId] || { title: 'קורס כללי' };
+
+            const container = document.createElement('div');
+            container.style.direction = 'rtl';
+            container.style.padding = '24px';
+            container.style.fontFamily = 'Heebo, sans-serif';
+            container.innerHTML = `
+                <h1 style="font-size:18px; font-weight:bold; color:#37352F;">ניתוח מאמר: ${escapeHtml(art.title)}</h1>
+                <p style="font-size:12px; color:#787774; margin-top:4px;"><b>מחברים:</b> ${escapeHtml(art.authors || 'לא צוינו')} | <b>שנה:</b> ${escapeHtml(art.year || 'לא צוינה')} | <b>קורס:</b> ${escapeHtml(courseObj.title)}</p>
+                <hr style="margin: 16px 0; border: 0; border-top: 1px solid #E9E9E7;"/>
+                <div style="font-size:12px; line-height:1.6; color:#37352F;">
+                    <h3 style="font-weight:bold; margin-top:12px;">1. שאלת המחקר והשערות</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.rq || 'אין פירוט')}</p>
+                    <h3 style="font-weight:bold; margin-top:12px;">2. מתודולוגיה, מדגם וכלים</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.method || 'אין פירוט')}</p>
+                    <h3 style="font-weight:bold; margin-top:12px;">3. ממצאים מרכזיים ותוצאות</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.findings || 'אין פירוט')}</p>
+                    <h3 style="font-weight:bold; margin-top:12px;">4. דיון, מגבלות וביקורת</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.critique || 'אין פירוט')}</p>
+                    <h3 style="font-weight:bold; margin-top:12px;">5. זיקה למחקר שלי</h3>
+                    <p style="margin-top:4px;">${escapeHtml(an.takeaways || 'אין פירוט')}</p>
+                </div>
+            `;
+            document.body.appendChild(container);
+            if (typeof html2pdf !== 'undefined') {
+                html2pdf().from(container).save(`Analysis_${art.title.replace(/\s+/g, '_')}.pdf`).then(() => document.body.removeChild(container));
+            } else {
+                window.print();
+                document.body.removeChild(container);
+            }
+        };
+
+        // --- BULK ROUTINE & HOBBIES EDIT LOGIC ---
+        function renderRoutineChecklist() {
+            const list = document.getElementById('routine-checklist-list');
+            if (!list) return;
+            if (!localState.routine || localState.routine.length === 0) {
+                list.innerHTML = '<p class="text-xs text-[#787774] italic">אין סעיפי סנכרון.</p>';
+                return;
+            }
+
+            list.innerHTML = localState.routine.map((item, idx) => `
+                <div class="flex items-center justify-between p-1.5 rounded hover:bg-[#EFEEEA]/50 text-xs">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRoutineCheckFirebase(${idx}, this.checked)" class="w-3.5 h-3.5 rounded border-[#E9E9E7]">
+                        <span class="${item.checked ? 'line-through text-[#787774]' : 'text-[#37352F]'}">${escapeHtml(item.text)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.bulkEditRoutineFirebase = function() {
+            const currentText = (localState.routine || []).map(r => r.text).join('\n');
+            const newText = prompt('ערכי את כל סעיפי הסנכרון (כל סעיף בשורה חדשה):', currentText);
+            if (newText === null || !loggedInUser) return;
+
+            const lines = newText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            localState.routine = lines.map((text, i) => {
+                const existing = (localState.routine || []).find(r => r.text === text);
+                return {
+                    id: existing ? existing.id : 'r_' + Date.now() + '_' + i,
+                    text: text,
+                    checked: existing ? existing.checked : false
+                };
+            });
+            update(ref(db, getUserPath()), { routine: localState.routine });
+        };
+
+        window.toggleRoutineCheckFirebase = function(idx, checked) {
+            localState.routine[idx].checked = checked;
+            if (loggedInUser) update(ref(db, getUserPath()), { routine: localState.routine });
+        };
+
+        window.resetRoutineChecks = function() {
+            if (!localState.routine) return;
+            localState.routine.forEach(r => r.checked = false);
+            if (loggedInUser) update(ref(db, getUserPath()), { routine: localState.routine });
+        };
+
+        function renderHobbiesTracker() {
+            const list = document.getElementById('hobbies-tracker-list');
+            if (!list) return;
+
+            if (!localState.hobbies || localState.hobbies.length === 0) {
+                list.innerHTML = '<tr><td colspan="8" class="py-3 text-center text-xs text-[#787774] italic">אין הרגלים/תחביבים בלוג.</td></tr>';
+                return;
+            }
+
+            list.innerHTML = localState.hobbies.map((h, hIdx) => `
+                <tr class="hover:bg-[#EFEEEA]/30">
+                    <td class="py-2 text-xs font-medium text-[#37352F]">
+                        <span>${escapeHtml(h.name)}</span>
+                    </td>
+                    ${[0,1,2,3,4,5,6].map(d => `<td class="text-center"><input type="checkbox" ${h.days[d] ? 'checked' : ''} onchange="toggleHobbyDayFirebase(${hIdx}, ${d}, this.checked)" class="w-3.5 h-3.5 rounded border-[#E9E9E7]"></td>`).join('')}
+                </tr>
+            `).join('');
+        }
+
+        window.bulkEditHobbiesFirebase = function() {
+            const currentNames = (localState.hobbies || []).map(h => h.name).join('\n');
+            const newNames = prompt('ערכי את כל ההרגלים/תחביבים (כל הרגל בשורה חדשה):', currentNames);
+            if (newNames === null || !loggedInUser) return;
+
+            const lines = newNames.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            localState.hobbies = lines.map((name, i) => {
+                const existing = (localState.hobbies || []).find(h => h.name === name);
+                return {
+                    id: existing ? existing.id : 'h_' + Date.now() + '_' + i,
+                    name: name,
+                    days: existing ? existing.days : [false, false, false, false, false, false, false]
+                };
+            });
+            update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+        };
+
+        window.toggleHobbyDayFirebase = function(hIdx, day, checked) {
+            localState.hobbies[hIdx].days[day] = checked;
+            if (loggedInUser) update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+        };
+
+        window.resetHobbiesChecks = function() {
+            if (!localState.hobbies) return;
+            localState.hobbies.forEach(h => h.days = [false, false, false, false, false, false, false]);
+            if (loggedInUser) update(ref(db, getUserPath()), { hobbies: localState.hobbies });
+        };
+
+        // --- PINNED NOTE ---
+        function renderPinnedNote() {
+            const el = document.getElementById('pinned-note-display');
+            if (el && document.activeElement !== el) {
+                el.innerText = localState.pinnedNote || 'לחצי כאן להוספת הערה מוצמדת...';
+            }
+        }
+
+        const debouncedSavePinnedNote = debounce(() => {
+            if (!loggedInUser) return;
+            const text = document.getElementById('pinned-note-display').innerText.trim();
+            const statusEl = document.getElementById('pinned-status-text');
+            if (statusEl) statusEl.innerText = 'שומר...';
+            update(ref(db, getUserPath()), { pinnedNote: text }).then(() => {
+                if (statusEl) statusEl.innerText = 'נשמר אוטומטית ✓';
+            });
+        }, 500);
+
+        document.getElementById('pinned-note-display')?.addEventListener('input', () => {
+            const statusEl = document.getElementById('pinned-status-text');
+            if (statusEl) statusEl.innerText = 'מקליד/ה...';
+            debouncedSavePinnedNote();
+        });
+
+        // --- COURSES & TASKS ---
+        function renderCoursesBoard() {
+            const container = document.getElementById('courses-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            Object.keys(localState.courses || {}).forEach(courseId => {
+                const course = localState.courses[courseId];
+                const taskCount = course.tasks ? Object.keys(course.tasks).length : 0;
+
+                let tasksHtml = '';
+                if (course.tasks) {
+                    Object.keys(course.tasks).forEach(taskId => {
+                        const task = course.tasks[taskId];
+                        const isDone = task.status === 'completed';
+                        tasksHtml += `
+                            <div class="p-2.5 rounded border border-[#E9E9E7] bg-white flex items-center justify-between">
+                                <div class="flex items-start gap-2">
+                                    <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleTaskCheckFirebase('${courseId}', '${taskId}', this.checked)" class="mt-0.5 w-3.5 h-3.5 rounded border-[#E9E9E7]">
+                                    <div>
+                                        <p class="text-xs font-medium text-[#37352F] ${isDone ? 'line-through opacity-60' : ''}">${escapeHtml(task.title)}</p>
+                                    </div>
+                                </div>
+                                <button onclick="deleteTaskFirebase('${courseId}', '${taskId}')" class="text-slate-400 hover:text-red-500 text-xs">✕</button>
+                            </div>
+                        `;
+                    });
+                } else {
+                    tasksHtml = '<p class="text-xs text-[#787774] italic text-center py-3">אין מטלות בקורס זה.</p>';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'notion-card p-4 flex flex-col justify-between';
+                card.innerHTML = `
+                    <div>
+                        <div class="border-b border-[#E9E9E7] pb-3 mb-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] text-[#787774] bg-[#EFEEEA] px-2 py-0.5 rounded">${escapeHtml(course.code || 'קוד')}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-[#787774]">${taskCount} מטלות</span>
+                                    <button onclick="openEditCourseModal('${courseId}')" class="text-slate-400 hover:text-slate-700 p-1">✏️</button>
+                                    <button onclick="deleteCourseFirebase('${courseId}')" class="text-slate-400 hover:text-red-500 p-1">🗑️</button>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-[#37352F] text-sm mt-1.5">${escapeHtml(course.title)}</h3>
+                            <div class="grid grid-cols-2 gap-1.5 mt-3 text-xs">
+                                <a href="${course.links?.moodle || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Moodle</a>
+                                <a href="${course.links?.docs || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center">Docs</a>
+                                <a href="${course.links?.drive || '#'}" target="_blank" class="bg-[#EFEEEA]/40 text-[#37352F] px-2 py-1 rounded border border-[#E9E9E7] text-center col-span-2">Drive</a>
+                            </div>
+                        </div>
+                        <div class="space-y-2 max-h-64 overflow-y-auto course-scroll pr-1">${tasksHtml}</div>
+                    </div>
+                    <div class="pt-3 border-t border-[#E9E9E7] mt-3">
+                        <button onclick="openAddTaskModal('${courseId}')" class="w-full py-1.5 bg-[#EFEEEA]/60 hover:bg-[#EFEEEA] text-[#37352F] text-xs font-medium rounded">+ הוספת משימה</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.openAddCourseModal = function() {
+            activeEditingCourseId = null;
+            document.getElementById('course-modal-title').innerText = 'הוספת קורס חדש';
+            document.getElementById('course-name').value = '';
+            document.getElementById('course-code').value = '';
+            document.getElementById('course-moodle').value = '';
+            document.getElementById('course-docs').value = '';
+            document.getElementById('course-drive').value = '';
+            document.getElementById('add-course-modal').classList.remove('hidden');
+        };
+
+        window.openEditCourseModal = function(courseId) {
+            activeEditingCourseId = courseId;
+            const c = localState.courses[courseId];
+            document.getElementById('course-modal-title').innerText = 'עריכת קורס';
+            document.getElementById('course-name').value = c.title || '';
+            document.getElementById('course-code').value = c.code || '';
+            document.getElementById('course-moodle').value = c.links?.moodle || '';
+            document.getElementById('course-docs').value = c.links?.docs || '';
+            document.getElementById('course-drive').value = c.links?.drive || '';
+            document.getElementById('add-course-modal').classList.remove('hidden');
+        };
+
+        window.closeAddCourseModal = function() { document.getElementById('add-course-modal').classList.add('hidden'); };
+
+        window.handleCourseSubmit = function(e) {
+            e.preventDefault();
+            if (!loggedInUser) return;
+            const courseObj = {
+                title: document.getElementById('course-name').value.trim(),
+                code: document.getElementById('course-code').value.trim(),
+                links: {
+                    moodle: document.getElementById('course-moodle').value.trim(),
+                    docs: document.getElementById('course-docs').value.trim(),
+                    drive: document.getElementById('course-drive').value.trim()
+                }
+            };
+            if (activeEditingCourseId) update(ref(db, `${getUserPath()}/courses/${activeEditingCourseId}`), courseObj);
+            else set(ref(db, `${getUserPath()}/courses/${push(ref(db, `${getUserPath()}/courses`)).key}`), courseObj);
+            closeAddCourseModal();
+        };
+
+        window.deleteCourseFirebase = function(courseId) {
+            if (loggedInUser && confirm('למחוק את הקורס וכל המשימות שלו?')) remove(ref(db, `${getUserPath()}/courses/${courseId}`));
+        };
+
+        window.openAddTaskModal = function(courseId) {
+            activeTargetCourseIdForTask = courseId;
+            document.getElementById('task-modal-text').value = '';
+            document.getElementById('task-modal-date').value = '';
+            document.getElementById('add-task-modal').classList.remove('hidden');
+        };
+
+        window.closeAddTaskModal = function() { document.getElementById('add-task-modal').classList.add('hidden'); };
+
+        window.handleAddNewTaskSubmit = function(e) {
+            e.preventDefault();
+            const text = document.getElementById('task-modal-text').value.trim();
+            const dateVal = document.getElementById('task-modal-date').value;
+            if (!text || !activeTargetCourseIdForTask || !loggedInUser) return;
+
+            const newTaskKey = push(ref(db, `${getUserPath()}/courses/${activeTargetCourseIdForTask}/tasks`)).key;
+            set(ref(db, `${getUserPath()}/courses/${activeTargetCourseIdForTask}/tasks/${newTaskKey}`), { title: text, date: dateVal, status: 'not-started' });
+            closeAddTaskModal();
+        };
+
+        window.toggleTaskCheckFirebase = function(courseId, taskId, checked) {
+            if (loggedInUser) update(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`), { status: checked ? 'completed' : 'not-started' });
+        };
+
+        window.deleteTaskFirebase = function(courseId, taskId) {
+            if (loggedInUser) remove(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`));
+        };
+
+        // --- SUMMARY DASHBOARD RENDER ---
+        function renderSemesterCoursesSummary() {
+            const list = document.getElementById('semester-courses-list');
+            if (!list) return;
+            const courses = Object.values(localState.courses || {});
+            list.innerHTML = courses.length ? courses.map(c => `<div class="p-2 rounded bg-[#EFEEEA]/40 border border-[#E9E9E7] text-xs font-medium">${escapeHtml(c.title)}</div>`).join('') : '<p class="text-xs text-[#787774]">אין קורסים</p>';
+        }
+
+        function renderUnifiedFocusTasks() {
+            const list = document.getElementById('focus-tasks-list');
+            const countEl = document.getElementById('focus-tasks-count');
+            if (!list) return;
+            let all = [];
+            Object.keys(localState.courses || {}).forEach(cId => {
+                const c = localState.courses[cId];
+                if (c.tasks) Object.keys(c.tasks).forEach(tId => all.push({ ...c.tasks[tId], cId, tId, courseTitle: c.title }));
+            });
+            if (countEl) countEl.innerText = `${all.length}`;
+            list.innerHTML = all.length ? all.map(t => `<div class="p-2.5 border rounded bg-white text-xs flex justify-between items-center"><span>${escapeHtml(t.title)} (${escapeHtml(t.courseTitle)})</span><button onclick="deleteTaskFirebase('${t.cId}', '${t.tId}')" class="text-slate-400">✕</button></div>`).join('') : '<p class="text-xs text-[#787774]">אין משימות</p>';
+        }
+
+        // --- TELEGRAM BOT LOGIC ---
         window.saveTelegramConfigFirebase = function() {
             const token = document.getElementById('tg-bot-token').value.trim();
             const chatId = document.getElementById('tg-chat-id').value.trim();
@@ -21,7 +1742,7 @@
                 return;
             }
             if (!token || !chatId) {
-                alert('יש להזין ולהציל Token ו-Chat ID בהגדרות הבוט תחילה.');
+                alert('יש להזין ולשמור Token ו-Chat ID בהגדרות הבוט תחילה.');
                 return;
             }
 
@@ -77,3 +1798,50 @@
                 badge.className = 'px-2.5 py-1 rounded text-xs bg-slate-100 text-slate-700';
             }
         }
+
+        // --- COMMAND PALETTE ---
+        window.toggleCommandPalette = function() {
+            document.getElementById('cmd-palette-modal').classList.toggle('hidden');
+        };
+
+        window.handleCommandSearch = function(query) {
+            const resultsList = document.getElementById('cmd-results-list');
+            const q = query.toLowerCase().trim();
+            resultsList.innerHTML = '';
+            let results = [];
+
+            (localState.glossary || []).forEach(c => {
+                if (!q || (c.termHe && c.termHe.toLowerCase().includes(q))) results.push({ type: 'מושג', title: c.termHe, action: () => switchMode('glossary') });
+            });
+            Object.keys(localState.articles || {}).forEach(id => {
+                const a = localState.articles[id];
+                if (!q || a.title.toLowerCase().includes(q)) results.push({ type: 'מאמר', title: a.title, action: () => openArticleModal(id) });
+            });
+
+            resultsList.innerHTML = results.length ? results.map(r => `<div onclick="(${r.action})(); toggleCommandPalette();" class="p-2 hover:bg-[#EFEEEA] cursor-pointer flex justify-between text-xs"><span>${escapeHtml(r.title)}</span><span class="text-[10px] bg-slate-100 p-0.5 rounded">${r.type}</span></div>`).join('') : '<p class="text-xs text-center py-4 text-[#787774]">לא נמצאו תוצאות</p>';
+        };
+
+        // NAVIGATION SWITCHER
+        window.switchMode = function(mode) {
+            ['focus', 'manage', 'articles', 'glossary', 'telegram', 'notes'].forEach(m => {
+                const el = document.getElementById(`view-${m}`);
+                if (el) el.classList.add('hidden');
+                const btn = document.getElementById(`btn-${m}-mode`);
+                if (btn) btn.className = 'px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774]';
+            });
+
+            const target = document.getElementById(`view-${mode}`);
+            const targetBtn = document.getElementById(`btn-${mode}-mode`);
+            if (target) target.classList.remove('hidden');
+            if (targetBtn) targetBtn.className = 'active-tab px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap';
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&#039;").replace(/'/g, "&#039;");
+        }
+
+        checkAuthSession();
+    </script>
+</body>
+</html>
