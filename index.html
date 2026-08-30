@@ -717,8 +717,6 @@
                     <div id="user-avatar" class="w-7 h-7 rounded-full bg-[#EFEEEA] flex items-center justify-center text-sm font-bold">🌿</div>
                     <div class="flex items-center gap-2 text-xs text-[#787774]">
                         <span id="user-display-name" class="font-medium text-[#37352F]">helen</span>
-                        <span>/</span>
-                        <span id="sync-status-badge" class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold">מחובר (helen)</span>
                     </div>
                 </div>
 
@@ -945,12 +943,11 @@
                     <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📝 פתקים</h2>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="resetNotesPositionFirebase()" class="bg-white border border-[#E9E9E7] text-xs px-3 py-1.5 rounded hover:bg-[#EFEEEA]">איפוס מיקומים</button>
                     <button onclick="createNewNoteDirectFirebase()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all font-medium">+ פתק חדש</button>
                 </div>
             </div>
             
-            <div id="notes-grid" onclick="closeAllColorMenus()" class="min-h-[600px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-hidden">
+            <div id="notes-grid" onclick="closeAllColorMenus()" class="min-h-[600px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-y-auto">
                 <div id="guide-line-v" class="guide-line-vertical hidden"></div>
                 <div id="guide-line-h" class="guide-line-horizontal hidden"></div>
             </div>
@@ -1252,23 +1249,14 @@
 
         function checkAuthSession() {
             const overlay = document.getElementById('login-overlay');
-            const badge = document.getElementById('sync-status-badge');
             const nameEl = document.getElementById('user-display-name');
 
             if (loggedInUser === 'helen') {
                 if (overlay) overlay.classList.add('hidden');
                 if (nameEl) nameEl.innerText = 'helen';
-                if (badge) {
-                    badge.innerText = 'מחובר (helen)';
-                    badge.className = 'px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold';
-                }
                 connectUserDatabase();
             } else {
                 if (overlay) overlay.classList.remove('hidden');
-                if (badge) {
-                    badge.innerText = 'לא מחובר';
-                    badge.className = 'px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold';
-                }
             }
         }
 
@@ -1469,6 +1457,17 @@
             });
         };
 
+        window.addNewTaskInline = function(courseId, inputEl) {
+            const text = inputEl.value.trim();
+            if (!text) return;
+            const taskId = push(ref(db, `${getUserPath()}/courses/${courseId}/tasks`)).key;
+            const taskObj = { text, dueDate: '', done: false };
+            set(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`), taskObj).then(() => {
+                inputEl.value = '';
+                renderAllViews();
+            });
+        };
+
         window.toggleTaskDoneFirebase = function(courseId, taskId) {
             const cur = localState.courses?.[courseId]?.tasks?.[taskId]?.done || false;
             update(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`), { done: !cur });
@@ -1528,6 +1527,11 @@
                                             </div>
                                         `;
                                     }).join('')}
+                                </div>
+                                <div class="mt-2">
+                                    <input type="text" placeholder="הוסף מטלה חדשה ולחץ Enter..." 
+                                           onkeydown="if(event.key==='Enter'){ addNewTaskInline('${cId}', this); }"
+                                           class="w-full p-1.5 border border-[#E9E9E7] rounded text-[11px] bg-white focus:outline-none focus:border-[#37352F]">
                                 </div>
                             </div>
                         </div>
@@ -2075,21 +2079,28 @@
                 <div id="guide-line-h" class="guide-line-horizontal hidden"></div>
             `;
 
+            let maxB = 600;
             Object.keys(localState.notes || {}).forEach(noteId => {
                 const note = localState.notes[noteId];
+                const ny = note.y || 20;
+                const nh = note.height || 170;
+                if (ny + nh + 80 > maxB) {
+                    maxB = ny + nh + 80;
+                }
+
                 const card = document.createElement('div');
                 card.className = 'draggable-note notion-card p-3 flex flex-col justify-between rounded-lg border shadow-sm transition-shadow';
-                card.style.transform = `translate3d(${note.x || 20}px, ${note.y || 20}px, 0)`;
+                card.style.transform = `translate3d(${note.x || 20}px, ${ny}px, 0)`;
                 card.style.width = `${note.width || 230}px`;
-                card.style.height = `${note.height || 170}px`;
+                card.style.height = `${nh}px`;
                 card.style.backgroundColor = note.color || '#FEF9C3';
                 card.style.borderColor = 'rgba(0,0,0,0.08)';
 
                 card.innerHTML = `
                     <div class="note-toolbar flex items-center justify-between pb-1.5 mb-1.5 border-b border-black/10 select-none relative">
                         <div class="relative">
-                            <button onclick="toggleColorPickerMenu('${noteId}', event)" title="שינוי צבע" class="text-slate-600 hover:text-black text-xs font-bold px-1 py-0.5 rounded hover:bg-black/5 flex items-center gap-1">
-                                🎨 <span>צבע</span>
+                            <button onclick="toggleColorPickerMenu('${noteId}', event)" title="שינוי צבע" class="text-slate-600 hover:text-black text-xs font-bold px-1.5 py-0.5 rounded hover:bg-black/5 flex items-center">
+                                🎨
                             </button>
                             <div id="color-menu-${noteId}" class="hidden absolute right-0 top-6 bg-white border border-[#E9E9E7] shadow-lg rounded-lg p-1.5 z-50 w-28 text-xs space-y-1">
                                 ${colorOptions.map(opt => `
@@ -2119,6 +2130,7 @@
                 grid.appendChild(card);
                 makeNoteDraggableAndResizableTouch(card, noteId);
             });
+            grid.style.minHeight = maxB + 'px';
         }
 
         window.toggleColorPickerMenu = function(noteId, event) {
@@ -2206,6 +2218,7 @@
             const guideV = document.getElementById('guide-line-v');
             const guideH = document.getElementById('guide-line-h');
             const resizeHandle = elmnt.querySelector('.note-resize-handle');
+            const grid = document.getElementById('notes-grid');
 
             const getCoords = e => e.touches && e.touches.length > 0 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
 
@@ -2266,6 +2279,10 @@
                     
                     elmnt.style.width = `${width}px`;
                     elmnt.style.height = `${height}px`;
+
+                    if (grid && (posY + height + 80 > parseInt(grid.style.minHeight || 600))) {
+                        grid.style.minHeight = (posY + height + 80) + 'px';
+                    }
                 };
 
                 const onEndResize = () => {
@@ -2318,6 +2335,10 @@
                     startY = mc.y;
 
                     elmnt.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
+
+                    if (grid && (posY + height + 80 > parseInt(grid.style.minHeight || 600))) {
+                        grid.style.minHeight = (posY + height + 80) + 'px';
+                    }
                 };
 
                 const onEndDrag = () => {
@@ -2342,14 +2363,6 @@
 
         window.deleteNoteFirebase = function(noteId) {
             if (confirm('למחוק פתק זה?')) remove(ref(db, `${getUserPath()}/notes/${noteId}`));
-        };
-
-        window.resetNotesPositionFirebase = function() {
-            Object.keys(localState.notes || {}).forEach((id, idx) => {
-                localState.notes[id].x = 25 + (idx * 25);
-                localState.notes[id].y = 25 + (idx * 25);
-            });
-            update(ref(db, getUserPath()), { notes: localState.notes });
         };
 
         // --- LISTS / TASKS BOARD ---
@@ -3228,7 +3241,7 @@
             const targetBtn = document.getElementById(`btn-${mode}-mode`);
             if (target) target.classList.remove('hidden');
             if (targetBtn) {
-                targetBtn.className = 'active-tab ' + (mode === 'focus' ? 'px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1.5' : 'px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1');
+                targetBtn.className = 'active-tab ' + (mode === 'focus' ? 'px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap flex items-center gap-1.5' : 'px-3 py-1 rounded-md text-xs transition-all whitespace-nowrap text-[#787774] flex items-center gap-1');
             }
             if (mode === 'lists') {
                 renderListsBoard();
