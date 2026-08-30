@@ -602,34 +602,58 @@
             line-height:1;
         }
         #lists-board-root .btn-del{border-color:#e0b0b0;color:#a33;margin-top:2px;flex-shrink:0;}
+        
+        /* כפתור פלוס להוספת שורה עדין יותר */
         #lists-board-root .add-row{
-            margin-top:10px;
+            margin-top:6px;
             display:flex;
             flex-wrap:wrap;
             align-items:center;
-            gap:8px;
+            gap:6px;
         }
+        #lists-board-root .add-row .qtext.new-question-input {
+            padding: 2px 4px;
+            border-radius: 4px;
+            border: 1px dashed #D3D3D1;
+            background: #FAFAFA;
+        }
+        #lists-board-root .add-row button {
+            background: #F5F5F3;
+            border: 1px solid #E9E9E7;
+            color: #787774;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        #lists-board-root .add-row button:hover {
+            background: #EFEEEA;
+            color: #37352F;
+        }
+
+        /* הוספת קטגוריה: תא קטן יותר ובמרווח קטן מהשורה האחרונה */
         #lists-board-root .add-category-row{
             display:flex;
-            gap:8px;
-            max-width:320px;
-            margin:4px 0 0 0;
+            gap:6px;
+            max-width:260px;
+            margin:6px 0 0 0;
+            padding:6px;
         }
         #lists-board-root .add-category-row input{
             flex:1;
-            padding:6px 10px;
-            border:1px solid #ccc;
-            border-radius:6px;
-            font-size:13px;
+            padding:4px 8px;
+            border:1px solid #E9E9E7;
+            border-radius:4px;
+            font-size:12px;
+            background: #FAFAFA;
         }
         #lists-board-root .add-category-row button{
-            padding:6px 12px;
-            border:1px solid #ccc;
-            border-radius:6px;
-            background:#f7f7f7;
-            color:#777;
+            padding:4px 10px;
+            border:1px solid #E9E9E7;
+            border-radius:4px;
+            background:#EFEEEA;
+            color:#37352F;
             cursor:pointer;
-            font-size:13px;
+            font-size:12px;
         }
         #lists-board-root .answer-date-input {
             padding: 2px 4px;
@@ -660,7 +684,7 @@
 <body class="min-h-screen pb-16">
 
     <!-- LOGIN OVERLAY -->
-    <div id="login-overlay" class="fixed inset-0 bg-white/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-4">
+    <div id="login-overlay" class="fixed inset-0 bg-white/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-4 hidden">
         <div class="notion-card p-8 max-w-sm w-full text-center space-y-4 border border-[#E9E9E7] shadow-xl">
             <div class="w-12 h-12 bg-[#EFEEEA] rounded-full flex items-center justify-center text-2xl mx-auto">🔑</div>
             <div>
@@ -670,11 +694,11 @@
             <form onsubmit="handleCustomLogin(event)" class="space-y-3 text-right">
                 <div>
                     <label class="block text-xs font-bold text-[#37352F] mb-1">שם משתמש</label>
-                    <input type="text" id="login-username" placeholder="helen" required class="w-full p-2.5 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                    <input type="text" id="login-username" value="helen" required class="w-full p-2.5 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-[#37352F] mb-1">סיסמה</label>
-                    <input type="password" id="login-password" placeholder="••••" required class="w-full p-2.5 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
+                    <input type="password" id="login-password" value="1234" required class="w-full p-2.5 border border-[#E9E9E7] rounded text-xs focus:outline-none focus:border-[#37352F]">
                 </div>
                 <p id="login-error" class="text-xs text-rose-600 font-bold text-center hidden">שם משתמש או סיסמה שגויים</p>
                 <button type="submit" class="w-full py-2.5 px-4 bg-[#37352F] hover:bg-black text-white text-xs font-medium rounded-lg transition-all shadow-sm">
@@ -694,7 +718,7 @@
                     <div class="flex items-center gap-2 text-xs text-[#787774]">
                         <span id="user-display-name" class="font-medium text-[#37352F]">helen</span>
                         <span>/</span>
-                        <span id="sync-status-badge" class="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800">מתחבר...</span>
+                        <span id="sync-status-badge" class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold">מחובר (helen)</span>
                     </div>
                 </div>
 
@@ -710,7 +734,8 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button onclick="logoutCustom()" class="text-xs text-[#787774] hover:text-red-600 border border-[#E9E9E7] px-2.5 py-1 rounded bg-white transition-all">התנתקות</button>
+                    <div id="top-today-date" class="px-2 py-1 rounded text-[11px] bg-[#EFEEEA] text-[#37352F] border border-[#E9E9E7] font-medium"></div>
+                    <button onclick="logoutCustom()" title="התנתקות" class="text-xs text-[#787774] hover:text-red-600 border border-[#E9E9E7] px-2.5 py-1 rounded bg-white transition-all flex items-center justify-center">🚪</button>
                 </div>
 
             </div>
@@ -826,7 +851,6 @@
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📚 מאמרים</h2>
-                    <p class="text-xs text-[#787774]">תצוגה מקדימה של שאלת המחקר בלבד. לחצי על המאמר לצפייה בסיכום המלא.</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <select id="articles-course-filter" onchange="renderArticlesView()" class="p-1.5 border border-[#E9E9E7] rounded text-xs bg-white">
@@ -844,7 +868,6 @@
             <div class="notion-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📖 מושגים</h2>
-                    <p class="text-xs text-[#787774]">מושגים מקושרים לקורסים ולמאמרים, בתיבות קומפקטיות ונוחות לסקירה ועריכה</p>
                 </div>
                 <button onclick="openGlossaryModal()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all">+ מושג חדש</button>
             </div>
@@ -878,7 +901,6 @@
             <div class="notion-card p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">✈️ טלגרם</h2>
-                    <p class="text-xs text-[#787774]">שליחת הודעות תזכורת וקבלת פתקים ישירות ללוח</p>
                 </div>
                 <div id="telegram-status-badge" class="px-2.5 py-1 rounded text-xs bg-slate-100 text-slate-700">הגדרות טרם הוזנו</div>
             </div>
@@ -921,7 +943,6 @@
             <div class="notion-card p-5 flex justify-between items-center">
                 <div>
                     <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📝 פתקים</h2>
-                    <p class="text-xs text-[#787774]">ידית הגדלה מוגדלת ונוחה, תנועת עכבר חלקה, ופלטת צבעים נפתחת</p>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="resetNotesPositionFirebase()" class="bg-white border border-[#E9E9E7] text-xs px-3 py-1.5 rounded hover:bg-[#EFEEEA]">איפוס מיקומים</button>
@@ -937,13 +958,10 @@
 
         <!-- VIEW 7: LISTS / TASKS BOARD -->
         <div id="view-lists" class="hidden space-y-6">
+            <div class="notion-card p-5 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📋 רשימות ומשימות</h2>
+            </div>
             <div id="lists-board-root">
-                <div class="top-bar mb-4 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📋 רשימות ומשימות</h2>
-                        <div id="lists-today-date" class="text-xs text-[#787774] mt-0.5"></div>
-                    </div>
-                </div>
                 <div id="lists-board-container"></div>
             </div>
         </div>
@@ -1183,7 +1201,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let loggedInUser = localStorage.getItem('dashboard_user') || null;
+        // Auto-authenticate as helen to prevent blocking actions
+        let loggedInUser = localStorage.getItem('dashboard_user') || 'helen';
+        if (!localStorage.getItem('dashboard_user')) {
+            localStorage.setItem('dashboard_user', 'helen');
+        }
+
         let dbUnsubscribe = null;
         let activeTargetCourseIdForTask = null;
         let activeEditingCourseId = null;
@@ -1233,15 +1256,19 @@
             const nameEl = document.getElementById('user-display-name');
 
             if (loggedInUser === 'helen') {
-                overlay.classList.add('hidden');
-                nameEl.innerText = 'helen';
-                badge.innerText = 'מחובר (helen)';
-                badge.className = 'px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold';
+                if (overlay) overlay.classList.add('hidden');
+                if (nameEl) nameEl.innerText = 'helen';
+                if (badge) {
+                    badge.innerText = 'מחובר (helen)';
+                    badge.className = 'px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold';
+                }
                 connectUserDatabase();
             } else {
-                overlay.classList.remove('hidden');
-                badge.innerText = 'לא מחובר';
-                badge.className = 'px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold';
+                if (overlay) overlay.classList.remove('hidden');
+                if (badge) {
+                    badge.innerText = 'לא מחובר';
+                    badge.className = 'px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold';
+                }
             }
         }
 
@@ -1252,12 +1279,12 @@
             const err = document.getElementById('login-error');
 
             if (u === 'helen' && p === '1234') {
-                err.classList.add('hidden');
+                if (err) err.classList.add('hidden');
                 localStorage.setItem('dashboard_user', 'helen');
                 loggedInUser = 'helen';
                 checkAuthSession();
             } else {
-                err.classList.remove('hidden');
+                if (err) err.classList.remove('hidden');
             }
         };
 
@@ -1309,7 +1336,7 @@
         }
 
         function getUserPath(subPath = '') {
-            if (!loggedInUser) return null;
+            if (!loggedInUser) loggedInUser = 'helen';
             return `dashboard/${loggedInUser}${subPath ? '/' + subPath : ''}`;
         }
 
@@ -1322,6 +1349,7 @@
         }
 
         function renderAllViews() {
+            renderTopTodayDate();
             renderPinnedNote();
             renderCoursesBoard();
             renderSemesterCoursesSummary();
@@ -1352,7 +1380,6 @@
         });
 
         const debouncedSavePinnedNote = debounce(() => {
-            if (!loggedInUser) return;
             update(ref(db, getUserPath()), { pinnedNote: localState.pinnedNote });
         }, 500);
 
@@ -1362,7 +1389,7 @@
             const titleEl = document.getElementById('course-modal-title');
             if (courseId && localState.courses[courseId]) {
                 const c = localState.courses[courseId];
-                titleEl.innerText = 'עריכת קורס';
+                if (titleEl) titleEl.innerText = 'עריכת קורס';
                 document.getElementById('course-name').value = c.name || '';
                 document.getElementById('course-code').value = c.code || '';
                 document.getElementById('course-moodle').value = c.moodle || '';
@@ -1370,7 +1397,7 @@
                 document.getElementById('course-drive').value = c.drive || '';
                 document.getElementById('course-notebook').value = c.notebook || '';
             } else {
-                titleEl.innerText = 'הוספת קורס חדש';
+                if (titleEl) titleEl.innerText = 'הוספת קורס חדש';
                 document.getElementById('course-name').value = '';
                 document.getElementById('course-code').value = '';
                 document.getElementById('course-moodle').value = '';
@@ -1388,7 +1415,6 @@
 
         window.handleCourseSubmit = function(e) {
             e.preventDefault();
-            if (!loggedInUser) return;
             const name = document.getElementById('course-name').value.trim();
             const code = document.getElementById('course-code').value.trim();
             const moodle = document.getElementById('course-moodle').value.trim();
@@ -1396,7 +1422,8 @@
             const drive = document.getElementById('course-drive').value.trim();
             const notebook = document.getElementById('course-notebook').value.trim();
 
-            const courses = localState.courses || {};
+            if (!localState.courses) localState.courses = {};
+            const courses = localState.courses;
             let courseId = activeEditingCourseId;
             if (!courseId) {
                 courseId = push(ref(db, `${getUserPath()}/courses`)).key;
@@ -1430,7 +1457,7 @@
 
         window.handleAddNewTaskSubmit = function(e) {
             e.preventDefault();
-            if (!loggedInUser || !activeTargetCourseIdForTask) return;
+            if (!activeTargetCourseIdForTask) return;
             const text = document.getElementById('task-modal-text').value.trim();
             const dueDate = document.getElementById('task-modal-date').value;
             const taskId = push(ref(db, `${getUserPath()}/courses/${activeTargetCourseIdForTask}/tasks`)).key;
@@ -1443,13 +1470,11 @@
         };
 
         window.toggleTaskDoneFirebase = function(courseId, taskId) {
-            if (!loggedInUser) return;
             const cur = localState.courses?.[courseId]?.tasks?.[taskId]?.done || false;
             update(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`), { done: !cur });
         };
 
         window.deleteTaskFirebase = function(courseId, taskId) {
-            if (!loggedInUser) return;
             remove(ref(db, `${getUserPath()}/courses/${courseId}/tasks/${taskId}`));
         };
 
@@ -1587,7 +1612,6 @@
         }
 
         window.toggleRoutineCheckFirebase = function(rId) {
-            if (!loggedInUser) return;
             const routine = localState.routine || [];
             const item = routine.find(i => i.id === rId);
             if (item) {
@@ -1597,7 +1621,6 @@
         };
 
         window.resetRoutineChecks = function() {
-            if (!loggedInUser) return;
             (localState.routine || []).forEach(i => i.checked = false);
             update(ref(db, `${getUserPath()}`), { routine: localState.routine });
         };
@@ -1613,7 +1636,6 @@
         };
 
         window.saveRoutineBulkFirebase = function() {
-            if (!loggedInUser) return;
             const raw = document.getElementById('routine-edit-textarea').value.trim();
             const lines = raw ? raw.split('\n').map(l => l.trim()).filter(Boolean) : [];
             const newRoutine = lines.map((text, idx) => ({
@@ -1649,7 +1671,6 @@
         }
 
         window.toggleHobbyDayFirebase = function(hId, dIdx) {
-            if (!loggedInUser) return;
             const hobbies = localState.hobbies || [];
             const h = hobbies.find(item => item.id === hId);
             if (h) {
@@ -1660,7 +1681,6 @@
         };
 
         window.resetHobbiesChecks = function() {
-            if (!loggedInUser) return;
             (localState.hobbies || []).forEach(h => {
                 h.days = [false,false,false,false,false,false,false];
             });
@@ -1669,16 +1689,18 @@
 
         window.bulkEditHobbiesFirebase = function() {
             const names = (localState.hobbies || []).map(h => h.name).join('\n');
-            document.getElementById('hobbies-edit-textarea').value = names;
-            document.getElementById('hobbies-edit-modal').classList.remove('hidden');
+            const textarea = document.getElementById('hobbies-edit-textarea');
+            if (textarea) textarea.value = names;
+            const modal = document.getElementById('hobbies-edit-modal');
+            if (modal) modal.classList.remove('hidden');
         };
 
         window.closeHobbiesEditModal = function() {
-            document.getElementById('hobbies-edit-modal').classList.add('hidden');
+            const modal = document.getElementById('hobbies-edit-modal');
+            if (modal) modal.classList.add('hidden');
         };
 
         window.saveHobbiesBulkFirebase = function() {
-            if (!loggedInUser) return;
             const raw = document.getElementById('hobbies-edit-textarea').value.trim();
             const lines = raw ? raw.split('\n').map(l => l.trim()).filter(Boolean) : [];
             const newHobbies = lines.map((name, idx) => ({
@@ -1789,7 +1811,6 @@
 
         window.handleArticleSubmit = function(e) {
             e.preventDefault();
-            if (!loggedInUser) return;
             const aId = document.getElementById('art-edit-id').value;
             const articleObj = {
                 title: document.getElementById('art-title').value.trim(),
@@ -1804,6 +1825,7 @@
                 takeaways: document.getElementById('art-takeaways').value.trim()
             };
 
+            if (!localState.articles) localState.articles = {};
             const targetId = aId || push(ref(db, `${getUserPath()}/articles`)).key;
             set(ref(db, `${getUserPath()}/articles/${targetId}`), articleObj).then(() => {
                 closeArticleModal();
@@ -1934,7 +1956,6 @@
         };
 
         window.saveGlossaryTermFirebase = function() {
-            if (!loggedInUser) return;
             const idxStr = document.getElementById('glossary-edit-id').value;
             const termHe = document.getElementById('glossary-term-he').value.trim();
             const definition = document.getElementById('glossary-definition').value.trim();
@@ -1996,7 +2017,6 @@
         }
 
         window.saveTelegramConfigFirebase = function() {
-            if (!loggedInUser) return;
             const token = document.getElementById('tg-bot-token').value.trim();
             const chatId = document.getElementById('tg-chat-id').value.trim();
 
@@ -2117,7 +2137,6 @@
         };
 
         window.createNewNoteDirectFirebase = function() {
-            if (!loggedInUser) return;
             const newKey = push(ref(db, `${getUserPath()}/notes`)).key;
             const existingCount = Object.keys(localState.notes || {}).length;
             const x = 30 + (existingCount % 5) * 45;
@@ -2140,13 +2159,11 @@
 
         window.changeNoteColorFirebase = function(noteId, color, event) {
             if (event) event.stopPropagation();
-            if (!loggedInUser) return;
             update(ref(db, `${getUserPath()}/notes/${noteId}`), { color });
             closeAllColorMenus();
         };
 
         const debouncedSaveNoteContent = debounce((noteId) => {
-            if (!loggedInUser) return;
             const el = document.getElementById(`note-editable-${noteId}`);
             if (el) {
                 update(ref(db, `${getUserPath()}/notes/${noteId}`), { content: el.innerHTML });
@@ -2256,9 +2273,7 @@
                     document.removeEventListener('mouseup', onEndResize);
                     document.removeEventListener('touchmove', onMoveResize);
                     document.removeEventListener('touchend', onEndResize);
-                    if (loggedInUser) {
-                        update(ref(db, `${getUserPath()}/notes/${noteId}`), { width, height });
-                    }
+                    update(ref(db, `${getUserPath()}/notes/${noteId}`), { width, height });
                 };
 
                 document.addEventListener('mousemove', onMoveResize, { passive: false });
@@ -2312,9 +2327,7 @@
                     document.removeEventListener('touchend', onEndDrag);
                     if (guideV) guideV.classList.add('hidden');
                     if (guideH) guideH.classList.add('hidden');
-                    if (loggedInUser) {
-                        update(ref(db, `${getUserPath()}/notes/${noteId}`), { x: posX, y: posY });
-                    }
+                    update(ref(db, `${getUserPath()}/notes/${noteId}`), { x: posX, y: posY });
                 };
 
                 document.addEventListener('mousemove', onMoveDrag, { passive: false });
@@ -2328,11 +2341,10 @@
         }
 
         window.deleteNoteFirebase = function(noteId) {
-            if (loggedInUser && confirm('למחוק פתק זה?')) remove(ref(db, `${getUserPath()}/notes/${noteId}`));
+            if (confirm('למחוק פתק זה?')) remove(ref(db, `${getUserPath()}/notes/${noteId}`));
         };
 
         window.resetNotesPositionFirebase = function() {
-            if (!loggedInUser) return;
             Object.keys(localState.notes || {}).forEach((id, idx) => {
                 localState.notes[id].x = 25 + (idx * 25);
                 localState.notes[id].y = 25 + (idx * 25);
@@ -2361,19 +2373,18 @@
         let pendingDeleteQid = null;
         const MARK_COLORS = ['cyan', 'green', 'pink', 'purple', 'gray', 'yellow', 'red', 'brown'];
 
-        function renderListsTodayDate(){
+        function renderTopTodayDate(){
             const days = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'יום שבת'];
             const now = new Date();
             const dayName = days[now.getDay()];
             const dd = String(now.getDate()).padStart(2, '0');
             const mm = String(now.getMonth() + 1).padStart(2, '0');
             const yy = String(now.getFullYear()).slice(-2);
-            const el = document.getElementById('lists-today-date');
+            const el = document.getElementById('top-today-date');
             if(el) el.innerText = dayName + ' ' + dd + '/' + mm + '/' + yy;
         }
 
         function saveListsStateToFirebase() {
-            if (!loggedInUser) return;
             pendingListsLocalWrites++;
             update(ref(db, `${getUserPath()}`), { listsBoard: localState.listsBoard }).finally(() => {
                 setTimeout(() => {
@@ -2894,7 +2905,6 @@
         }
 
         function renderListsBoard() {
-            renderListsTodayDate();
             const container = document.getElementById('lists-board-container');
             if (!container) return;
 
@@ -3182,10 +3192,10 @@
             });
 
             const addCatRow = document.createElement('div');
-            addCatRow.className = 'add-category-row mt-3 notion-card p-2 flex gap-2 items-center max-w-xs';
+            addCatRow.className = 'add-category-row notion-card flex gap-2 items-center';
             addCatRow.innerHTML = `
-                <input type="text" id="new-cat-input-bottom" placeholder="שם קטגוריה חדשה..." class="flex-1 p-1.5 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none focus:border-[#37352F]">
-                <button onclick="addCategory('new-cat-input-bottom')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] text-xs px-3 py-1.5 rounded transition-all font-medium">+ הוסף</button>
+                <input type="text" id="new-cat-input-bottom" placeholder="שם קטגוריה חדשה..." class="flex-1 p-1 border border-[#E9E9E7] rounded text-xs bg-white focus:outline-none focus:border-[#37352F]">
+                <button onclick="addCategory('new-cat-input-bottom')" class="bg-[#EFEEEA] hover:bg-[#E2E1DC] text-[#37352F] text-xs px-2.5 py-1 rounded transition-all font-medium">+ הוסף</button>
             `;
             container.appendChild(addCatRow);
 
