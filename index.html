@@ -936,20 +936,37 @@
             </div>
         </div>
 
-        <!-- VIEW 6: NOTES CANVAS -->
+        <!-- VIEW 6: NOTES BOARDS CANVAS -->
         <div id="view-notes" class="hidden space-y-6">
             <div class="notion-card p-5 flex justify-between items-center">
-                <div>
-                    <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📝 פתקים</h2>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="createNewNoteDirectFirebase()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all font-medium">+ פתק חדש</button>
-                </div>
+                <h2 class="text-lg font-bold text-[#37352F] flex items-center gap-1.5">📝 לוחות פתקים</h2>
             </div>
             
-            <div id="notes-grid" onclick="closeAllColorMenus()" class="min-h-[600px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-y-auto">
-                <div id="guide-line-v" class="guide-line-vertical hidden"></div>
-                <div id="guide-line-h" class="guide-line-horizontal hidden"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+                <!-- RIGHT SIDEBAR: BOARDS LIST -->
+                <div class="notion-card p-4 space-y-3 lg:col-span-1">
+                    <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-2">
+                        <span class="text-xs font-bold text-[#37352F]">הלוחות שלי</span>
+                        <button onclick="createNewNoteBoardFirebase()" class="text-xs bg-[#EFEEEA] hover:bg-[#E2E1DC] px-2.5 py-1 rounded font-medium transition-all">+ לוח חדש</button>
+                    </div>
+                    <div id="note-boards-sidebar-list" class="space-y-1.5 max-h-[500px] overflow-y-auto"></div>
+                </div>
+
+                <!-- LEFT MAIN CANVAS: ACTIVE BOARD NOTES -->
+                <div class="notion-card p-4 lg:col-span-3 space-y-3">
+                    <div class="flex items-center justify-between border-b border-[#E9E9E7] pb-2">
+                        <div class="flex items-center gap-2">
+                            <span id="active-board-title-display" class="text-xs font-bold text-[#37352F]">לוח ראשי</span>
+                            <button onclick="openRenameBoardModal()" class="text-[10px] text-[#787774] hover:text-[#37352F]" title="שנה שם לוח">✏️</button>
+                        </div>
+                        <button onclick="createNewNoteDirectFirebase()" class="bg-[#37352F] hover:bg-black text-white text-xs px-3.5 py-1.5 rounded transition-all font-medium">+ פתק חדש ללוח זה</button>
+                    </div>
+                    
+                    <div id="notes-grid" onclick="closeAllColorMenus()" class="min-h-[550px] bg-[#EFEEEA]/20 p-5 rounded-lg border border-dashed border-[#E9E9E7] relative overflow-y-auto">
+                        <div id="guide-line-v" class="guide-line-vertical hidden"></div>
+                        <div id="guide-line-h" class="guide-line-horizontal hidden"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1215,6 +1232,13 @@
             courses: {},
             articles: {},
             notes: {},
+            noteBoards: {
+                'board_default': {
+                    title: 'לוח ראשי',
+                    notes: {}
+                }
+            },
+            activeNoteBoardId: 'board_default',
             glossary: [],
             routine: [
                 { id: 'r1', text: 'סנכרון סיכומים וטיוטות ל-Docs ול-Drive', checked: false },
@@ -1302,6 +1326,17 @@
                     if (!localState.articles) localState.articles = {};
                     if (!localState.courses) localState.courses = {};
                     if (!localState.notes) localState.notes = {};
+                    if (!localState.noteBoards) {
+                        localState.noteBoards = {
+                            'board_default': {
+                                title: 'לוח ראשי',
+                                notes: localState.notes || {}
+                            }
+                        };
+                    }
+                    if (!localState.activeNoteBoardId || !localState.noteBoards[localState.activeNoteBoardId]) {
+                        localState.activeNoteBoardId = Object.keys(localState.noteBoards)[0] || 'board_default';
+                    }
                     if (!localState.routine) localState.routine = [];
                     if (!localState.hobbies) localState.hobbies = [];
                     if (!localState.telegram) localState.telegram = { token: '', chatId: '' };
@@ -2069,8 +2104,20 @@
             });
         };
 
-        // --- STICKY NOTES CANVAS ---
+        // --- STICKY NOTES BOARDS CANVAS ---
         function renderStickyNotesCanvas() {
+            renderNoteBoardsSidebar();
+            
+            const activeBoardId = localState.activeNoteBoardId || 'board_default';
+            if (!localState.noteBoards) localState.noteBoards = {};
+            if (!localState.noteBoards[activeBoardId]) {
+                localState.noteBoards[activeBoardId] = { title: 'לוח ראשי', notes: {} };
+            }
+            
+            const currentBoard = localState.noteBoards[activeBoardId];
+            const titleDisplay = document.getElementById('active-board-title-display');
+            if (titleDisplay) titleDisplay.innerText = currentBoard.title || 'לוח פתקים';
+
             const grid = document.getElementById('notes-grid');
             if (!grid) return;
             
@@ -2079,9 +2126,10 @@
                 <div id="guide-line-h" class="guide-line-horizontal hidden"></div>
             `;
 
-            let maxB = 600;
-            Object.keys(localState.notes || {}).forEach(noteId => {
-                const note = localState.notes[noteId];
+            let maxB = 550;
+            const notesObj = currentBoard.notes || {};
+            Object.keys(notesObj).forEach(noteId => {
+                const note = notesObj[noteId];
                 const ny = note.y || 20;
                 const nh = note.height || 170;
                 if (ny + nh + 80 > maxB) {
@@ -2133,6 +2181,83 @@
             grid.style.minHeight = maxB + 'px';
         }
 
+        function renderNoteBoardsSidebar() {
+            const sidebarList = document.getElementById('note-boards-sidebar-list');
+            if (!sidebarList) return;
+            const boards = localState.noteBoards || {};
+            const activeId = localState.activeNoteBoardId || 'board_default';
+
+            sidebarList.innerHTML = Object.keys(boards).map(bId => {
+                const b = boards[bId];
+                const isActive = bId === activeId;
+                return `
+                    <div class="flex items-center justify-between p-2 rounded text-xs transition-all ${isActive ? 'bg-[#EFEEEA] font-bold text-[#37352F]' : 'hover:bg-[#EFEEEA]/40 text-[#787774]'}">
+                        <button onclick="switchNoteBoard('${bId}')" class="flex-1 text-right truncate">
+                            📁 ${b.title || 'לוח ללא שם'}
+                        </button>
+                        <div class="flex items-center gap-1 mr-1">
+                            <button onclick="deleteNoteBoardFirebase('${bId}')" title="מחיקת לוח" class="text-slate-400 hover:text-rose-600 text-[11px] px-1">🗑</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.switchNoteBoard = function(bId) {
+            localState.activeNoteBoardId = bId;
+            renderStickyNotesCanvas();
+            update(ref(db, getUserPath()), { activeNoteBoardId: bId });
+        };
+
+        window.createNewNoteBoardFirebase = function() {
+            const title = prompt('הכניסי את שם לוח הפתקים החדש:', 'לוח חדש');
+            if (!title) return;
+            const newBId = push(ref(db, `${getUserPath()}/noteBoards`)).key;
+            if (!localState.noteBoards) localState.noteBoards = {};
+            localState.noteBoards[newBId] = { title: title.trim(), notes: {} };
+            localState.activeNoteBoardId = newBId;
+
+            update(ref(db, getUserPath()), {
+                noteBoards: localState.noteBoards,
+                activeNoteBoardId: newBId
+            }).then(() => {
+                renderStickyNotesCanvas();
+            });
+        };
+
+        window.openRenameBoardModal = function() {
+            const activeId = localState.activeNoteBoardId;
+            if (!activeId || !localState.noteBoards?.[activeId]) return;
+            const curTitle = localState.noteBoards[activeId].title;
+            const newTitle = prompt('עדכון שם הלוח:', curTitle);
+            if (!newTitle || !newTitle.trim()) return;
+
+            localState.noteBoards[activeId].title = newTitle.trim();
+            update(ref(db, `${getUserPath()}/noteBoards/${activeId}`), { title: newTitle.trim() }).then(() => {
+                renderStickyNotesCanvas();
+            });
+        };
+
+        window.deleteNoteBoardFirebase = function(bId) {
+            const keys = Object.keys(localState.noteBoards || {});
+            if (keys.length <= 1) {
+                alert('לא ניתן למחוק את הלוח היחיד במערכת.');
+                return;
+            }
+            if (confirm('למחוק את לוח הפתקים הזה וכל הפתקים שבו?')) {
+                delete localState.noteBoards[bId];
+                if (localState.activeNoteBoardId === bId) {
+                    localState.activeNoteBoardId = Object.keys(localState.noteBoards)[0];
+                }
+                update(ref(db, getUserPath()), {
+                    noteBoards: localState.noteBoards,
+                    activeNoteBoardId: localState.activeNoteBoardId
+                }).then(() => {
+                    renderStickyNotesCanvas();
+                });
+            }
+        };
+
         window.toggleColorPickerMenu = function(noteId, event) {
             if (event) event.stopPropagation();
             const menu = document.getElementById(`color-menu-${noteId}`);
@@ -2149,19 +2274,29 @@
         };
 
         window.createNewNoteDirectFirebase = function() {
-            const newKey = push(ref(db, `${getUserPath()}/notes`)).key;
-            const existingCount = Object.keys(localState.notes || {}).length;
+            const activeBoardId = localState.activeNoteBoardId || 'board_default';
+            if (!localState.noteBoards?.[activeBoardId]) {
+                if (!localState.noteBoards) localState.noteBoards = {};
+                localState.noteBoards[activeBoardId] = { title: 'לוח ראשי', notes: {} };
+            }
+            const notes = localState.noteBoards[activeBoardId].notes || {};
+            const newKey = push(ref(db, `${getUserPath()}/noteBoards/${activeBoardId}/notes`)).key;
+            const existingCount = Object.keys(notes).length;
             const x = 30 + (existingCount % 5) * 45;
             const y = 30 + (existingCount % 5) * 35;
             
-            set(ref(db, `${getUserPath()}/notes/${newKey}`), {
+            const newNote = {
                 content: 'הקלידי כאן...',
                 x: x,
                 y: y,
                 width: 230,
                 height: 170,
                 color: '#FEF9C3'
-            }).then(() => {
+            };
+
+            localState.noteBoards[activeBoardId].notes[newKey] = newNote;
+            set(ref(db, `${getUserPath()}/noteBoards/${activeBoardId}/notes/${newKey}`), newNote).then(() => {
+                renderStickyNotesCanvas();
                 setTimeout(() => {
                     const el = document.getElementById(`note-editable-${newKey}`);
                     if (el) el.focus();
@@ -2171,14 +2306,23 @@
 
         window.changeNoteColorFirebase = function(noteId, color, event) {
             if (event) event.stopPropagation();
-            update(ref(db, `${getUserPath()}/notes/${noteId}`), { color });
+            const activeBoardId = localState.activeNoteBoardId || 'board_default';
+            if (localState.noteBoards?.[activeBoardId]?.notes?.[noteId]) {
+                localState.noteBoards[activeBoardId].notes[noteId].color = color;
+            }
+            update(ref(db, `${getUserPath()}/noteBoards/${activeBoardId}/notes/${noteId}`), { color });
             closeAllColorMenus();
+            renderStickyNotesCanvas();
         };
 
         const debouncedSaveNoteContent = debounce((noteId) => {
+            const activeBoardId = localState.activeNoteBoardId || 'board_default';
             const el = document.getElementById(`note-editable-${noteId}`);
             if (el) {
-                update(ref(db, `${getUserPath()}/notes/${noteId}`), { content: el.innerHTML });
+                if (localState.noteBoards?.[activeBoardId]?.notes?.[noteId]) {
+                    localState.noteBoards[activeBoardId].notes[noteId].content = el.innerHTML;
+                }
+                update(ref(db, `${getUserPath()}/noteBoards/${activeBoardId}/notes/${noteId}`), { content: el.innerHTML });
             }
         }, 600);
         window.debouncedSaveNoteContent = debouncedSaveNoteContent;
@@ -2210,10 +2354,12 @@
         }
 
         function makeNoteDraggableAndResizableTouch(elmnt, noteId) {
-            let posX = localState.notes[noteId]?.x || 20;
-            let posY = localState.notes[noteId]?.y || 20;
-            let width = localState.notes[noteId]?.width || 230;
-            let height = localState.notes[noteId]?.height || 170;
+            const activeBoardId = localState.activeNoteBoardId || 'board_default';
+            const noteData = localState.noteBoards?.[activeBoardId]?.notes?.[noteId] || {};
+            let posX = noteData.x || 20;
+            let posY = noteData.y || 20;
+            let width = noteData.width || 230;
+            let height = noteData.height || 170;
 
             const guideV = document.getElementById('guide-line-v');
             const guideH = document.getElementById('guide-line-h');
@@ -2230,9 +2376,10 @@
                 const cL = currX, cR = currX + currW, cCX = currX + currW / 2;
                 const cT = currY, cB = currY + currH, cCY = currY + currH / 2;
 
-                Object.keys(localState.notes || {}).forEach(otherId => {
+                const notesObj = localState.noteBoards?.[activeBoardId]?.notes || {};
+                Object.keys(notesObj).forEach(otherId => {
                     if (otherId === noteId) return;
-                    const o = localState.notes[otherId];
+                    const o = notesObj[otherId];
                     const oW = o.width || 230, oH = o.height || 170;
                     const oL = o.x || 20, oR = oL + oW, oCX = oL + oW / 2;
                     const oT = o.y || 20, oB = oT + oH, oCY = oT + oH / 2;
@@ -2280,7 +2427,7 @@
                     elmnt.style.width = `${width}px`;
                     elmnt.style.height = `${height}px`;
 
-                    if (grid && (posY + height + 80 > parseInt(grid.style.minHeight || 600))) {
+                    if (grid && (posY + height + 80 > parseInt(grid.style.minHeight || 550))) {
                         grid.style.minHeight = (posY + height + 80) + 'px';
                     }
                 };
@@ -2290,7 +2437,11 @@
                     document.removeEventListener('mouseup', onEndResize);
                     document.removeEventListener('touchmove', onMoveResize);
                     document.removeEventListener('touchend', onEndResize);
-                    update(ref(db, `${getUserPath()}/notes/${noteId}`), { width, height });
+                    if (localState.noteBoards?.[activeBoardId]?.notes?.[noteId]) {
+                        localState.noteBoards[activeBoardId].notes[noteId].width = width;
+                        localState.noteBoards[activeBoardId].notes[noteId].height = height;
+                    }
+                    update(ref(db, `${getUserPath()}/noteBoards/${activeBoardId}/notes/${noteId}`), { width, height });
                 };
 
                 document.addEventListener('mousemove', onMoveResize, { passive: false });
@@ -2336,7 +2487,7 @@
 
                     elmnt.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
 
-                    if (grid && (posY + height + 80 > parseInt(grid.style.minHeight || 600))) {
+                    if (grid && (posY + height + 80 > parseInt(grid.style.minHeight || 550))) {
                         grid.style.minHeight = (posY + height + 80) + 'px';
                     }
                 };
@@ -2348,7 +2499,11 @@
                     document.removeEventListener('touchend', onEndDrag);
                     if (guideV) guideV.classList.add('hidden');
                     if (guideH) guideH.classList.add('hidden');
-                    update(ref(db, `${getUserPath()}/notes/${noteId}`), { x: posX, y: posY });
+                    if (localState.noteBoards?.[activeBoardId]?.notes?.[noteId]) {
+                        localState.noteBoards[activeBoardId].notes[noteId].x = posX;
+                        localState.noteBoards[activeBoardId].notes[noteId].y = posY;
+                    }
+                    update(ref(db, `${getUserPath()}/noteBoards/${activeBoardId}/notes/${noteId}`), { x: posX, y: posY });
                 };
 
                 document.addEventListener('mousemove', onMoveDrag, { passive: false });
@@ -2362,7 +2517,15 @@
         }
 
         window.deleteNoteFirebase = function(noteId) {
-            if (confirm('למחוק פתק זה?')) remove(ref(db, `${getUserPath()}/notes/${noteId}`));
+            const activeBoardId = localState.activeNoteBoardId || 'board_default';
+            if (confirm('למחוק פתק זה?')) {
+                if (localState.noteBoards?.[activeBoardId]?.notes?.[noteId]) {
+                    delete localState.noteBoards[activeBoardId].notes[noteId];
+                }
+                remove(ref(db, `${getUserPath()}/noteBoards/${activeBoardId}/notes/${noteId}`)).then(() => {
+                    renderStickyNotesCanvas();
+                });
+            }
         };
 
         // --- LISTS / TASKS BOARD ---
@@ -3251,6 +3414,8 @@
                 renderArticlesView();
             } else if (mode === 'glossary') {
                 renderGlossaryView();
+            } else if (mode === 'notes') {
+                renderStickyNotesCanvas();
             }
         };
 
